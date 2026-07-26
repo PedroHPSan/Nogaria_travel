@@ -29,3 +29,6 @@ dist-ssr
 
 # Supabase CLI local state
 supabase/.temp
+
+# Subagent-driven-development scratch (progress ledger, task briefs, review packages)
+.superpowers/
