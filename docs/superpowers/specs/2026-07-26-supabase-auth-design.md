@@ -21,6 +21,11 @@ This is the **auth** sub-project: get real users able to sign up, log in, land i
 - Automated tests (this project has no test framework — see `CLAUDE.md`). Verification is `npm run build` + `npm run lint` + a manual click-through.
 - Password reset UI, email template customization, account deletion, session-revocation UX.
 
+## External prerequisites (manual, not automatable from here)
+
+- **Google OAuth**: requires creating an OAuth client (client ID + secret) in Google Cloud Console and entering it under Supabase Dashboard → Authentication → Providers → Google, plus adding the app's URL(s) to the redirect allow-list. This needs your Google account and dashboard access — I'll write the `signInWithOAuth` call, but this configuration step is yours to do (I'll provide exact instructions when we get there).
+- **Email confirmation setting**: the spec assumes Supabase's default (confirmations required before a session is issued). I haven't checked whether this project's Auth settings actually have it on — I'll verify (`Authentication → Providers → Email` / via the Management API) at implementation time rather than assume, since if it's off the "confirm your email" screen becomes dead code.
+
 ## Database changes (new migration(s) on top of the existing schema)
 
 ### `create_tenant_with_owner` — simplify signature
@@ -37,8 +42,8 @@ role            varchar(50) not null check (same role set as memberships.role)
 invited_by_id   uuid references profiles(id) on delete set null
 created_at      timestamptz not null default now()
 accepted_at     timestamptz  -- null until resolved
-unique (tenant_id, lower(email))
 ```
+Plus a unique index (Postgres doesn't allow an expression like `lower(email)` in a table-level `unique(...)` constraint): `create unique index on tenant_invites (tenant_id, lower(email));`
 
 RLS: only tenant admins (`is_tenant_admin(tenant_id)`) can select/insert/delete rows for their own tenant. No invitee-facing visibility is needed — resolution is fully automatic, nothing for the invited person to accept.
 
