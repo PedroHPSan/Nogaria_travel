@@ -95,6 +95,10 @@ para cada item:
     imposto_do_item = excedente × share × customs_excess_tax_pct / 100
 ```
 
+**RN-07b** — Resíduo de arredondamento. Arredondar o imposto de cada item a 2 casas faz a soma divergir do total em centavos. Após calcular todos os itens de um participante, o resíduo `excedente × alíquota − Σ imposto_do_item` é somado ao item de maior `share`. A soma dos impostos por item é **exatamente** igual ao imposto total do participante.
+
+**RN-07c** — Arredondamento. Toda linha nomeada do cálculo é arredondada a 2 casas com `Math.round(n * 100) / 100`, mesma convenção do `giftCardCalculator.ts`. `share` não é arredondado.
+
 **RN-07a** — Guardas de divisão por zero. Se `total_pessoa = 0`, então `share = 0` e `imposto_do_item = 0`. Se `br_liquido_brl = 0`, então `economia_pct = 0` e o veredito é `DADOS_INSUFICIENTES` — não se calcula percentual sobre base zero.
 
 **RN-08** — `quota_owner_id` tem default `beneficiary_id ?? target_participant_id`, e é editável.
@@ -437,13 +441,24 @@ Formulários mantêm o padrão manual do repositório (sem Zod nesta fase). Regr
 
 **CA-01** — Dado um item com cotação US e BR ativas, quando o card renderiza, então exibe veredito, economia em R$ e economia em %.
 
-**CA-02** — Dado o iPhone 17 Pro Max do seed (US$ 1.399 / R$ 11.499), com US$ 600 em gift card Apple a 18% de economia efetiva, cashback 4%, sales tax 7%, IOF 3,38%, câmbio 5,62, e cesta do responsável em US$ 2.000 de líquido, então o desembarcado é R$ 9.826 e a economia é R$ 1.673 (14,5%), com veredito `COMPRAR_EUA`.
+**CA-02** — Dado o iPhone Pro Max do seed (US$ 1.399 / R$ 11.499) com o gift card `gc-apple-01` do seed (saldo US$ 300, `effective_savings_pct` 18,40), cashback 4%, sales tax 7%, IOF 3,38%, spread 0, câmbio 5,62, e a cesta do Pedro composta por esse item mais o Apple Watch Ultra (US$ 799), então:
 
-**CA-03** — Dado o mesmo item com `customs_quota_usd_per_person` alto o bastante para não gerar excedente, então o desembarcado é R$ 7.861 e a economia é R$ 3.638 (31,6%).
+| | valor |
+|---|---:|
+| líquido iPhone | US$ 1.393,85 |
+| líquido Watch | US$ 820,73 |
+| cesta do Pedro | US$ 2.214,58 |
+| excedente de cota | US$ 1.214,58 |
+| imposto do iPhone | US$ 382,23 |
+| desembarcado | **R$ 10.318,95** |
+| economia | **R$ 1.180,05 (10,26%)** |
+| veredito | `COMPRAR_EUA` |
+
+**CA-03** — Dado o mesmo item com `customs_quota_usd_per_person` alto o bastante para não gerar excedente, então o desembarcado é R$ 8.098,21 e a economia é R$ 3.400,79 (29,57%). A diferença entre CA-02 e CA-03 — R$ 2.220,74 num único item — é a razão de a cota estar dentro do veredito.
 
 **CA-04** — Dado um item sem cotação de um dos mercados, então o veredito é `DADOS_INSUFICIENTES` e a tela nomeia qual cotação falta.
 
-**CA-05** — Dado um participante com US$ 2.400 em itens e cota de US$ 1.000, então cada item recebe imposto proporcional ao seu share do excedente, e a soma dos impostos dos itens é igual a US$ 700.
+**CA-05** — Dado um participante com US$ 2.400 em itens e cota de US$ 1.000, então cada item recebe imposto proporcional ao seu share do excedente, e a soma dos impostos dos itens é **exatamente** US$ 700,00, com o resíduo de arredondamento absorvido pelo item de maior share (RN-07b).
 
 **CA-06** — Dado um item único de US$ 1.500 pertencente a um participante, então ele gera excedente mesmo que outro participante tenha folga, e aparece a sugestão de rebalanceamento sem realocação automática.
 
