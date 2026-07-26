@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Plane, ShieldAlert, Sparkles, DollarSign, Plus, ChevronDown, Building2, RefreshCw } from 'lucide-react';
+import { Plane, ShieldAlert, Sparkles, DollarSign, Plus, ChevronDown, Building2, RefreshCw, Users, LogOut } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
+import { useAuth } from '../context/AuthContext';
 import { TripModal } from './modals/TripModal';
+import { TeamModal } from './modals/TeamModal';
 
 interface HeaderProps {
   onOpenAudit: () => void;
@@ -24,10 +26,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
     exchangeRateDate
   } = useTrip();
 
+  const { profile, signOut } = useAuth();
+
   const [isTripModalOpen, setIsTripModalOpen] = useState(false);
   const [isTripMenuOpen, setIsTripMenuOpen] = useState(false);
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [tempRate, setTempRate] = useState(exchangeRate.toString());
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   const criticalCount = auditFindings.filter(f => f.severity === 'critical' && !f.resolved).length;
   const warningCount = auditFindings.filter(f => f.severity === 'warning' && !f.resolved).length;
@@ -194,6 +200,45 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
               <Sparkles className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Copiloto IA</span>
             </button>
+
+            {/* Team Button */}
+            <button
+              onClick={() => setIsTeamModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 text-slate-200 hover:bg-slate-700 text-xs font-semibold border border-slate-700 transition"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Equipe</span>
+            </button>
+
+            {/* Account Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 text-white text-xs font-bold flex items-center justify-center shadow-sm"
+                title={profile?.full_name}
+              >
+                {profile?.full_name ? profile.full_name[0].toUpperCase() : '?'}
+              </button>
+
+              {isAccountMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-3 py-2 text-xs">
+                    <div className="font-semibold text-white truncate">{profile?.full_name}</div>
+                    <div className="text-slate-400 truncate">{profile?.email}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsAccountMenuOpen(false);
+                      signOut();
+                    }}
+                    className="w-full px-3 py-2 rounded-lg text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition flex items-center gap-1.5"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sair
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -204,6 +249,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
         onClose={() => setIsTripModalOpen(false)}
         onSave={tripData => createTrip(tripData)}
         tenantId={activeTenant.id}
+      />
+
+      {/* Team Modal */}
+      <TeamModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
       />
     </>
   );
