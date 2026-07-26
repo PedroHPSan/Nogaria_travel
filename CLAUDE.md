@@ -56,6 +56,14 @@ Deliberate deviations from the TS types, worth knowing before writing queries or
 
 **Still not wired:** `TripContext.tsx` (trips/participants/flights/accommodations/expenses/etc.) remains 100% localStorage, deliberately out of scope for this pass — swapping its `useState`/`localStorage` pairs for `supabase-js` calls against the tables above hasn't been started. Logging out clears both the Supabase session and every `localStorage` key under `TripContext.tsx`'s `STORAGE_KEY` prefix, but nothing in `TripContext.tsx` itself talks to Supabase yet.
 
+### Deployment: Vercel, connected to this repo's `main` branch
+
+Vercel project `nogaria-travel` (team `pedrohpsans-projects`) auto-deploys on push to `main`. Production URL is **`https://nogaria-travel.vercel.app`** — treat this as the stable canonical URL (not the custom domain, see below). The project's env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) are set directly in the Vercel dashboard (Project Settings → Environment Variables), not derived from anything in this repo — keep them in sync with `.env` by hand if the Supabase project ever changes.
+
+The custom domain **`nogaria.store`** (registered via Locaweb) is attached to the Vercel project but currently broken (DNS/registrar-side issue, tracked as a support ticket with Locaweb — not a Vercel or app-code problem). Once fixed, it should become the primary URL; until then, use the `.vercel.app` one everywhere (including Supabase's Auth URL Configuration, below).
+
+**Supabase Auth ↔ Vercel wiring:** the Supabase dashboard's Auth → URL Configuration (`https://supabase.com/dashboard/project/bkrqhividgljticgjrem/auth/url-configuration`) controls where email confirmation links, magic links, and OAuth redirects land — it is **not** derived from anything in code or `vercel.json`, so it goes stale silently if the deployment URL changes. Currently set to Site URL `https://nogaria-travel.vercel.app`, with `https://nogaria-travel.vercel.app/**`, `https://nogaria-travel-git-main-pedrohpsans-projects.vercel.app/**`, `https://nogaria.store/**`, and `http://localhost:5173/**` (for local dev — Vite's default port; the Supabase project's default Site URL was originally `localhost:3000`, which silently broke local magic-link/OAuth testing until this was added) all in the redirect allow-list. Update this dashboard setting by hand whenever the canonical URL changes (e.g., once `nogaria.store` is fixed).
+
 ### Services (`src/services/`) — pure functions, two different timings
 
 - **`auditEngine.ts`** — `runFullTripAudit()` derives `AuditFinding[]` from the whole trip. Called inside a `useMemo` in `TripContext`, so findings recompute on every data change; `rerunAudit()` is intentionally a no-op. Only the *resolved* flags are persisted (as an ID array in `resolvedAuditIds`), never the findings themselves. The unresolved count feeds the Audit tab badge in `App.tsx`.
