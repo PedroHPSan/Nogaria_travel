@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { TripProvider, useTrip } from './context/TripContext';
+import { AuthProvider } from './context/AuthContext';
+import { AuthGate } from './features/auth/AuthGate';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
 import type { NavTab } from './components/Navigation';
@@ -88,9 +90,13 @@ function MainAppContent() {
 
 export function App() {
   return (
-    <TripProvider>
-      <MainAppContent />
-    </TripProvider>
+    <AuthProvider>
+      <AuthGate>
+        <TripProvider>
+          <MainAppContent />
+        </TripProvider>
+      </AuthGate>
+    </AuthProvider>
   );
 }
 

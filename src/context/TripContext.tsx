@@ -37,6 +37,7 @@ import {
 import { runFullTripAudit } from '../services/auditEngine';
 import { calculateGiftCardNetCost } from '../services/giftCardCalculator';
 import { formatCurrencyValue, convertCurrency } from '../services/exchangeRateService';
+import { useAuth } from './AuthContext';
 
 export interface DocumentFile {
   id: string;
@@ -157,14 +158,6 @@ interface TripContextType {
 const TripContext = createContext<TripContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'ANTIGRAVITY_TRAVEL_PLATFORM_V1';
-
-const INITIAL_TENANT: Tenant = {
-  id: 'tenant-family-palheta',
-  name: 'Família Palheta (SaaS Enterprise)',
-  slug: 'familia-palheta',
-  plan: 'pro',
-  created_at: new Date().toISOString()
-};
 
 const INITIAL_DOCUMENTS: DocumentFile[] = [
   {
@@ -313,8 +306,12 @@ const INITIAL_EXPENSES: Expense[] = [
 ];
 
 export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tenants] = useState<Tenant[]>([INITIAL_TENANT]);
-  const [activeTenant] = useState<Tenant>(INITIAL_TENANT);
+  const { tenantMemberships, activeTenant: authActiveTenant } = useAuth();
+  const tenants = tenantMemberships.map(m => m.tenant);
+  const activeTenant = authActiveTenant;
+  if (!activeTenant) {
+    throw new Error('TripProvider rendered without an active tenant — it must be wrapped by AuthGate');
+  }
 
   // Currency & Live Exchange Rate State
   const [currency, setCurrency] = useState<Currency>(() => {
