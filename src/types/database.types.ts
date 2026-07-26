@@ -1,3 +1,5 @@
+import type { PurchaseDecision, PurchaseVerdict } from './purchase.types';
+
 export type UserRole = 'admin' | 'organizer' | 'participant' | 'viewer' | 'developer';
 
 export type Currency = 'USD' | 'BRL';
@@ -49,6 +51,7 @@ export interface Participant {
   height_cm?: number;
   notes?: string;
   budget_limit_usd: number;
+  quota_eligible?: boolean;
   avatar_color: string;
 }
 
@@ -186,6 +189,22 @@ export interface PurchaseItem {
   status: 'planned' | 'bought' | 'online_ordered' | 'delivered_hotel' | 'cancelled';
   delivery_location?: string;
   link_url?: string;
+  purchase_channel?: 'in_store' | 'online_us' | 'online_br';
+  us_store_state?: string;
+  freight_usd?: number;
+  coupon_pct?: number;
+  coupon_amount_usd?: number;
+  cashback_pct?: number;
+  gift_card_id?: string;
+  br_cashback_pct?: number;
+  warranty_risk?: 'none' | 'low' | 'medium' | 'high';
+  expected_weight_kg?: number;
+  quota_owner_id?: string;
+  decision_id?: string;
+  verdict_override?: PurchaseVerdict;
+  override_reason?: string;
+  actual_paid_usd?: number;
+  decision_snapshot?: PurchaseDecision;
   notes?: string;
 }
 
@@ -302,5 +321,45 @@ export interface DocumentFile {
   uploaded_at: string;
   file_size?: string;
   notes?: string;
+}
+
+export type Market = 'US' | 'BR';
+
+export interface PriceQuote {
+  id: string;
+  trip_id: string;
+  purchase_item_id: string;
+  market: Market;
+  store_name: string;
+  url?: string;
+  price: number;
+  currency: Currency;
+  price_kind: 'list' | 'promo' | 'used' | 'refurbished';
+  includes_tax: boolean;
+  observed_at: string;
+  source: 'manual' | 'ai_search';
+  source_note?: string;
+  confidence?: 'high' | 'medium' | 'low';
+  validated_by?: string;
+  validated_at?: string;
+  is_active: boolean;
+  superseded_by_id?: string;
+  created_at: string;
+}
+
+export interface PurchaseAssumptions {
+  trip_id: string;
+  usd_brl_rate: number;
+  rate_source: string;
+  rate_date: string;
+  default_sales_tax_pct: number;
+  sales_tax_pct_by_state?: Record<string, number>;
+  card_iof_pct: number;
+  card_spread_pct: number;
+  customs_quota_usd_per_person: number;
+  customs_excess_tax_pct: number;
+  safety_margin_pct: number;
+  legal_reference?: string;
+  updated_at: string;
 }
 
