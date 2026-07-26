@@ -1,0 +1,335 @@
+import React, { useState, useEffect } from 'react';
+import { BaseModal } from './BaseModal';
+import type { Participant } from '../../types/database.types';
+
+interface ParticipantModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (participant: any) => void;
+  initialData?: Participant | null;
+  existingParticipants: Participant[];
+  tripId: string;
+}
+
+const COLOR_OPTIONS = [
+  'bg-emerald-500',
+  'bg-purple-500',
+  'bg-blue-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-indigo-500',
+  'bg-teal-500',
+  'bg-pink-500'
+];
+
+export const ParticipantModal: React.FC<ParticipantModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  existingParticipants,
+  tripId
+}) => {
+  const [fullName, setFullName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [age, setAge] = useState<number>(30);
+  const [isMinor, setIsMinor] = useState(false);
+  const [relationship, setRelationship] = useState('');
+  const [responsibleId, setResponsibleId] = useState('');
+  const [passportNumber, setPassportNumber] = useState('');
+  const [passportExpiry, setPassportExpiry] = useState('');
+  const [visaStatus, setVisaStatus] = useState<'valid' | 'pending' | 'exempt' | 'expired'>('valid');
+  const [heightCm, setHeightCm] = useState<number | ''>('');
+  const [dietary, setDietary] = useState('');
+  const [notes, setNotes] = useState('');
+  const [budgetLimit, setBudgetLimit] = useState<number>(2000);
+  const [avatarColor, setAvatarColor] = useState('bg-blue-500');
+
+  useEffect(() => {
+    if (initialData) {
+      setFullName(initialData.full_name || '');
+      setNickname(initialData.nickname || '');
+      setBirthDate(initialData.birth_date || '');
+      setAge(initialData.age || 30);
+      setIsMinor(initialData.is_minor || false);
+      setRelationship(initialData.relationship || '');
+      setResponsibleId(initialData.responsible_participant_id || '');
+      setPassportNumber(initialData.passport_number || '');
+      setPassportExpiry(initialData.passport_expiry || '');
+      setVisaStatus(initialData.visa_status || 'valid');
+      setHeightCm(initialData.height_cm ?? '');
+      setDietary(initialData.dietary_restrictions ? initialData.dietary_restrictions.join(', ') : '');
+      setNotes(initialData.notes || '');
+      setBudgetLimit(initialData.budget_limit_usd || 2000);
+      setAvatarColor(initialData.avatar_color || 'bg-blue-500');
+    } else {
+      setFullName('');
+      setNickname('');
+      setBirthDate('');
+      setAge(30);
+      setIsMinor(false);
+      setRelationship('');
+      setResponsibleId('');
+      setPassportNumber('');
+      setPassportExpiry('');
+      setVisaStatus('valid');
+      setHeightCm('');
+      setDietary('');
+      setNotes('');
+      setBudgetLimit(2000);
+      setAvatarColor('bg-blue-500');
+    }
+  }, [initialData, isOpen]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim()) return;
+
+    const dietaryArray = dietary
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    onSave({
+      trip_id: tripId,
+      full_name: fullName.trim(),
+      nickname: nickname.trim() || undefined,
+      birth_date: birthDate || '1990-01-01',
+      age: Number(age) || 0,
+      is_minor: isMinor || Number(age) < 18,
+      relationship: relationship.trim() || 'Membro do Grupo',
+      responsible_participant_id: isMinor ? responsibleId || undefined : undefined,
+      passport_number: passportNumber.trim() || undefined,
+      passport_expiry: passportExpiry || undefined,
+      visa_status: visaStatus,
+      height_cm: heightCm !== '' ? Number(heightCm) : undefined,
+      dietary_restrictions: dietaryArray,
+      notes: notes.trim() || undefined,
+      budget_limit_usd: Number(budgetLimit) || 0,
+      avatar_color: avatarColor
+    });
+    onClose();
+  };
+
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={initialData ? 'Editar Participante' : 'Cadastrar Novo Participante'}
+      subtitle="Defina dados pessoais, passaporte, visto, restrições por idade/altura e teto de orçamento."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Nome Completo *</label>
+            <input
+              type="text"
+              required
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+              placeholder="Ex: Bárbara Palheta"
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Apelido / Nome Curto</label>
+            <input
+              type="text"
+              value={nickname}
+              onChange={e => setNickname(e.target.value)}
+              placeholder="Ex: Bárbara"
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Idade (Anos) *</label>
+            <input
+              type="number"
+              required
+              min="0"
+              max="120"
+              value={age}
+              onChange={e => {
+                const val = Number(e.target.value);
+                setAge(val);
+                if (val < 18) setIsMinor(true);
+              }}
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Data Nascimento</label>
+            <input
+              type="date"
+              value={birthDate}
+              onChange={e => setBirthDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Altura (cm)</label>
+            <input
+              type="number"
+              placeholder="Ex: 100 para 4 anos"
+              value={heightCm}
+              onChange={e => setHeightCm(e.target.value === '' ? '' : Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Relação no Grupo</label>
+            <input
+              type="text"
+              value={relationship}
+              onChange={e => setRelationship(e.target.value)}
+              placeholder="Ex: Mãe, Pai, Filha de Bárbara, etc."
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Orçamento Limite (US$)</label>
+            <input
+              type="number"
+              min="0"
+              step="50"
+              value={budgetLimit}
+              onChange={e => setBudgetLimit(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold text-emerald-400"
+            />
+          </div>
+        </div>
+
+        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer text-slate-200 font-medium">
+            <input
+              type="checkbox"
+              checked={isMinor}
+              onChange={e => setIsMinor(e.target.checked)}
+              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
+            />
+            É Menor de Idade (Requer controle legal e de atrações)
+          </label>
+
+          {isMinor && (
+            <select
+              value={responsibleId}
+              onChange={e => setResponsibleId(e.target.value)}
+              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+            >
+              <option value="">-- Selecione o Responsável Legal --</option>
+              {existingParticipants
+                .filter(p => !p.is_minor && p.id !== initialData?.id)
+                .map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.full_name}
+                  </option>
+                ))}
+            </select>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Número do Passaporte</label>
+            <input
+              type="text"
+              value={passportNumber}
+              onChange={e => setPassportNumber(e.target.value)}
+              placeholder="Ex: BR984712"
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 uppercase"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Validade do Passaporte</label>
+            <input
+              type="date"
+              value={passportExpiry}
+              onChange={e => setPassportExpiry(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Status do Visto EUA</label>
+            <select
+              value={visaStatus}
+              onChange={e => setVisaStatus(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="valid">Visto Válido (Aprovado)</option>
+              <option value="pending">Pendente Emissão / Entrevista</option>
+              <option value="exempt">Isento (Passaporte Europeu / ESTA)</option>
+              <option value="expired">Vencido</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-slate-300 font-semibold mb-1">Restrições Alimentares (separadas por vírgula)</label>
+          <input
+            type="text"
+            value={dietary}
+            onChange={e => setDietary(e.target.value)}
+            placeholder="Ex: Sem lactose, Alergia a amendoim"
+            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-slate-300 font-semibold mb-1">Observações & Regras do Participante</label>
+          <textarea
+            rows={2}
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Ex: Exige carrinho infantil e pausa de descanso. Preferência por atrações calmas."
+            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-slate-300 font-semibold mb-1">Cor da Badge de Avatar</label>
+          <div className="flex items-center gap-2 mt-1">
+            {COLOR_OPTIONS.map(c => (
+              <button
+                type="button"
+                key={c}
+                onClick={() => setAvatarColor(c)}
+                className={`w-6 h-6 rounded-full ${c} border-2 ${
+                  avatarColor === c ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60'
+                } transition`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-600/30"
+          >
+            Salvar Participante
+          </button>
+        </div>
+      </form>
+    </BaseModal>
+  );
+};

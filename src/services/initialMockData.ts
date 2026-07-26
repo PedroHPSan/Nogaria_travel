@@ -1,0 +1,532 @@
+import type {
+  Trip,
+  Participant,
+  Flight,
+  Accommodation,
+  TransportReservation,
+  ItineraryItem,
+  GiftCard,
+  PurchaseItem,
+  Task,
+  Decision,
+  AiProviderConfig,
+  AiUsageLog
+} from '../types/database.types';
+
+export const INITIAL_TRIP: Trip = {
+  id: 'trip-miami-orlando-2026',
+  tenant_id: 'tenant-family-palheta',
+  title: 'Miami e Orlando 2026',
+  destination_main: 'Orlando, Miami e Fort Lauderdale, EUA',
+  start_date: '2026-09-01',
+  end_date: '2026-09-20',
+  currency_base: 'USD',
+  status: 'planning',
+  created_at: '2026-07-25T00:00:00Z',
+  updated_at: '2026-07-25T00:00:00Z'
+};
+
+export const INITIAL_PARTICIPANTS: Participant[] = [
+  {
+    id: 'p-barbara',
+    trip_id: 'trip-miami-orlando-2026',
+    full_name: 'Bárbara Palheta',
+    nickname: 'Bárbara',
+    birth_date: '1988-04-12',
+    age: 38,
+    is_minor: false,
+    relationship: 'Mãe / Organizadora Principal',
+    passport_number: 'BR984712',
+    passport_expiry: '2030-05-15',
+    visa_status: 'valid',
+    dietary_restrictions: [],
+    notes: 'Responsável legal por Débora. Co-organizadora financeira do grupo.',
+    budget_limit_usd: 3500,
+    avatar_color: 'bg-emerald-500'
+  },
+  {
+    id: 'p-debora',
+    trip_id: 'trip-miami-orlando-2026',
+    full_name: 'Débora Palheta',
+    nickname: 'Débora',
+    birth_date: '2014-08-20',
+    age: 12,
+    is_minor: true,
+    relationship: 'Filha de Bárbara',
+    responsible_participant_id: 'p-barbara',
+    passport_number: 'BR554890',
+    passport_expiry: '2029-11-10',
+    visa_status: 'valid',
+    dietary_restrictions: ['Sem lactose'],
+    notes: 'Não pode entrar em áreas de cassino/restritas para maiores de 18/21 anos. Ama cartas Pokémon.',
+    budget_limit_usd: 600,
+    avatar_color: 'bg-purple-500'
+  },
+  {
+    id: 'p-pedro',
+    trip_id: 'trip-miami-orlando-2026',
+    full_name: 'Pedro Palheta',
+    nickname: 'Pedro',
+    birth_date: '1992-03-05',
+    age: 34,
+    is_minor: false,
+    relationship: 'Desenvolvedor / Pai de Gabriela',
+    passport_number: 'BR123456',
+    passport_expiry: '2031-01-20',
+    visa_status: 'valid',
+    notes: 'Orçamento próprio de ~US$ 2.000 (foco em eletrônicos Apple e compras familiares).',
+    budget_limit_usd: 2000,
+    avatar_color: 'bg-blue-500'
+  },
+  {
+    id: 'p-gabriela',
+    trip_id: 'trip-miami-orlando-2026',
+    full_name: 'Gabriela Palheta',
+    nickname: 'Gabi',
+    birth_date: '2022-06-10',
+    age: 4,
+    is_minor: true,
+    relationship: 'Filha de Pedro',
+    responsible_participant_id: 'p-pedro',
+    passport_number: 'BR778123',
+    passport_expiry: '2027-08-01',
+    visa_status: 'valid',
+    height_cm: 100,
+    notes: 'Exige controle de altura mínima em atrações (>102cm/112cm/130cm), intervalos de descanso e carrinho infantil.',
+    budget_limit_usd: 400,
+    avatar_color: 'bg-amber-500'
+  }
+];
+
+export const INITIAL_FLIGHTS: Flight[] = [
+  {
+    id: 'f-pedro-gabi-01',
+    trip_id: 'trip-miami-orlando-2026',
+    airline: 'Azul Fidelidade',
+    flight_number: 'AD 8702',
+    origin_airport: 'VCP (Campinas/SP)',
+    destination_airport: 'MCO (Orlando)',
+    departure_time: '2026-09-01T09:30:00',
+    arrival_time: '2026-09-01T17:45:00',
+    terminal: 'T1',
+    booking_code: 'PDRGAB26',
+    class_type: 'economy',
+    passenger_ids: ['p-pedro', 'p-gabriela'],
+    seats: { 'p-pedro': '14A', 'p-gabriela': '14B' },
+    price_cash: 0,
+    price_points: 120000,
+    taxes_amount: 145.50,
+    currency: 'USD',
+    status: 'confirmed',
+    notes: 'Emitido com pontos Azul Fidelidade (Pedro + Gabi).'
+  },
+  {
+    id: 'f-barbara-debora-01',
+    trip_id: 'trip-miami-orlando-2026',
+    airline: 'LATAM Pass',
+    flight_number: 'LA 8180',
+    origin_airport: 'GRU (São Paulo)',
+    destination_airport: 'MIA (Miami)',
+    departure_time: '2026-09-01T23:10:00',
+    arrival_time: '2026-09-02T07:05:00',
+    terminal: 'T3',
+    booking_code: 'BARBDEB26',
+    class_type: 'economy',
+    passenger_ids: ['p-barbara', 'p-debora'],
+    seats: { 'p-barbara': '22C', 'p-debora': '22D' },
+    price_cash: 850.00,
+    taxes_amount: 98.00,
+    currency: 'USD',
+    status: 'confirmed',
+    notes: 'Chegada em Miami pela manhã do dia 02/09.'
+  },
+  {
+    id: 'f-return-group',
+    trip_id: 'trip-miami-orlando-2026',
+    airline: 'Azul / LATAM',
+    flight_number: 'AD 8703',
+    origin_airport: 'FLL (Fort Lauderdale)',
+    destination_airport: 'VCP / GRU',
+    departure_time: '2026-09-19T21:30:00',
+    arrival_time: '2026-09-20T06:15:00',
+    terminal: 'T3',
+    booking_code: 'RETFAMILY26',
+    class_type: 'economy',
+    passenger_ids: ['p-barbara', 'p-debora', 'p-pedro', 'p-gabriela'],
+    price_cash: 1400.00,
+    currency: 'USD',
+    status: 'confirmed',
+    notes: 'Voo noturno de retorno após devolução do carro em FLL.'
+  }
+];
+
+export const INITIAL_ACCOMMODATIONS: Accommodation[] = [
+  {
+    id: 'acc-disney-allstar',
+    trip_id: 'trip-miami-orlando-2026',
+    name: 'Disney All-Star Movies Resort',
+    chain: 'Disney Parks & Resorts',
+    address: '1901 West Buena Vista Drive, Lake Buena Vista, FL',
+    city: 'Orlando',
+    check_in: '2026-09-01T15:00:00',
+    check_out: '2026-09-12T11:00:00',
+    confirmation_code: 'DSNY-994821',
+    guest_ids: ['p-barbara', 'p-debora', 'p-pedro', 'p-gabriela'],
+    room_type: 'Quarto Padrão Temático',
+    price_total: 1980.00,
+    resort_fee_per_night: 0,
+    parking_fee_per_night: 0,
+    is_breakfast_included: false,
+    currency: 'USD',
+    status: 'confirmed',
+    distance_to_airport_km: 32
+  },
+  {
+    id: 'acc-fourpoints-fll',
+    trip_id: 'trip-miami-orlando-2026',
+    name: 'Four Points by Sheraton Fort Lauderdale Airport',
+    chain: 'Marriott Bonvoy',
+    address: '1800 S Federal Hwy, Fort Lauderdale, FL',
+    city: 'Fort Lauderdale',
+    check_in: '2026-09-18T15:00:00',
+    check_out: '2026-09-19T12:00:00',
+    confirmation_code: 'MARR-883719',
+    guest_ids: ['p-barbara', 'p-debora', 'p-pedro', 'p-gabriela'],
+    room_type: 'Suíte Familiar 2 Camas Queen',
+    price_total: 210.00,
+    resort_fee_per_night: 0,
+    parking_fee_per_night: 15.00,
+    is_breakfast_included: true,
+    currency: 'USD',
+    status: 'confirmed',
+    notes: 'Reserva para a noite final da viagem antes do embarque.'
+  },
+  {
+    id: 'acc-celebration-suites-replaced',
+    trip_id: 'trip-miami-orlando-2026',
+    name: 'Celebration Suites Kissimmee',
+    chain: 'Independent',
+    address: '5820 W Irlo Bronson Memorial Hwy, Kissimmee, FL',
+    city: 'Kissimmee',
+    check_in: '2026-09-18T15:00:00',
+    check_out: '2026-09-19T11:00:00',
+    guest_ids: ['p-barbara', 'p-debora', 'p-pedro', 'p-gabriela'],
+    price_total: 140.00,
+    is_breakfast_included: false,
+    currency: 'USD',
+    status: 'replaced',
+    replacement_reason: 'Substituído pelo Four Points para garantir melhor qualidade na última noite e proximidade do aeroporto FLL.',
+    linked_decision_id: 'dec-hotel-replacement-01'
+  }
+];
+
+export const INITIAL_TRANSPORTS: TransportReservation[] = [
+  {
+    id: 'tr-rental-car-hertz',
+    trip_id: 'trip-miami-orlando-2026',
+    type: 'rental_car',
+    provider_company: 'Hertz / Alamo Rent A Car',
+    category_or_model: 'SUV Midsize (Nissan Rogue ou similar)',
+    primary_driver_id: 'p-pedro',
+    additional_driver_ids: ['p-barbara'],
+    pickup_location: 'MCO Airport (Orlando)',
+    pickup_time: '2026-09-01T18:30:00',
+    dropoff_location: 'FLL Airport (Fort Lauderdale)',
+    dropoff_time: '2026-09-19T17:30:00',
+    confirmation_code: 'HTZ-7738210',
+    price_total: 820.00,
+    currency: 'USD',
+    status: 'reserved',
+    requires_followup_transport: true,
+    notes: 'Atenção ao horário limite de devolução: 19/09 às 17h30. Necessário agendar Uber até o Four Points / Aeroporto após entrega.'
+  }
+];
+
+export const INITIAL_GIFT_CARDS: GiftCard[] = [
+  {
+    id: 'gc-disney-01',
+    trip_id: 'trip-miami-orlando-2026',
+    store_brand: 'Disney Store / Parks',
+    nominal_value: 500.00,
+    paid_amount: 425.00,
+    cashback_pct: 5.0,
+    cashback_amount: 21.25,
+    net_cost: 403.75,
+    effective_savings: 96.25,
+    effective_savings_pct: 19.25,
+    currency: 'USD',
+    purchased_by_id: 'p-barbara',
+    beneficiary_id: 'p-barbara',
+    card_code_masked: '•••• •••• •••• 9942',
+    current_balance: 500.00,
+    status: 'active',
+    purchase_date: '2026-06-15',
+    notes: 'Gift card comprado com 15% de desconto promocional + 5% cashback.'
+  },
+  {
+    id: 'gc-apple-01',
+    trip_id: 'trip-miami-orlando-2026',
+    store_brand: 'Apple Store',
+    nominal_value: 300.00,
+    paid_amount: 255.00,
+    cashback_pct: 4.0,
+    cashback_amount: 10.20,
+    net_cost: 244.80,
+    effective_savings: 55.20,
+    effective_savings_pct: 18.40,
+    currency: 'USD',
+    purchased_by_id: 'p-pedro',
+    beneficiary_id: 'p-pedro',
+    card_code_masked: '•••• •••• •••• 4410',
+    current_balance: 300.00,
+    status: 'active',
+    purchase_date: '2026-07-01',
+    notes: 'Destinado ao abate do valor do iPhone Pro Max / Apple Watch de Pedro.'
+  },
+  {
+    id: 'gc-adidas-01',
+    trip_id: 'trip-miami-orlando-2026',
+    store_brand: 'Adidas Outlet',
+    nominal_value: 100.00,
+    paid_amount: 70.00,
+    cashback_pct: 6.0,
+    cashback_amount: 4.20,
+    net_cost: 65.80,
+    effective_savings: 34.20,
+    effective_savings_pct: 34.20,
+    currency: 'USD',
+    purchased_by_id: 'p-barbara',
+    card_code_masked: '•••• •••• •••• 1120',
+    current_balance: 100.00,
+    status: 'active',
+    purchase_date: '2026-07-10',
+    notes: 'Excelente desconto obtido no Raise/CardCash.'
+  }
+];
+
+export const INITIAL_PURCHASES: PurchaseItem[] = [
+  {
+    id: 'pur-iphone-16',
+    trip_id: 'trip-miami-orlando-2026',
+    product_name: 'iPhone Pro Max 512GB (Desbloqueado)',
+    category: 'electronics',
+    brand: 'Apple',
+    store_name: 'Apple Store Millenia Orlando',
+    target_participant_id: 'p-pedro',
+    beneficiary_id: 'p-pedro',
+    priority: 'high',
+    quantity: 1,
+    target_price_usd: 1399.00,
+    price_found_usd: 1399.00,
+    brl_equivalent_price: 11499.00,
+    estimated_savings_pct: 32.5,
+    gift_card_eligible: true,
+    status: 'planned',
+    notes: 'Compra sujeita a desconto com Gift Cards Apple e comparação com modelo usado de outro participante.'
+  },
+  {
+    id: 'pur-apple-watch-ultra',
+    trip_id: 'trip-miami-orlando-2026',
+    product_name: 'Apple Watch Ultra (Caixa Grande)',
+    category: 'electronics',
+    brand: 'Apple',
+    store_name: 'Apple Store / Best Buy',
+    target_participant_id: 'p-pedro',
+    beneficiary_id: 'p-pedro',
+    priority: 'medium',
+    quantity: 1,
+    target_price_usd: 799.00,
+    brl_equivalent_price: 6800.00,
+    estimated_savings_pct: 35.0,
+    gift_card_eligible: true,
+    status: 'planned'
+  },
+  {
+    id: 'pur-pokemon-cards',
+    trip_id: 'trip-miami-orlando-2026',
+    product_name: 'Box de Cartas Pokémon TCG (Elite Trainer Box)',
+    category: 'collectibles',
+    brand: 'Pokémon',
+    store_name: 'Target / Walmart',
+    target_participant_id: 'p-debora',
+    beneficiary_id: 'p-debora',
+    priority: 'high',
+    quantity: 2,
+    target_price_usd: 49.99,
+    gift_card_eligible: false,
+    status: 'planned'
+  },
+  {
+    id: 'pur-carters-kids',
+    trip_id: 'trip-miami-orlando-2026',
+    product_name: 'Lote de Roupas Infantis Verão/Outono',
+    category: 'kids',
+    brand: "Carter's",
+    store_name: "Carter's Orlando Premium Outlets",
+    target_participant_id: 'p-barbara',
+    beneficiary_id: 'p-gabriela',
+    priority: 'high',
+    quantity: 10,
+    target_price_usd: 120.00,
+    gift_card_eligible: true,
+    status: 'planned'
+  }
+];
+
+export const INITIAL_ITINERARY: ItineraryItem[] = [
+  {
+    id: 'iti-01',
+    trip_id: 'trip-miami-orlando-2026',
+    date: '2026-09-01',
+    time_start: '18:30',
+    time_end: '20:00',
+    city: 'Orlando',
+    title: 'Chegada MCO e Retirada do SUV na Hertz',
+    category: 'transit',
+    participant_ids: ['p-pedro', 'p-gabriela'],
+    estimated_cost: 0,
+    currency: 'USD',
+    status: 'confirmed',
+    child_friendly: true,
+    notes: 'Encontro com o grupo após voos.'
+  },
+  {
+    id: 'iti-02',
+    trip_id: 'trip-miami-orlando-2026',
+    date: '2026-09-03',
+    time_start: '09:00',
+    time_end: '18:00',
+    city: 'Orlando',
+    title: 'Magic Kingdom (Disney World)',
+    category: 'park',
+    participant_ids: ['p-barbara', 'p-debora', 'p-pedro', 'p-gabriela'],
+    estimated_cost: 620.00,
+    currency: 'USD',
+    status: 'planned',
+    min_height_cm: 100,
+    child_friendly: true,
+    notes: 'Priorizar atrações do Fantasyland para Gabi (4a) e Genie+ Lightning Lane para Dumbo / Peter Pan.'
+  },
+  {
+    id: 'iti-03',
+    trip_id: 'trip-miami-orlando-2026',
+    date: '2026-09-05',
+    time_start: '09:00',
+    time_end: '19:00',
+    city: 'Orlando',
+    title: 'Universal Islands of Adventure',
+    category: 'park',
+    participant_ids: ['p-barbara', 'p-debora', 'p-pedro', 'p-gabriela'],
+    estimated_cost: 580.00,
+    currency: 'USD',
+    status: 'planned',
+    min_height_cm: 130,
+    child_friendly: true,
+    notes: 'Gabi (100cm) não entra na VelociCoaster (130cm). Utilizar Child Swap / Rider Switch.'
+  },
+  {
+    id: 'iti-04',
+    trip_id: 'trip-miami-orlando-2026',
+    date: '2026-09-19',
+    time_start: '17:30',
+    time_end: '18:15',
+    city: 'Fort Lauderdale',
+    title: 'Devolução do Veículo Alugado na Locadora FLL',
+    category: 'transit',
+    participant_ids: ['p-pedro', 'p-barbara', 'p-debora', 'p-gabriela'],
+    estimated_cost: 0,
+    currency: 'USD',
+    status: 'confirmed',
+    child_friendly: true,
+    notes: 'Horário rígido de devolução: 17h30. Abastecer tanque antes da entrega.'
+  }
+];
+
+export const INITIAL_TASKS: Task[] = [
+  {
+    id: 'task-01',
+    trip_id: 'trip-miami-orlando-2026',
+    title: 'Confirmar meio de transporte pós devolução do carro em 19/09 17h30',
+    description: 'Definir se será usado Uber XL corporativo ou transfer privativo para levar bagagens e 4 passageiros.',
+    assigned_to_id: 'p-pedro',
+    due_date: '2026-08-15',
+    priority: 'high',
+    category: 'logistics',
+    status: 'pending',
+    created_at: '2026-07-25T00:00:00Z'
+  },
+  {
+    id: 'task-02',
+    trip_id: 'trip-miami-orlando-2026',
+    title: 'Comprar Gift Cards adicionais Disney com cashback acumulado',
+    description: 'Aproveitar promoções do cartão Inter/Wise para adquirir mais US$ 300 nominais.',
+    assigned_to_id: 'p-barbara',
+    due_date: '2026-08-10',
+    priority: 'medium',
+    category: 'finance',
+    status: 'in_progress',
+    created_at: '2026-07-25T00:00:00Z'
+  }
+];
+
+export const INITIAL_DECISIONS: Decision[] = [
+  {
+    id: 'dec-hotel-replacement-01',
+    trip_id: 'trip-miami-orlando-2026',
+    topic: 'Substituição do hotel da última noite (Celebration Suites -> Four Points FLL)',
+    alternatives_considered: ['Celebration Suites Kissimmee', 'Four Points by Sheraton FLL Airport'],
+    chosen_decision: 'Four Points by Sheraton Fort Lauderdale Airport',
+    reason: 'Elimina o risco de trânsito longo entre Kissimmee e o aeroporto FLL no dia de retorno.',
+    decided_by_id: 'p-barbara',
+    date: '2026-07-20',
+    financial_impact_usd: 70.00,
+    is_active: true
+  }
+];
+
+export const INITIAL_AI_PROVIDERS: AiProviderConfig[] = [
+  {
+    id: 'ai-gemini',
+    provider: 'gemini',
+    model_name: 'gemini-1.5-pro',
+    is_active: true,
+    is_default: true,
+    daily_token_limit: 100000,
+    monthly_budget_usd: 15.00,
+    temperature: 0.2
+  },
+  {
+    id: 'ai-openai',
+    provider: 'openai',
+    model_name: 'gpt-4o-mini',
+    is_active: true,
+    is_default: false,
+    daily_token_limit: 50000,
+    monthly_budget_usd: 10.00,
+    temperature: 0.3
+  },
+  {
+    id: 'ai-anthropic',
+    provider: 'anthropic',
+    model_name: 'claude-3-5-sonnet',
+    is_active: true,
+    is_default: false,
+    daily_token_limit: 30000,
+    monthly_budget_usd: 20.00,
+    temperature: 0.2
+  }
+];
+
+export const INITIAL_AI_LOGS: AiUsageLog[] = [
+  {
+    id: 'log-01',
+    timestamp: '2026-07-25T14:20:00Z',
+    user_name: 'Pedro',
+    function_name: 'Auditoria Autônoma de Conflitos',
+    provider: 'Google Gemini',
+    model: 'gemini-1.5-pro',
+    tokens_input: 1420,
+    tokens_output: 310,
+    estimated_cost_usd: 0.0042
+  }
+];
