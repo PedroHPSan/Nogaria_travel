@@ -39,21 +39,31 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
   const loadTeamData = useCallback(async () => {
     if (!activeTenantId) return;
 
-    const { data: memberData } = await supabase
+    setError(null);
+
+    const { data: memberData, error: memberError } = await supabase
       .from('memberships')
       .select('user_id, role, profiles(full_name, email)')
       .eq('tenant_id', activeTenantId)
       .returns<MemberRow[]>();
-    setMembers(memberData ?? []);
+    if (memberError) {
+      setError('Não foi possível carregar os membros da equipe.');
+    } else {
+      setMembers(memberData ?? []);
+    }
 
     if (isAdmin) {
-      const { data: inviteData } = await supabase
+      const { data: inviteData, error: inviteError } = await supabase
         .from('tenant_invites')
         .select('id, email, role, created_at')
         .eq('tenant_id', activeTenantId)
         .is('accepted_at', null)
         .returns<InviteRow[]>();
-      setInvites(inviteData ?? []);
+      if (inviteError) {
+        setError('Não foi possível carregar os convites pendentes.');
+      } else {
+        setInvites(inviteData ?? []);
+      }
     }
   }, [activeTenantId, isAdmin]);
 
@@ -102,6 +112,12 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Equipe" subtitle="Membros com acesso a esta família/organização.">
       <div className="space-y-5 text-xs">
+        {error && (
+          <div className="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-2">
           <h4 className="text-slate-300 font-semibold">Membros ({members.length})</h4>
           {members.map(m => (
@@ -163,12 +179,6 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
                 ))}
               </select>
             </div>
-
-            {error && (
-              <div className="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
-                {error}
-              </div>
-            )}
 
             <button
               type="submit"

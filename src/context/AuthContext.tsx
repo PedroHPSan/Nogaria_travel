@@ -3,6 +3,10 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabaseClient';
 import type { Profile, Tenant, UserRole } from '../types/database.types';
 
+// Must match TripContext.tsx's STORAGE_KEY. Not imported directly to avoid a
+// circular dependency (TripContext.tsx already imports useAuth from this file).
+const TRIP_STORAGE_KEY = 'ANTIGRAVITY_TRAVEL_PLATFORM_V1';
+
 export interface TenantMembership {
   tenant: Tenant;
   role: UserRole;
@@ -10,6 +14,8 @@ export interface TenantMembership {
 
 interface AuthContextType {
   loading: boolean;
+  userDataLoading: boolean;
+  loadError: string | null;
   session: Session | null;
   profile: Profile | null;
   tenantMemberships: TenantMembership[];
@@ -21,20 +27,21 @@ interface AuthContextType {
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithMagicLink: (email: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: string | null }>;
   createTenant: (name: string) => Promise<{ error: string | null }>;
+  retryLoadUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-async function fetchProfile(userId: string): Promise<Profile | null> {
+async function fetchProfile(userId: string): Promise<{ data: Profile | null; error: string | null }> {
   const { data, error } = await supabase
     .from('profiles')
     .select('id, email, full_name, avatar_url, created_at')
     .eq('id', userId)
     .returns<Profile[]>();
-  if (error || !data || data.length === 0) return null;
-  return data[0];
+  if (error) return { data: null, error: error.message };
+  return { data: data?.[0] ?? null, error: null };
 }
 
 interface MembershipRow {
@@ -42,49 +49,59 @@ interface MembershipRow {
   tenants: Tenant | null;
 }
 
-async function fetchTenantMemberships(userId: string): Promise<TenantMembership[]> {
+async function fetchTenantMemberships(userId: string): Promise<{ data: TenantMembership[]; error: string | null }> {
   const { data, error } = await supabase
     .from('memberships')
     .select('role, tenants(id, name, slug, plan, created_at)')
     .eq('user_id', userId)
     .returns<MembershipRow[]>();
-  if (error || !data) return [];
-  return data
+  if (error) return { data: [], error: error.message };
+  const memberships = (data ?? [])
     .filter((row): row is MembershipRow & { tenants: Tenant } => row.tenants !== null)
     .map(row => ({ tenant: row.tenants, role: row.role }));
+  return { data: memberships, error: null };
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(true);
+  const [userDataLoading, setUserDataLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tenantMemberships, setTenantMemberships] = useState<TenantMembership[]>([]);
   const [activeTenantId, setActiveTenantId] = useState<string | null>(null);
 
   const loadUserData = useCallback(async (userId: string) => {
-    const [profileData, memberships] = await Promise.all([
-      fetchProfile(userId),
-      fetchTenantMemberships(userId)
-    ]);
-    setProfile(profileData);
-    setTenantMemberships(memberships);
-    setActiveTenantId(prev =>
-      prev && memberships.some(m => m.tenant.id === prev) ? prev : (memberships[0]?.tenant.id ?? null)
-    );
+    setUserDataLoading(true);
+    setLoadError(null);
+    try {
+      const [profileResult, membershipsResult] = await Promise.all([
+        fetchProfile(userId),
+        fetchTenantMemberships(userId)
+      ]);
+      const combinedError = profileResult.error ?? membershipsResult.error;
+      if (combinedError) setLoadError(combinedError);
+      setProfile(profileResult.data);
+      setTenantMemberships(membershipsResult.data);
+      setActiveTenantId(prev =>
+        prev && membershipsResult.data.some(m => m.tenant.id === prev)
+          ? prev
+          : (membershipsResult.data[0]?.tenant.id ?? null)
+      );
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Erro ao carregar dados do usuário.');
+    } finally {
+      setUserDataLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     let isMounted = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!isMounted) return;
-      setSession(data.session);
-      if (data.session) {
-        await loadUserData(data.session.user.id);
-      }
-      setLoading(false);
-    });
-
+    // Rely solely on onAuthStateChange: it fires an INITIAL_SESSION event to
+    // every new subscriber on mount (carrying the same session getSession()
+    // would resolve), so a separate getSession() call would just duplicate
+    // loadUserData for the same user on every mount.
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       if (!isMounted) return;
       setSession(newSession);
@@ -94,7 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(null);
         setTenantMemberships([]);
         setActiveTenantId(null);
+        setLoadError(null);
       }
+      if (isMounted) setLoading(false);
     });
 
     return () => {
@@ -102,6 +121,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       listener.subscription.unsubscribe();
     };
   }, [loadUserData]);
+
+  const retryLoadUserData = async () => {
+    if (session) await loadUserData(session.user.id);
+  };
 
   const signUpWithPassword = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -128,7 +151,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error('signOut failed:', error.message);
+
+    // Clear TripContext's localStorage so the next person to sign in on this
+    // browser doesn't inherit the previous account's trip/financial data.
+    Object.keys(localStorage)
+      .filter(key => key.startsWith(TRIP_STORAGE_KEY))
+      .forEach(key => localStorage.removeItem(key));
+
+    return { error: error ? error.message : null };
   };
 
   const createTenant = async (name: string) => {
@@ -148,6 +180,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         loading,
+        userDataLoading,
+        loadError,
         session,
         profile,
         tenantMemberships,
@@ -160,7 +194,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithMagicLink,
         signInWithGoogle,
         signOut,
-        createTenant
+        createTenant,
+        retryLoadUserData
       }}
     >
       {children}
