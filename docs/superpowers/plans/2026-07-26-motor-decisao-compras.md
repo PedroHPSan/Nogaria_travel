@@ -2008,7 +2008,7 @@ Em `src/context/TripContext.tsx`, importe o helper logo abaixo do import de `use
 import { newId } from '../services/ids';
 ```
 
-Depois substitua **todas** as ocorrências do padrão `` id: `xx-${Date.now()}` `` por `id: newId()`. São 14 ocorrências (participantes, voos, hospedagens, transportes, roteiro, gift cards, compras, bagagens, despesas, tarefas, decisões, documentos, fidelidade e viagens). Localize-as com:
+Depois substitua **todas** as ocorrências do padrão `` id: `xx-${Date.now()}` `` por `id: newId()`. São 15 ocorrências (viagens, participantes, voos, hospedagens, transportes, roteiro, gift cards, compras, bagagens, despesas, tarefas, decisões, documentos, fidelidade e logs de IA), todas do padrão de ID. Localize-as com:
 
 ```bash
 grep -n 'Date.now()' src/context/TripContext.tsx
