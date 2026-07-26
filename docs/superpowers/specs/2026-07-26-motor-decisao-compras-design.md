@@ -97,7 +97,7 @@ para cada item:
 
 **RN-07b** — Resíduo de arredondamento. Arredondar o imposto de cada item a 2 casas faz a soma divergir do total em centavos. Após calcular todos os itens de um participante, o resíduo `excedente × alíquota − Σ imposto_do_item` é somado ao item de maior `share`. A soma dos impostos por item é **exatamente** igual ao imposto total do participante.
 
-**RN-07c** — Arredondamento. Toda linha nomeada do cálculo é arredondada a 2 casas com `Math.round(n * 100) / 100`, mesma convenção do `giftCardCalculator.ts`. `share` não é arredondado.
+**RN-07c** — Arredondamento. Toda linha nomeada do cálculo é arredondada a 2 casas com `Math.round(n * 100) / 100`. `share` não é arredondado. Note que isto **difere** do `giftCardCalculator.ts`, que usa `Number(x.toFixed(2))`: `toFixed` depende da representação binária e devolve o centavo de baixo em alguns valores de meio centavo. O rateio de cota exige meio-para-cima determinístico para que a soma por item feche com o total (RN-07b). O motor consome do `giftCardCalculator` apenas o `effective_savings_pct` já calculado, então as duas convenções não se misturam dentro de uma mesma soma.
 
 **RN-07a** — Guardas de divisão por zero. Se `total_pessoa = 0`, então `share = 0` e `imposto_do_item = 0`. Se `br_liquido_brl = 0`, então `economia_pct = 0` e o veredito é `DADOS_INSUFICIENTES` — não se calcula percentual sobre base zero.
 

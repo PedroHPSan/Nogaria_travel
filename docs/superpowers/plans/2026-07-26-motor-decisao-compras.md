@@ -43,27 +43,27 @@
 - [ ] **Step 1: Instalar o Vitest**
 
 ```bash
-npm install -D vitest@^3
+npm install -D vitest@^2
 ```
 
-- [ ] **Step 2: Configurar o Vitest no Vite**
+Nenhuma versão do Vitest declara compatibilidade de peer com `vite@8` (a v2 para em `^5`, a v3 em `^7`). Isso é esperado e não impede nada, porque a configuração de teste do Step 2 não carrega plugin nenhum do Vite.
 
-Substitua `vite.config.ts` inteiro. A troca do import de `vite` para `vitest/config` é o que habilita a chave `test` com tipagem.
+- [ ] **Step 2: Configurar o Vitest em arquivo próprio**
+
+**Não toque em `vite.config.ts`.** Crie `vitest.config.ts` na raiz:
 
 ```ts
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
   },
 });
 ```
+
+O Vitest prefere `vitest.config.ts` quando ele existe. Como os testes rodam em `environment: 'node'` sobre funções puras, eles não precisam do plugin do React nem do Tailwind — e é justamente por não declarar plugins que este arquivo não esbarra na incompatibilidade de tipos entre o Vite aninhado do Vitest e o `vite@8` do projeto. Configurar o `test` dentro de `vite.config.ts` exigiria um cast `as any` sobre o array de plugins, silenciando a checagem de tipos de um arquivo que o `tsc -b` cobre.
 
 - [ ] **Step 3: Adicionar o script de teste**
 
@@ -132,8 +132,11 @@ Crie `src/services/money.ts`:
 ```ts
 /**
  * Arredonda para duas casas decimais (RN-07c).
- * Mesma convenção do giftCardCalculator.ts, para que os dois módulos
- * nunca divirjam em centavos.
+ * Usa Math.round em vez do Number(x.toFixed(2)) do giftCardCalculator.ts:
+ * toFixed depende da representação binária do número e devolve o centavo de
+ * baixo em alguns valores de meio centavo. O rateio de cota precisa de
+ * meio-para-cima determinístico, porque a soma dos impostos por item tem de
+ * fechar exatamente com o imposto total do participante.
  */
 export const round2 = (n: number): number => Math.round(n * 100) / 100;
 
