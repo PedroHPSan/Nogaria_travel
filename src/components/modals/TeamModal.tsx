@@ -88,7 +88,14 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleCancelInvite = async (inviteId: string) => {
-    await supabase.from('tenant_invites').delete().eq('id', inviteId);
+    setError(null);
+    const { error: deleteError } = await supabase.from('tenant_invites').delete().eq('id', inviteId);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
+
     await loadTeamData();
   };
 
