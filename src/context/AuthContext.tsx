@@ -34,6 +34,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// PostgREST rejects a request with these exact messages (error code PGRST303/
+// PGRST301 family) when the JWT's iat/exp/nbf claims fall outside its own
+// clock ±30s tolerance. Supabase has had real incidents of clock skew between
+// its Auth service (which stamps `iat`) and PostgREST (which validates it) —
+// we hit "JWT issued at future" right after email confirmation on 2026-07-26.
+// The condition is transient: PostgREST's clock keeps advancing, so a freshly
+// rejected token becomes valid seconds later. Retry instead of hard-failing.
+// See .superpowers/sdd/jwt-future-investigation-report.md for the evidence.
+const JWT_CLOCK_SKEW_ERROR = /JWT (issued at future|expired|not yet valid)/i;
+
+// Total ~22s of automatic waiting, enough to outlast skew of up to ~50s
+// beyond PostgREST's built-in 30s tolerance. Beyond that, the user still
+// gets the manual "Tentar novamente" screen.
+const JWT_RETRY_DELAYS_MS = [2000, 6000, 14000];
+
+const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
 async function fetchProfile(userId: string): Promise<{ data: Profile | null; error: string | null }> {
   const { data, error } = await supabase
     .from('profiles')
@@ -75,11 +92,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserDataLoading(true);
     setLoadError(null);
     try {
-      const [profileResult, membershipsResult] = await Promise.all([
-        fetchProfile(userId),
-        fetchTenantMemberships(userId)
-      ]);
-      const combinedError = profileResult.error ?? membershipsResult.error;
+      let profileResult: Awaited<ReturnType<typeof fetchProfile>>;
+      let membershipsResult: Awaited<ReturnType<typeof fetchTenantMemberships>>;
+      let combinedError: string | null;
+      for (let attempt = 0; ; attempt++) {
+        [profileResult, membershipsResult] = await Promise.all([
+          fetchProfile(userId),
+          fetchTenantMemberships(userId)
+        ]);
+        combinedError = profileResult.error ?? membershipsResult.error;
+        if (
+          combinedError &&
+          JWT_CLOCK_SKEW_ERROR.test(combinedError) &&
+          attempt < JWT_RETRY_DELAYS_MS.length
+        ) {
+          // Transient Supabase-side clock skew (see JWT_CLOCK_SKEW_ERROR
+          // above): wait for PostgREST's clock to catch up and try again.
+          await delay(JWT_RETRY_DELAYS_MS[attempt]);
+          continue;
+        }
+        break;
+      }
       if (combinedError) setLoadError(combinedError);
       setProfile(profileResult.data);
       setTenantMemberships(membershipsResult.data);
