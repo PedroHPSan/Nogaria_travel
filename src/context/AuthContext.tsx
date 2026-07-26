@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabaseClient';
 import type { Profile, Tenant, UserRole } from '../types/database.types';
@@ -95,6 +95,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  // Tracks the user id we last loaded profile/tenant data for, so background
+  // auth events for the SAME user (e.g. the hourly token auto-refresh, or a
+  // SIGNED_IN/TOKEN_REFRESHED rebroadcast from another tab) don't trigger a
+  // blocking reload of already-loaded data. Reset to null on sign-out so a
+  // subsequent sign-in — even as the same user — is always treated as fresh.
+  const previousUserIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -106,8 +113,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!isMounted) return;
       setSession(newSession);
       if (newSession) {
-        await loadUserData(newSession.user.id);
+        const isBackgroundRefreshForSameUser = previousUserIdRef.current === newSession.user.id;
+        previousUserIdRef.current = newSession.user.id;
+        if (!isBackgroundRefreshForSameUser) {
+          await loadUserData(newSession.user.id);
+        }
+        // else: same user's session was silently refreshed (or rebroadcast
+        // from another tab) — setSession above already kept the token fresh;
+        // profile/tenant data hasn't changed, so skip the blocking reload.
       } else {
+        previousUserIdRef.current = null;
         setProfile(null);
         setTenantMemberships([]);
         setActiveTenantId(null);
