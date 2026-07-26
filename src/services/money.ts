@@ -1,7 +1,10 @@
 /**
  * Arredonda para duas casas decimais (RN-07c).
- * Mesma convenção do giftCardCalculator.ts, para que os dois módulos
- * nunca divirjam em centavos.
+ * Usa Math.round em vez do Number(x.toFixed(2)) do giftCardCalculator.ts:
+ * toFixed depende da representação binária do número e devolve o centavo de
+ * baixo em alguns valores de meio centavo. O rateio de cota precisa de
+ * meio-para-cima determinístico, porque a soma dos impostos por item tem de
+ * fechar exatamente com o imposto total do participante.
  */
 export const round2 = (n: number): number => Math.round(n * 100) / 100;
 
