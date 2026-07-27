@@ -37,22 +37,20 @@
 **Interfaces:**
 - Produces: ambiente de teste capaz de renderizar hooks React. Todas as tasks seguintes que testam hooks dependem disto.
 
-- [ ] **Step 1: Instalar as dependências de teste**
+- [x] **Step 1: Instalar as dependências de teste**
 
 ```bash
 npm install -D jsdom@^25.0.1 @testing-library/react@^16.1.0 @testing-library/dom@^10.4.0
 ```
 
-- [ ] **Step 2: Permitir arquivos de teste `.tsx` e ambiente por arquivo**
+- [x] **Step 2: Permitir arquivos de teste `.tsx` e ambiente por arquivo**
 
 Substitua `vitest.config.ts` inteiro por:
 
 ```ts
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [react()],
   test: {
     // Ambiente padrão continua node: a suíte de funções puras não paga o custo do DOM.
     // Arquivos que precisam de DOM declaram `// @vitest-environment jsdom` no topo.
@@ -62,7 +60,9 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: Pôr o vitest.config.ts no grafo do tsc**
+Sem plugin do React de propósito: nenhum teste desta fatia escreve JSX literal (todos usam `renderHook` com função pura via `@testing-library/react`), e incluir `@vitejs/plugin-react` aqui já causou, num plano anterior deste mesmo repo, um choque de tipos entre o Vite do app e o Vite embutido do Vitest — a correção de lá foi exatamente não incluir o plugin. `.tsx` como extensão de arquivo é suficiente para o parser do esbuild, com ou sem plugin.
+
+- [x] **Step 3: Pôr o vitest.config.ts no grafo do tsc**
 
 Em `tsconfig.node.json`, troque a última linha:
 
@@ -70,7 +70,7 @@ Em `tsconfig.node.json`, troque a última linha:
   "include": ["vite.config.ts", "vitest.config.ts"]
 ```
 
-- [ ] **Step 4: Escrever o teste que prova o ambiente**
+- [x] **Step 4: Escrever o teste que prova o ambiente**
 
 Crie `src/data/setup.test.tsx`:
 
@@ -94,17 +94,17 @@ describe('ambiente de teste de hooks', () => {
 });
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passa**
+- [x] **Step 5: Rodar e confirmar que passa**
 
 Run: `npx vitest run src/data/setup.test.tsx`
 Expected: 1 teste passando. Se falhar com "document is not defined", o docblock `@vitest-environment jsdom` não está na primeira linha do arquivo.
 
-- [ ] **Step 6: Confirmar que a suíte inteira e o build seguem verdes**
+- [x] **Step 6: Confirmar que a suíte inteira e o build seguem verdes**
 
 Run: `npm test && npm run build && npm run lint`
 Expected: 85 testes passando (84 anteriores + 1 novo), build sem erro, lint com exatamente 2 warnings conhecidos.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add package.json package-lock.json vitest.config.ts tsconfig.node.json src/data/setup.test.tsx
@@ -133,7 +133,7 @@ git commit -m "Add jsdom test environment for React hook tests"
 
 **Contexto que você precisa saber:** o Postgres **não tem** as colunas `age` nem `quota_eligible` em `participants` — só `birth_date`. `age` é derivada na leitura. `quota_eligible` não é mapeada nesta fatia: ninguém a edita hoje e `customsQuota.ts:40` a lê como `participant.quota_eligible !== false`, então ausente significa elegível, que é o comportamento atual. `is_minor` **é** coluna, mas também é derivada de `birth_date` na leitura e recalculada na escrita, para que a coluna nunca contradiga a data.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Crie `src/data/mappers/participantMapper.test.ts`:
 
@@ -292,12 +292,12 @@ describe('tripToInsert', () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx vitest run src/data/mappers`
 Expected: FAIL com "Failed to load url ./participantMapper" — os arquivos ainda não existem.
 
-- [ ] **Step 3: Implementar o mapper de Trip**
+- [x] **Step 3: Implementar o mapper de Trip**
 
 Crie `src/data/mappers/tripMapper.ts`:
 
@@ -352,7 +352,7 @@ export function tripToInsert(trip: Trip): TripRow {
 }
 ```
 
-- [ ] **Step 4: Implementar o mapper de Participant**
+- [x] **Step 4: Implementar o mapper de Participant**
 
 Crie `src/data/mappers/participantMapper.ts`:
 
@@ -447,17 +447,17 @@ export function participantToInsert(p: Participant, today: string): ParticipantR
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passam**
+- [x] **Step 5: Rodar e confirmar que passam**
 
 Run: `npx vitest run src/data/mappers`
 Expected: PASS, 18 testes.
 
-- [ ] **Step 6: Confirmar build e lint**
+- [x] **Step 6: Confirmar build e lint**
 
 Run: `npm run build && npm run lint`
 Expected: build sem erro, lint com exatamente 2 warnings conhecidos.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/data/mappers
@@ -482,7 +482,7 @@ git commit -m "Add pure Trip and Participant mappers deriving age from birth dat
 
 **Por que isto existe:** no trabalho anterior, todo defeito sério era silencioso. Uma escrita que falha e some é a mesma classe de problema. A faixa é persistente de propósito — nada de toast que evapora.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Crie `src/data/useWriteFailures.test.tsx`:
 
@@ -563,12 +563,12 @@ describe('useWriteFailures', () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx vitest run src/data/useWriteFailures.test.tsx`
 Expected: FAIL com "Failed to load url ./useWriteFailures".
 
-- [ ] **Step 3: Implementar o hook**
+- [x] **Step 3: Implementar o hook**
 
 Crie `src/data/useWriteFailures.ts`:
 
@@ -610,12 +610,12 @@ export function useWriteFailures() {
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 Run: `npx vitest run src/data/useWriteFailures.test.tsx`
 Expected: PASS, 6 testes.
 
-- [ ] **Step 5: Criar a faixa**
+- [x] **Step 5: Criar a faixa**
 
 Crie `src/components/WriteFailureBanner.tsx`:
 
@@ -672,12 +672,12 @@ export const WriteFailureBanner: React.FC<Props> = ({ failures, onRetry, onDismi
 };
 ```
 
-- [ ] **Step 6: Confirmar build, lint e suíte**
+- [x] **Step 6: Confirmar build, lint e suíte**
 
 Run: `npm test && npm run build && npm run lint`
 Expected: testes passando, build sem erro, lint com exatamente 2 warnings conhecidos.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/data/useWriteFailures.ts src/data/useWriteFailures.test.tsx src/components/WriteFailureBanner.tsx
@@ -700,7 +700,7 @@ git commit -m "Add persistent write-failure registry and banner"
 
 **Sobre a injeção do cliente:** o hook recebe o cliente por parâmetro em vez de importar `supabase` direto. Isso é o que torna o ciclo otimista testável sem rede. `SupabaseLike` é um tipo estrutural mínimo definido neste arquivo — não importe tipos do `@supabase/supabase-js` para ele.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 Crie `src/data/useTripsData.test.tsx`:
 
@@ -845,12 +845,12 @@ describe('useTripsData', () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e confirmar que falham**
+- [x] **Step 2: Rodar e confirmar que falham**
 
 Run: `npx vitest run src/data/useTripsData.test.tsx`
 Expected: FAIL com "Failed to load url ./useTripsData".
 
-- [ ] **Step 3: Implementar o hook**
+- [x] **Step 3: Implementar o hook**
 
 Crie `src/data/useTripsData.ts`:
 
@@ -941,17 +941,17 @@ export function useTripsData({ client, tenantId, nowIso, recordFailure }: TripsD
 }
 ```
 
-- [ ] **Step 4: Rodar e confirmar que passam**
+- [x] **Step 4: Rodar e confirmar que passam**
 
 Run: `npx vitest run src/data/useTripsData.test.tsx`
 Expected: PASS, 6 testes.
 
-- [ ] **Step 5: Confirmar build e lint**
+- [x] **Step 5: Confirmar build e lint**
 
 Run: `npm run build && npm run lint`
 Expected: build sem erro, lint com exatamente 2 warnings conhecidos.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/data/useTripsData.ts src/data/useTripsData.test.tsx
@@ -974,7 +974,7 @@ git commit -m "Add optimistic trips data hook backed by Supabase"
 
 **Atenção:** `SupabaseLike` da Task 4 só tem `select`/`insert`. Esta task precisa também de `update` e `delete`, então **estenda o tipo em `useTripsData.ts`** acrescentando os dois métodos, em vez de criar um segundo tipo. Os testes da Task 4 continuam passando porque o cliente de mentira deles só precisa implementar o que usa.
 
-- [ ] **Step 1: Estender SupabaseLike**
+- [x] **Step 1: Estender SupabaseLike**
 
 Em `src/data/useTripsData.ts`, substitua a interface `SupabaseLike` por:
 
@@ -1002,7 +1002,7 @@ Nos testes da Task 4 (`useTripsData.test.tsx`), o `makeClient` e o cliente inlin
       delete: () => ({ eq: () => Promise.resolve({ error: null }) }),
 ```
 
-- [ ] **Step 2: Escrever os testes que falham**
+- [x] **Step 2: Escrever os testes que falham**
 
 Crie `src/data/useParticipantsData.test.tsx`:
 
@@ -1153,12 +1153,12 @@ describe('useParticipantsData', () => {
 });
 ```
 
-- [ ] **Step 3: Rodar e confirmar que falham**
+- [x] **Step 3: Rodar e confirmar que falham**
 
 Run: `npx vitest run src/data/useParticipantsData.test.tsx`
 Expected: FAIL com "Failed to load url ./useParticipantsData".
 
-- [ ] **Step 4: Implementar o hook**
+- [x] **Step 4: Implementar o hook**
 
 Crie `src/data/useParticipantsData.ts`:
 
@@ -1311,17 +1311,17 @@ export function useParticipantsData({ client, tripId, today, recordFailure }: Pa
 }
 ```
 
-- [ ] **Step 5: Rodar e confirmar que passam**
+- [x] **Step 5: Rodar e confirmar que passam**
 
 Run: `npx vitest run src/data/`
 Expected: PASS. Os testes da Task 4 continuam passando com o `SupabaseLike` estendido.
 
-- [ ] **Step 6: Confirmar build e lint**
+- [x] **Step 6: Confirmar build e lint**
 
 Run: `npm run build && npm run lint`
 Expected: build sem erro, lint com exatamente 2 warnings conhecidos.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/data/useParticipantsData.ts src/data/useParticipantsData.test.tsx src/data/useTripsData.ts src/data/useTripsData.test.tsx
@@ -1342,7 +1342,7 @@ git commit -m "Add optimistic participants data hook with rollback"
 
 **O corte é limpo:** `trips` e `participants` deixam de ter `useState` inicializado de `localStorage` e deixam de ter `useEffect` escrevendo nele. As outras 14 coleções não são tocadas.
 
-- [ ] **Step 1: Remover a persistência local de trips e participants**
+- [x] **Step 1: Remover a persistência local de trips e participants**
 
 Em `src/context/TripContext.tsx`, apague os dois pares `useState` + `useEffect` de `trips` e de `participants`. Localize-os com:
 
@@ -1352,7 +1352,7 @@ grep -n "STORAGE_KEY}_trips\|STORAGE_KEY}_participants" src/context/TripContext.
 
 Apague também as funções `createTrip`, `addParticipant`, `updateParticipant` e `deleteParticipant` que hoje manipulam esse estado — elas vêm dos hooks agora.
 
-- [ ] **Step 2: Chamar os hooks dentro do provider**
+- [x] **Step 2: Chamar os hooks dentro do provider**
 
 Acrescente os imports no topo:
 
@@ -1380,7 +1380,7 @@ Dentro do `TripProvider`, logo depois da leitura de `activeTenantId` do `useAuth
   });
 ```
 
-- [ ] **Step 3: Corrigir o activeTripId, que hoje aponta para uma viagem semeada**
+- [x] **Step 3: Corrigir o activeTripId, que hoje aponta para uma viagem semeada**
 
 Hoje a linha é `useState<string>(trips[0]?.id || INITIAL_TRIP.id)`. Com o banco vazio, `INITIAL_TRIP.id` aponta para uma viagem que não existe. Substitua por:
 
@@ -1417,7 +1417,7 @@ Agora chame o hook de participantes usando o id resolvido:
   });
 ```
 
-- [ ] **Step 4: Tratar o activeTrip possivelmente ausente**
+- [x] **Step 4: Tratar o activeTrip possivelmente ausente**
 
 Hoje o provider faz `const activeTrip = trips.find(...) ?? trips[0]` e dezenas de consumidores leem `activeTrip.id` direto. Com o banco vazio, `activeTrip` pode não existir.
 
@@ -1443,7 +1443,7 @@ Hoje o provider faz `const activeTrip = trips.find(...) ?? trips[0]` e dezenas d
   };
 ```
 
-- [ ] **Step 5: Ajustar as assinaturas que realmente mudaram no TripContextType**
+- [x] **Step 5: Ajustar as assinaturas que realmente mudaram no TripContextType**
 
 Três mudanças de tipo, todas obrigatórias — sem elas o build quebra:
 
@@ -1473,7 +1473,7 @@ No objeto passado ao `Provider`, garanta que constam `trips`, `participants`, `c
         retryFailure,
 ```
 
-- [ ] **Step 6: Mostrar a faixa de falhas no shell do app**
+- [x] **Step 6: Mostrar a faixa de falhas no shell do app**
 
 Em `src/App.tsx`, acrescente o import e leia os três valores novos do `useTrip()`:
 
@@ -1491,12 +1491,12 @@ Renderize a faixa como primeiro filho do elemento raiz do `App`, antes do cabeç
 <WriteFailureBanner failures={failures} onRetry={retryFailure} onDismiss={dismissFailure} />
 ```
 
-- [ ] **Step 7: Confirmar que tudo compila e a suíte segue verde**
+- [x] **Step 7: Confirmar que tudo compila e a suíte segue verde**
 
 Run: `npm test && npm run build && npm run lint`
 Expected: testes passando, build sem erro, lint com exatamente 2 warnings conhecidos. Se o build reclamar de `INITIAL_TRIP` ou `INITIAL_PARTICIPANTS` não usados, remova os imports órfãos — `noUnusedLocals` está ligado.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/context/TripContext.tsx src/App.tsx
@@ -1516,11 +1516,11 @@ git commit -m "Move trips and participants from localStorage to Supabase"
 
 **O problema concreto:** hoje o modal tem um campo de **idade** (linha ~36, `const [age, setAge] = useState<number>(30)`) *e* um de data de nascimento (linha ~35), que podem discordar entre si. Pior: envia `birth_date: birthDate || '1990-01-01'`, um fallback silencioso. Com `birth_date not null` no Postgres, esse fallback grava uma data errada de verdade. E `is_minor` é um checkbox manual (`isMinor || Number(age) < 18`) que também pode contradizer a data.
 
-- [ ] **Step 1: Remover o campo de idade e o checkbox de menor**
+- [x] **Step 1: Remover o campo de idade e o checkbox de menor**
 
 Apague os estados `age`/`setAge` e `isMinor`/`setIsMinor`, o `<input>` de idade e o checkbox de menor de idade, junto com as linhas que os populam em `useEffect` a partir de `initialData`.
 
-- [ ] **Step 2: Derivar a idade para exibição**
+- [x] **Step 2: Derivar a idade para exibição**
 
 Importe o helper e mostre a idade calculada ao lado do campo de data, como texto, não como campo editável:
 
@@ -1544,7 +1544,7 @@ Abaixo do input de data de nascimento:
 )}
 ```
 
-- [ ] **Step 3: Tornar a data de nascimento obrigatória**
+- [x] **Step 3: Tornar a data de nascimento obrigatória**
 
 No `handleSubmit`, antes do `onSave`, acrescente a validação no padrão dos outros modais:
 
@@ -1557,7 +1557,7 @@ No `handleSubmit`, antes do `onSave`, acrescente a validação no padrão dos ou
 
 Se o componente ainda não tem estado de erro, acrescente `const [error, setError] = useState('');` e renderize a mensagem acima dos botões, seguindo o padrão de `PriceQuoteModal.tsx`.
 
-- [ ] **Step 4: Enviar sem age e sem is_minor**
+- [x] **Step 4: Enviar sem age e sem is_minor**
 
 No objeto do `onSave`, remova as chaves `age` e `is_minor` e troque o fallback da data:
 
@@ -1567,19 +1567,19 @@ No objeto do `onSave`, remova as chaves `age` e `is_minor` e troque o fallback d
 
 O seletor de responsável passa a aparecer com base em `idadeCalculada !== null && idadeCalculada < 18`, não no checkbox removido.
 
-- [ ] **Step 5: Verificar no navegador**
+- [x] **Step 5: Verificar no navegador**
 
 Run: `npm run dev`
 
 Abra a aba de Grupo, edite um participante, limpe a data de nascimento e tente salvar.
 Expected: erro em pt-BR "Informe a data de nascimento.", sem salvar. Ao preencher uma data, a idade aparece calculada abaixo do campo. Se você não conseguir logar, diga isso no relatório em vez de afirmar que verificou.
 
-- [ ] **Step 6: Confirmar build, lint e suíte**
+- [x] **Step 6: Confirmar build, lint e suíte**
 
 Run: `npm test && npm run build && npm run lint`
 Expected: testes passando, build sem erro, lint com exatamente 2 warnings conhecidos.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/modals/ParticipantModal.tsx
@@ -1599,7 +1599,7 @@ git commit -m "Make birth date the only source of age in the participant form"
 
 **Comportamento na falha parcial:** grava a viagem, depois os participantes. Se um participante falhar, a viagem já existe e a falha aparece na faixa persistente. Isso é aceitável: viagem sem participante é estado válido.
 
-- [ ] **Step 1: Criar o componente**
+- [x] **Step 1: Criar o componente**
 
 Crie `src/features/onboarding/TripWizard.tsx`:
 
@@ -1813,12 +1813,12 @@ export const TripWizard: React.FC = () => {
 };
 ```
 
-- [ ] **Step 2: Confirmar build e lint**
+- [x] **Step 2: Confirmar build e lint**
 
 Run: `npm run build && npm run lint`
 Expected: build sem erro, lint com exatamente 2 warnings conhecidos. O componente ainda não é renderizado por ninguém — isso é esperado, a Task 9 o liga.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/features/onboarding/TripWizard.tsx
@@ -1827,25 +1827,28 @@ git commit -m "Add first-trip wizard collecting trip and participants"
 
 ---
 
-### Task 9: Ligar o wizard ao AuthGate
+### Task 9: Ligar o wizard à composição do app
 
 **Files:**
-- Modify: `src/features/auth/AuthGate.tsx`
+- Modify: `src/App.tsx`
 
 **Interfaces:**
 - Consumes: `TripWizard` (Task 8); `trips` e `tripDataLoading` do `useTrip()` (Task 6)
 - Produces: cadeia de portões completa — sem sessão, sem tenant, sem viagem, app
 
-**Cuidado com a ordem:** o `TripWizard` usa `useTrip()`, então precisa estar **dentro** do `TripProvider`. Mas o `TripProvider` devolve `null` quando não há viagem (Task 6, Step 4). Portanto o portão de "nenhuma viagem" tem que morar dentro do provider, não antes dele.
+**Correção sobre a estrutura real (verificada no código, não suposta):** `AuthGate.tsx` **não** envolve seus filhos em `TripProvider` — ele é um portão puro que só lê `useAuth()` e nunca chama `useTrip()`. É `src/App.tsx` quem compõe `<AuthGate><TripProvider><MainAppContent /></TripProvider></AuthGate>` (linhas ~95-101 no HEAD desta task). Como o `TripWizard` chama `useTrip()`, o portão de "nenhuma viagem" tem que morar **dentro** do `TripProvider`, ou seja, em `App.tsx`, entre a abertura do `<TripProvider>` e o `<MainAppContent />` — não em `AuthGate.tsx`, que nunca teria acesso ao contexto.
 
-- [ ] **Step 1: Criar o portão dentro do provider**
+- [x] **Step 1: Criar o portão dentro do TripProvider, em App.tsx**
 
-Em `src/features/auth/AuthGate.tsx`, envolva o conteúdo do app num componente interno que já está sob o `TripProvider`:
+Em `src/App.tsx`, acrescente os imports:
 
 ```tsx
-import { TripWizard } from '../onboarding/TripWizard';
-import { useTrip } from '../../context/TripContext';
+import { TripWizard } from './features/onboarding/TripWizard';
+```
 
+(`useTrip` já é importado neste arquivo.) Antes da função `App()`, crie o componente do portão:
+
+```tsx
 const AppOuWizard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { trips, tripDataLoading } = useTrip();
 
@@ -1863,19 +1866,45 @@ const AppOuWizard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 ```
 
-- [ ] **Step 2: Encaixar na cadeia**
+- [x] **Step 2: Encaixar na composição**
 
-No `AuthGate`, onde hoje o app é renderizado dentro do `TripProvider`, envolva-o:
+Ainda em `src/App.tsx`, troque a função `App()` de:
 
 ```tsx
-<TripProvider>
-  <AppOuWizard>
-    <App />
-  </AppOuWizard>
-</TripProvider>
+export function App() {
+  return (
+    <AuthProvider>
+      <AuthGate>
+        <TripProvider>
+          <MainAppContent />
+        </TripProvider>
+      </AuthGate>
+    </AuthProvider>
+  );
+}
 ```
 
-- [ ] **Step 3: Verificar no navegador**
+para:
+
+```tsx
+export function App() {
+  return (
+    <AuthProvider>
+      <AuthGate>
+        <TripProvider>
+          <AppOuWizard>
+            <MainAppContent />
+          </AppOuWizard>
+        </TripProvider>
+      </AuthGate>
+    </AuthProvider>
+  );
+}
+```
+
+`AuthGate.tsx` não é tocado por esta task — ele continua sendo só o portão de sessão/tenant, sem saber nada de viagens.
+
+- [x] **Step 3: Verificar no navegador**
 
 Run: `npm run dev`
 
@@ -1888,15 +1917,15 @@ supabase db query --linked "select title from public.trips; select full_name, bi
 
 Se você não conseguir logar, diga isso no relatório em vez de afirmar que verificou.
 
-- [ ] **Step 4: Confirmar build, lint e suíte**
+- [x] **Step 4: Confirmar build, lint e suíte**
 
 Run: `npm test && npm run build && npm run lint`
 Expected: testes passando, build sem erro, lint com exatamente 2 warnings conhecidos.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
-git add src/features/auth/AuthGate.tsx src/context/TripContext.tsx
+git add src/App.tsx
 git commit -m "Show the first-trip wizard when the tenant has no trips"
 ```
 
