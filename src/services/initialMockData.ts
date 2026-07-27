@@ -10,7 +10,8 @@ import type {
   Task,
   Decision,
   AiProviderConfig,
-  AiUsageLog
+  AiUsageLog,
+  PriceQuote
 } from '../types/database.types';
 
 export const INITIAL_TRIP: Trip = {
@@ -322,7 +323,12 @@ export const INITIAL_PURCHASES: PurchaseItem[] = [
     estimated_savings_pct: 32.5,
     gift_card_eligible: true,
     status: 'planned',
-    notes: 'Compra sujeita a desconto com Gift Cards Apple e comparação com modelo usado de outro participante.'
+    notes: 'Compra sujeita a desconto com Gift Cards Apple e comparação com modelo usado de outro participante.',
+    us_store_state: 'FL',
+    cashback_pct: 4,
+    gift_card_id: 'gc-apple-01',
+    purchase_channel: 'in_store',
+    warranty_risk: 'medium'
   },
   {
     id: 'pur-apple-watch-ultra',
@@ -339,7 +345,11 @@ export const INITIAL_PURCHASES: PurchaseItem[] = [
     brl_equivalent_price: 6800.00,
     estimated_savings_pct: 35.0,
     gift_card_eligible: true,
-    status: 'planned'
+    status: 'planned',
+    us_store_state: 'FL',
+    cashback_pct: 4,
+    purchase_channel: 'in_store',
+    warranty_risk: 'medium'
   },
   {
     id: 'pur-pokemon-cards',
@@ -529,4 +539,67 @@ export const INITIAL_AI_LOGS: AiUsageLog[] = [
     tokens_output: 310,
     estimated_cost_usd: 0.0042
   }
+];
+
+export const INITIAL_PRICE_QUOTES: PriceQuote[] = [
+  {
+    id: 'q-iphone-us',
+    trip_id: 'trip-miami-orlando-2026',
+    purchase_item_id: 'pur-iphone-16',
+    market: 'US',
+    store_name: 'Apple Store Millenia Orlando',
+    price: 1399.0,
+    currency: 'USD',
+    price_kind: 'list',
+    includes_tax: false,
+    observed_at: '2026-07-20',
+    source: 'manual',
+    is_active: true,
+    created_at: '2026-07-20T12:00:00Z',
+  },
+  {
+    id: 'q-iphone-br',
+    trip_id: 'trip-miami-orlando-2026',
+    purchase_item_id: 'pur-iphone-16',
+    market: 'BR',
+    store_name: 'Apple Store Brasil',
+    price: 11499.0,
+    currency: 'BRL',
+    price_kind: 'list',
+    includes_tax: true,
+    observed_at: '2026-07-20',
+    source: 'manual',
+    is_active: true,
+    created_at: '2026-07-20T12:00:00Z',
+  },
+  {
+    id: 'q-watch-us',
+    trip_id: 'trip-miami-orlando-2026',
+    purchase_item_id: 'pur-apple-watch-ultra',
+    market: 'US',
+    store_name: 'Best Buy',
+    price: 799.0,
+    currency: 'USD',
+    price_kind: 'list',
+    includes_tax: false,
+    observed_at: '2026-07-20',
+    source: 'manual',
+    is_active: true,
+    created_at: '2026-07-20T12:00:00Z',
+  },
+  {
+    id: 'q-watch-br',
+    trip_id: 'trip-miami-orlando-2026',
+    purchase_item_id: 'pur-apple-watch-ultra',
+    market: 'BR',
+    store_name: 'Apple Store Brasil',
+    price: 6800.0,
+    currency: 'BRL',
+    price_kind: 'list',
+    includes_tax: true,
+    observed_at: '2026-07-20',
+    source: 'manual',
+    is_active: true,
+    created_at: '2026-07-20T12:00:00Z',
+  },
 ];

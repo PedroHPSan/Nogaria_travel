@@ -16,8 +16,11 @@ import type {
   AuditFinding,
   AiProviderConfig,
   AiUsageLog,
-  Currency
+  Currency,
+  PriceQuote,
+  PurchaseAssumptions
 } from '../types/database.types';
+import type { PurchaseDecision } from '../types/purchase.types';
 
 import {
   INITIAL_TRIP,
@@ -38,6 +41,9 @@ import { runFullTripAudit } from '../services/auditEngine';
 import { calculateGiftCardNetCost } from '../services/giftCardCalculator';
 import { formatCurrencyValue, convertCurrency } from '../services/exchangeRateService';
 import { useAuth } from './AuthContext';
+import { newId } from '../services/ids';
+import { usePurchasesState } from '../features/purchases/usePurchasesState';
+import { decidePurchases } from '../services/purchase/purchaseDecisionEngine';
 
 export interface DocumentFile {
   id: string;
@@ -113,6 +119,13 @@ interface TripContextType {
   addPurchase: (p: Omit<PurchaseItem, 'id'>) => void;
   updatePurchase: (id: string, p: Partial<PurchaseItem>) => void;
   deletePurchase: (id: string) => void;
+
+  priceQuotes: PriceQuote[];
+  addPriceQuote: (q: Omit<PriceQuote, 'id' | 'created_at' | 'is_active'>) => void;
+  deactivateQuote: (id: string) => void;
+  assumptions: PurchaseAssumptions;
+  updateAssumptions: (patch: Partial<PurchaseAssumptions>) => void;
+  purchaseDecisions: PurchaseDecision[];
 
   luggages: Luggage[];
   addLuggage: (l: Omit<Luggage, 'id'>) => void;
@@ -428,6 +441,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return trips.find(t => t.id === activeTripId) || trips[0] || INITIAL_TRIP;
   }, [trips, activeTripId]);
 
+  const purchaseState = usePurchasesState(STORAGE_KEY, activeTrip.id);
+
   // Persist State to LocalStorage on Change
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_currency`, currency);
@@ -507,6 +522,20 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, [activeTrip, participants, flights, accommodations, transports, itinerary, giftCards, purchases, expenses, resolvedAuditIds]);
 
+  const purchaseDecisions = useMemo(
+    () =>
+      decidePurchases({
+        items: purchases.filter(p => p.trip_id === activeTrip.id),
+        quotes: purchaseState.priceQuotes,
+        participants: participants.filter(p => p.trip_id === activeTrip.id),
+        giftCards: giftCards.filter(g => g.trip_id === activeTrip.id),
+        assumptions: purchaseState.assumptions,
+        today: purchaseState.today,
+        luggages: luggages.filter(l => l.trip_id === activeTrip.id),
+      }),
+    [purchases, purchaseState, participants, giftCards, luggages, activeTrip.id],
+  );
+
   const toggleResolveAudit = (id: string) => {
     setResolvedAuditIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
@@ -521,7 +550,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createTrip = (tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>) => {
     const newTrip: Trip = {
       ...tripData,
-      id: `trip-${Date.now()}`,
+      id: newId(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -530,7 +559,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addParticipant = (p: Omit<Participant, 'id'>) => {
-    const newP: Participant = { ...p, id: `p-${Date.now()}` };
+    const newP: Participant = { ...p, id: newId() };
     setParticipants(prev => [...prev, newP]);
   };
 
@@ -543,7 +572,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addFlight = (f: Omit<Flight, 'id'>) => {
-    const newF: Flight = { ...f, id: `f-${Date.now()}` };
+    const newF: Flight = { ...f, id: newId() };
     setFlights(prev => [...prev, newF]);
   };
 
@@ -556,7 +585,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addAccommodation = (a: Omit<Accommodation, 'id'>) => {
-    const newA: Accommodation = { ...a, id: `acc-${Date.now()}` };
+    const newA: Accommodation = { ...a, id: newId() };
     setAccommodations(prev => [...prev, newA]);
   };
 
@@ -569,7 +598,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addTransport = (t: Omit<TransportReservation, 'id'>) => {
-    const newT: TransportReservation = { ...t, id: `tr-${Date.now()}` };
+    const newT: TransportReservation = { ...t, id: newId() };
     setTransports(prev => [...prev, newT]);
   };
 
@@ -582,7 +611,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addItineraryItem = (i: Omit<ItineraryItem, 'id'>) => {
-    const newI: ItineraryItem = { ...i, id: `iti-${Date.now()}` };
+    const newI: ItineraryItem = { ...i, id: newId() };
     setItinerary(prev => [...prev, newI]);
   };
 
@@ -598,7 +627,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const calc = calculateGiftCardNetCost(g.nominal_value, g.paid_amount, g.cashback_pct);
     const newG: GiftCard = {
       ...g,
-      id: `gc-${Date.now()}`,
+      id: newId(),
       net_cost: calc.netCost,
       cashback_amount: calc.cashbackValue,
       effective_savings: calc.effectiveSavingsUSD,
@@ -629,7 +658,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addPurchase = (p: Omit<PurchaseItem, 'id'>) => {
-    const newP: PurchaseItem = { ...p, id: `pur-${Date.now()}` };
+    const newP: PurchaseItem = { ...p, id: newId() };
     setPurchases(prev => [...prev, newP]);
   };
 
@@ -642,7 +671,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addLuggage = (l: Omit<Luggage, 'id'>) => {
-    const newL: Luggage = { ...l, id: `lug-${Date.now()}` };
+    const newL: Luggage = { ...l, id: newId() };
     setLuggages(prev => [...prev, newL]);
   };
 
@@ -655,7 +684,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addExpense = (e: Omit<Expense, 'id'>) => {
-    const newE: Expense = { ...e, id: `exp-${Date.now()}` };
+    const newE: Expense = { ...e, id: newId() };
     setExpenses(prev => [...prev, newE]);
   };
 
@@ -668,7 +697,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addTask = (t: Omit<Task, 'id' | 'created_at'>) => {
-    const newT: Task = { ...t, id: `task-${Date.now()}`, created_at: new Date().toISOString() };
+    const newT: Task = { ...t, id: newId(), created_at: new Date().toISOString() };
     setTasks(prev => [...prev, newT]);
   };
 
@@ -691,7 +720,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addDecision = (d: Omit<Decision, 'id'>) => {
-    const newD: Decision = { ...d, id: `dec-${Date.now()}` };
+    const newD: Decision = { ...d, id: newId() };
     setDecisions(prev => [...prev, newD]);
   };
 
@@ -706,7 +735,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addDocument = (doc: Omit<DocumentFile, 'id' | 'uploaded_at'>) => {
     const newDoc: DocumentFile = {
       ...doc,
-      id: `doc-${Date.now()}`,
+      id: newId(),
       uploaded_at: new Date().toISOString()
     };
     setDocuments(prev => [...prev, newDoc]);
@@ -717,7 +746,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addLoyaltyAccount = (acc: Omit<LoyaltyAccount, 'id'>) => {
-    const newLoy: LoyaltyAccount = { ...acc, id: `loy-${Date.now()}` };
+    const newLoy: LoyaltyAccount = { ...acc, id: newId() };
     setLoyaltyAccounts(prev => [...prev, newLoy]);
   };
 
@@ -736,7 +765,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addAiLog = (log: Omit<AiUsageLog, 'id' | 'timestamp'>) => {
     const newLog: AiUsageLog = {
       ...log,
-      id: `log-${Date.now()}`,
+      id: newId(),
       timestamp: new Date().toISOString()
     };
     setAiLogs(prev => [newLog, ...prev]);
@@ -794,6 +823,13 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addPurchase,
         updatePurchase,
         deletePurchase,
+
+        priceQuotes: purchaseState.priceQuotes,
+        addPriceQuote: purchaseState.addPriceQuote,
+        deactivateQuote: purchaseState.deactivateQuote,
+        assumptions: purchaseState.assumptions,
+        updateAssumptions: purchaseState.updateAssumptions,
+        purchaseDecisions,
 
         luggages,
         addLuggage,
