@@ -334,7 +334,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [exchangeRate, setExchangeRate] = useState<number>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_exchangeRate`);
-    return saved ? Number(saved) : 5.62;
+    const parsed = saved ? Number(saved) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.62;
   });
 
   const exchangeRateDate = new Date().toLocaleDateString('pt-BR');

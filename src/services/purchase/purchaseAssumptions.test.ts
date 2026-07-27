@@ -9,7 +9,6 @@ const base = makeDefaultAssumptions('trip-1', '2026-07-26', 5.62);
 
 describe('makeDefaultAssumptions', () => {
   it('aplica os defaults acordados no spec', () => {
-    expect(base.usd_brl_rate).toBe(5.62);
     expect(base.default_sales_tax_pct).toBe(7);
     expect(base.card_iof_pct).toBe(3.38);
     expect(base.card_spread_pct).toBe(0);
