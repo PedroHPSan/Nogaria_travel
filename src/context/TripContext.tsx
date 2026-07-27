@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import type {
   Trip,
   Tenant,
@@ -16,8 +16,11 @@ import type {
   AuditFinding,
   AiProviderConfig,
   AiUsageLog,
-  Currency
+  Currency,
+  PriceQuote,
+  PurchaseAssumptions
 } from '../types/database.types';
+import type { PurchaseDecision } from '../types/purchase.types';
 
 import {
   INITIAL_TRIP,
@@ -38,6 +41,10 @@ import { runFullTripAudit } from '../services/auditEngine';
 import { calculateGiftCardNetCost } from '../services/giftCardCalculator';
 import { formatCurrencyValue, convertCurrency } from '../services/exchangeRateService';
 import { useAuth } from './AuthContext';
+import { newId } from '../services/ids';
+import { usePurchasesState } from '../features/purchases/usePurchasesState';
+import { decidePurchases } from '../services/purchase/purchaseDecisionEngine';
+import type { DecisionInput } from '../services/purchase/purchaseDecisionEngine';
 
 export interface DocumentFile {
   id: string;
@@ -113,6 +120,14 @@ interface TripContextType {
   addPurchase: (p: Omit<PurchaseItem, 'id'>) => void;
   updatePurchase: (id: string, p: Partial<PurchaseItem>) => void;
   deletePurchase: (id: string) => void;
+  markPurchaseBought: (id: string, actualPaidUsd: number) => void;
+
+  priceQuotes: PriceQuote[];
+  addPriceQuote: (q: Omit<PriceQuote, 'id' | 'created_at' | 'is_active'>) => void;
+  deactivateQuote: (id: string) => void;
+  assumptions: PurchaseAssumptions;
+  updateAssumptions: (patch: Partial<PurchaseAssumptions>) => void;
+  purchaseDecisions: PurchaseDecision[];
 
   luggages: Luggage[];
   addLuggage: (l: Omit<Luggage, 'id'>) => void;
@@ -321,7 +336,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [exchangeRate, setExchangeRate] = useState<number>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_exchangeRate`);
-    return saved ? Number(saved) : 5.62;
+    const parsed = saved ? Number(saved) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.62;
   });
 
   const exchangeRateDate = new Date().toLocaleDateString('pt-BR');
@@ -428,6 +444,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return trips.find(t => t.id === activeTripId) || trips[0] || INITIAL_TRIP;
   }, [trips, activeTripId]);
 
+  const purchaseState = usePurchasesState(STORAGE_KEY, activeTrip.id, exchangeRate);
+
   // Persist State to LocalStorage on Change
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_currency`, currency);
@@ -507,6 +525,58 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, [activeTrip, participants, flights, accommodations, transports, itinerary, giftCards, purchases, expenses, resolvedAuditIds]);
 
+  // Single input-assembly point for the decision engine (final-review Finding
+  // 1): `purchaseDecisions`, `addPurchase`, and `updatePurchase` all funnel
+  // through this instead of each carrying its own copy of the
+  // quotes/participants/giftCards/assumptions/luggages assembly — that
+  // duplication was exactly the seam where `updatePurchase` drifted from
+  // `addPurchase`'s correct pattern. `itemSet` is the raw (unfiltered)
+  // purchases array; the trip filter happens in here.
+  //
+  // Wrapped in `useCallback` (not a plain per-render function) specifically
+  // so `purchaseDecisions` below can depend on this function's identity
+  // instead of re-listing every underlying piece of state — this is what
+  // lets the helper be shared without tripping `react-hooks/exhaustive-deps`
+  // (a previous round duplicated the assembly to dodge that warning; this
+  // is the "solve it properly" fix instead).
+  const buildDecisionInput = useCallback(
+    (itemSet: PurchaseItem[]): DecisionInput => ({
+      items: itemSet.filter(p => p.trip_id === activeTrip.id),
+      quotes: purchaseState.priceQuotes.filter(q => q.trip_id === activeTrip.id),
+      participants: participants.filter(p => p.trip_id === activeTrip.id),
+      giftCards: giftCards.filter(g => g.trip_id === activeTrip.id),
+      // The stored assumptions' usd_brl_rate is only a seed (see
+      // usePurchasesState) — TripContext's own `exchangeRate` is the single
+      // source of truth for USD/BRL app-wide, so it always wins here. This
+      // keeps the decision engine's BRL totals in sync with an edited rate
+      // even though the persisted assumptions record is not rewritten.
+      assumptions: {
+        ...purchaseState.assumptions,
+        usd_brl_rate: exchangeRate,
+        rate_source: 'Câmbio do app (TripContext)',
+        rate_date: purchaseState.today,
+      },
+      today: purchaseState.today,
+      luggages: luggages.filter(l => l.trip_id === activeTrip.id),
+    }),
+    [activeTrip.id, purchaseState, participants, giftCards, exchangeRate, luggages],
+  );
+
+  const purchaseDecisions = useMemo(
+    () => decidePurchases(buildDecisionInput(purchases)),
+    [purchases, buildDecisionInput],
+  );
+
+  // Used by `addPurchase` and `updatePurchase` (final-review Finding 1): a
+  // brand-new or just-edited item isn't reflected in `purchaseDecisions`
+  // above (memoized off the pre-write `purchases` state), so freezing a
+  // decision at write time needs to run the engine against an item set that
+  // already substitutes the draft/updated record in place of the old one.
+  const decisionsForItemSet = useCallback(
+    (itemSet: PurchaseItem[]): PurchaseDecision[] => decidePurchases(buildDecisionInput(itemSet)),
+    [buildDecisionInput],
+  );
+
   const toggleResolveAudit = (id: string) => {
     setResolvedAuditIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
@@ -521,7 +591,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createTrip = (tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>) => {
     const newTrip: Trip = {
       ...tripData,
-      id: `trip-${Date.now()}`,
+      id: newId(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -530,7 +600,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addParticipant = (p: Omit<Participant, 'id'>) => {
-    const newP: Participant = { ...p, id: `p-${Date.now()}` };
+    const newP: Participant = { ...p, id: newId() };
     setParticipants(prev => [...prev, newP]);
   };
 
@@ -543,7 +613,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addFlight = (f: Omit<Flight, 'id'>) => {
-    const newF: Flight = { ...f, id: `f-${Date.now()}` };
+    const newF: Flight = { ...f, id: newId() };
     setFlights(prev => [...prev, newF]);
   };
 
@@ -556,7 +626,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addAccommodation = (a: Omit<Accommodation, 'id'>) => {
-    const newA: Accommodation = { ...a, id: `acc-${Date.now()}` };
+    const newA: Accommodation = { ...a, id: newId() };
     setAccommodations(prev => [...prev, newA]);
   };
 
@@ -569,7 +639,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addTransport = (t: Omit<TransportReservation, 'id'>) => {
-    const newT: TransportReservation = { ...t, id: `tr-${Date.now()}` };
+    const newT: TransportReservation = { ...t, id: newId() };
     setTransports(prev => [...prev, newT]);
   };
 
@@ -582,7 +652,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addItineraryItem = (i: Omit<ItineraryItem, 'id'>) => {
-    const newI: ItineraryItem = { ...i, id: `iti-${Date.now()}` };
+    const newI: ItineraryItem = { ...i, id: newId() };
     setItinerary(prev => [...prev, newI]);
   };
 
@@ -598,7 +668,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const calc = calculateGiftCardNetCost(g.nominal_value, g.paid_amount, g.cashback_pct);
     const newG: GiftCard = {
       ...g,
-      id: `gc-${Date.now()}`,
+      id: newId(),
       net_cost: calc.netCost,
       cashback_amount: calc.cashbackValue,
       effective_savings: calc.effectiveSavingsUSD,
@@ -628,21 +698,103 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setGiftCards(prev => prev.filter(item => item.id !== id));
   };
 
+  // Ponto único da invariante do congelamento (RN-18/CA-11): TODA gravação de
+  // PurchaseItem passa por aqui — criação (addPurchase) e edição
+  // (updatePurchase), inclusive o <select> de Status do PurchaseModal em
+  // ambos os fluxos, que nunca chama markPurchaseBought diretamente. Duas
+  // cópias do mesmo guard (uma em cada função) foi exatamente o que faltou na
+  // rodada anterior: addPurchase ficou sem o guard e um item podia nascer já
+  // 'bought' sem snapshot (revisão Finding 2, rodada 2). `getLiveDecision` é
+  // avaliado só quando necessário porque, na criação, calcular a decisão
+  // exige rodar o motor com o conjunto de itens que já inclui o candidato —
+  // mais caro que o simples lookup usado na edição.
+  //
+  // Qualquer transição PARA 'bought' sem um snapshot já anexado ao patch tira
+  // um agora — senão o item nunca congela e recalcula ao vivo para sempre.
+  // Qualquer transição PARA FORA de 'bought' apaga o snapshot (e o valor
+  // pago) — senão reverter para 'planned' e marcar 'bought' de novo ressuscita
+  // o snapshot da compra anterior com os números de outra compra.
+  const freezeBoughtStatus = (
+    candidate: PurchaseItem,
+    wasBought: boolean,
+    getLiveDecision: () => PurchaseDecision | undefined,
+  ): PurchaseItem => {
+    if (candidate.status === 'bought' && !wasBought && !candidate.decision_snapshot) {
+      return { ...candidate, decision_snapshot: getLiveDecision() };
+    }
+    if (candidate.status !== 'bought' && wasBought) {
+      return { ...candidate, decision_snapshot: undefined, actual_paid_usd: undefined };
+    }
+    return candidate;
+  };
+
   const addPurchase = (p: Omit<PurchaseItem, 'id'>) => {
-    const newP: PurchaseItem = { ...p, id: `pur-${Date.now()}` };
-    setPurchases(prev => [...prev, newP]);
+    const draft: PurchaseItem = { ...p, id: newId() };
+    setPurchases(prev => {
+      const withDraft = [...prev, draft];
+      const frozenDraft = freezeBoughtStatus(draft, false, () =>
+        decisionsForItemSet(withDraft).find(d => d.purchase_item_id === draft.id),
+      );
+      return [...prev, frozenDraft];
+    });
   };
 
   const updatePurchase = (id: string, p: Partial<PurchaseItem>) => {
-    setPurchases(prev => prev.map(item => (item.id === id ? { ...item, ...p } : item)));
+    setPurchases(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const updated: PurchaseItem = { ...item, ...p };
+      // final-review Finding 1: a single edit can change quantity, the
+      // quota-owner fields, and flip status to 'bought' all at once. The
+      // decision must be computed against a basket where `updated` (the
+      // POST-edit record) stands in for the old item — never against the
+      // stale `purchaseDecisions` memo, which was still built from the
+      // pre-edit `prev` — or the frozen snapshot would contradict the
+      // record it's attached to.
+      const withUpdated = prev.map(i => (i.id === id ? updated : i));
+      const frozen = freezeBoughtStatus(updated, item.status === 'bought', () =>
+        decisionsForItemSet(withUpdated).find(d => d.purchase_item_id === id),
+      );
+      return prev.map(i => (i.id === id ? frozen : i));
+    });
   };
 
   const deletePurchase = (id: string) => {
     setPurchases(prev => prev.filter(item => item.id !== id));
   };
 
+  // Congela a decisão vigente no momento da compra (RN-18/CA-11): o snapshot
+  // gravado aqui deixa de participar de `purchaseDecisions` como cálculo ao
+  // vivo — ver o early-return em decidePurchases — então mudar câmbio,
+  // premissas ou cotações depois não reescreve o registro do que foi decidido.
+  //
+  // Esta é uma API pública de `useTrip()` — não confia só no único chamador
+  // de UI atual (revisão Finding 3): valida aqui o valor pago e a existência
+  // de uma decisão calculável, recusando a gravação (sem congelar nada) em
+  // vez de aceitar um valor inválido ou um snapshot vazio.
+  const markPurchaseBought = (id: string, actualPaidUsd: number) => {
+    if (!Number.isFinite(actualPaidUsd) || actualPaidUsd < 0) {
+      console.error(
+        `markPurchaseBought: valor pago inválido (${actualPaidUsd}) para o item ${id}; nada foi gravado.`,
+      );
+      return;
+    }
+    const snapshot = purchaseDecisions.find(d => d.purchase_item_id === id);
+    if (!snapshot) {
+      console.error(
+        `markPurchaseBought: nenhuma decisão calculada encontrada para o item ${id}; nada foi gravado.`,
+      );
+      return;
+    }
+    updatePurchase(id, {
+      status: 'bought',
+      actual_paid_usd: actualPaidUsd,
+      decision_snapshot: snapshot,
+    });
+  };
+
   const addLuggage = (l: Omit<Luggage, 'id'>) => {
-    const newL: Luggage = { ...l, id: `lug-${Date.now()}` };
+    const newL: Luggage = { ...l, id: newId() };
     setLuggages(prev => [...prev, newL]);
   };
 
@@ -655,7 +807,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addExpense = (e: Omit<Expense, 'id'>) => {
-    const newE: Expense = { ...e, id: `exp-${Date.now()}` };
+    const newE: Expense = { ...e, id: newId() };
     setExpenses(prev => [...prev, newE]);
   };
 
@@ -668,7 +820,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addTask = (t: Omit<Task, 'id' | 'created_at'>) => {
-    const newT: Task = { ...t, id: `task-${Date.now()}`, created_at: new Date().toISOString() };
+    const newT: Task = { ...t, id: newId(), created_at: new Date().toISOString() };
     setTasks(prev => [...prev, newT]);
   };
 
@@ -691,7 +843,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addDecision = (d: Omit<Decision, 'id'>) => {
-    const newD: Decision = { ...d, id: `dec-${Date.now()}` };
+    const newD: Decision = { ...d, id: newId() };
     setDecisions(prev => [...prev, newD]);
   };
 
@@ -706,7 +858,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addDocument = (doc: Omit<DocumentFile, 'id' | 'uploaded_at'>) => {
     const newDoc: DocumentFile = {
       ...doc,
-      id: `doc-${Date.now()}`,
+      id: newId(),
       uploaded_at: new Date().toISOString()
     };
     setDocuments(prev => [...prev, newDoc]);
@@ -717,7 +869,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addLoyaltyAccount = (acc: Omit<LoyaltyAccount, 'id'>) => {
-    const newLoy: LoyaltyAccount = { ...acc, id: `loy-${Date.now()}` };
+    const newLoy: LoyaltyAccount = { ...acc, id: newId() };
     setLoyaltyAccounts(prev => [...prev, newLoy]);
   };
 
@@ -736,7 +888,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addAiLog = (log: Omit<AiUsageLog, 'id' | 'timestamp'>) => {
     const newLog: AiUsageLog = {
       ...log,
-      id: `log-${Date.now()}`,
+      id: newId(),
       timestamp: new Date().toISOString()
     };
     setAiLogs(prev => [newLog, ...prev]);
@@ -794,6 +946,14 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addPurchase,
         updatePurchase,
         deletePurchase,
+        markPurchaseBought,
+
+        priceQuotes: purchaseState.priceQuotes,
+        addPriceQuote: purchaseState.addPriceQuote,
+        deactivateQuote: purchaseState.deactivateQuote,
+        assumptions: purchaseState.assumptions,
+        updateAssumptions: purchaseState.updateAssumptions,
+        purchaseDecisions,
 
         luggages,
         addLuggage,
