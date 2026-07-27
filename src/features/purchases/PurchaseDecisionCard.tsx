@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, Edit2, Sparkles, Trash2 } from 'lucide-react';
 import type { PriceQuote, PurchaseItem } from '../../types/database.types';
 import type { PurchaseDecision, PurchaseVerdict } from '../../types/purchase.types';
 import { PurchaseBreakdown } from './PurchaseBreakdown';
@@ -22,9 +22,10 @@ interface Props {
   onEdit: (item: PurchaseItem) => void;
   onDelete: (id: string) => void;
   onResearch: (item: PurchaseItem) => void;
+  onAiResearch: (item: PurchaseItem) => void;
 }
 
-export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, onEdit, onDelete, onResearch }) => {
+export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, onEdit, onDelete, onResearch, onAiResearch }) => {
   const [expanded, setExpanded] = useState(false);
   const style = VERDICT_STYLE[decision.verdict];
   const positiva = decision.economia_brl > 0;
@@ -59,12 +60,21 @@ export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, 
       </div>
 
       {decision.verdict === 'DADOS_INSUFICIENTES' ? (
-        <button
-          onClick={() => onResearch(item)}
-          className="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition"
-        >
-          Registrar preço
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onResearch(item)}
+            className="flex-1 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition"
+          >
+            Registrar preço
+          </button>
+          <button
+            onClick={() => onAiResearch(item)}
+            className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-xs transition flex items-center justify-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Pesquisar com IA
+          </button>
+        </div>
       ) : (
         <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
           <div className="text-[10px] text-slate-400">Economia líquida comprando nos EUA</div>
@@ -107,12 +117,21 @@ export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, 
                   <PriceQuoteHistory quotes={quotes} itemId={item.id} market="BR" />
                 </div>
               </div>
-              <button
-                onClick={() => onResearch(item)}
-                className="w-full mt-2 mb-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-[11px] transition"
-              >
-                Registrar nova cotação
-              </button>
+              <div className="flex gap-2 mt-2 mb-3">
+                <button
+                  onClick={() => onResearch(item)}
+                  className="flex-1 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-[11px] transition"
+                >
+                  Registrar nova cotação
+                </button>
+                <button
+                  onClick={() => onAiResearch(item)}
+                  className="flex-1 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 font-semibold text-[11px] transition flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Pesquisar com IA
+                </button>
+              </div>
               <PurchaseBreakdown decision={decision} />
             </div>
           )}

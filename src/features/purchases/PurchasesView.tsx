@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useTrip } from '../../context/TripContext';
+import { useAuth } from '../../context/AuthContext';
 import { PurchaseModal } from '../../components/modals/PurchaseModal';
 import { LuggageModal } from '../../components/modals/LuggageModal';
 import { PriceQuoteModal } from '../../components/modals/PriceQuoteModal';
+import { PriceResearchModal } from '../../components/modals/PriceResearchModal';
 import { AssumptionsModal } from '../../components/modals/AssumptionsModal';
 import { PurchaseDecisionCard } from './PurchaseDecisionCard';
 import { QuotaAllocationPanel } from './QuotaAllocationPanel';
@@ -38,6 +40,7 @@ export const PurchasesView: React.FC = () => {
     setExchangeRate,
     formatAmount
   } = useTrip();
+  const { session } = useAuth();
 
 
   const [activeSubTab, setActiveSubTab] = useState<'purchases' | 'luggage'>('purchases');
@@ -50,6 +53,7 @@ export const PurchasesView: React.FC = () => {
   const [editingLuggage, setEditingLuggage] = useState<Luggage | null>(null);
 
   const [quoteItem, setQuoteItem] = useState<PurchaseItem | null>(null);
+  const [researchItem, setResearchItem] = useState<PurchaseItem | null>(null);
 
   const [isAssumptionsOpen, setIsAssumptionsOpen] = useState(false);
 
@@ -181,6 +185,7 @@ export const PurchasesView: React.FC = () => {
                   onEdit={handleOpenEditPurchase}
                   onDelete={deletePurchase}
                   onResearch={setQuoteItem}
+                  onAiResearch={setResearchItem}
                 />
               );
             })}
@@ -300,6 +305,15 @@ export const PurchasesView: React.FC = () => {
         onSave={addPriceQuote}
         item={quoteItem}
         tripId={activeTrip.id}
+      />
+
+      <PriceResearchModal
+        isOpen={researchItem !== null}
+        onClose={() => setResearchItem(null)}
+        item={researchItem}
+        tripId={activeTrip.id}
+        userId={session?.user?.id ?? ''}
+        onAccept={addPriceQuote}
       />
 
       <AssumptionsModal
