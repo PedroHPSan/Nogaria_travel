@@ -16,15 +16,17 @@ import { DocumentsView } from './features/documents/DocumentsView';
 import { AuditView } from './features/audits/AuditView';
 import { AiCopilotView } from './features/ai/AiCopilotView';
 import { DailyBriefingView } from './features/briefing/DailyBriefingView';
+import { WriteFailureBanner } from './components/WriteFailureBanner';
 
 function MainAppContent() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
-  const { auditFindings } = useTrip();
+  const { auditFindings, failures, dismissFailure, retryFailure } = useTrip();
 
   const unresolvedAuditCount = auditFindings.filter(f => !f.resolved).length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
+      <WriteFailureBanner failures={failures} onRetry={retryFailure} onDismiss={dismissFailure} />
       <Header
         onOpenAudit={() => setActiveTab('audit')}
         onOpenAi={() => setActiveTab('ai')}
