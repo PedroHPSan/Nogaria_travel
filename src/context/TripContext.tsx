@@ -526,7 +526,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     () =>
       decidePurchases({
         items: purchases.filter(p => p.trip_id === activeTrip.id),
-        quotes: purchaseState.priceQuotes,
+        quotes: purchaseState.priceQuotes.filter(q => q.trip_id === activeTrip.id),
         participants: participants.filter(p => p.trip_id === activeTrip.id),
         giftCards: giftCards.filter(g => g.trip_id === activeTrip.id),
         assumptions: purchaseState.assumptions,

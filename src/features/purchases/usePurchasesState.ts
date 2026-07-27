@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PriceQuote, PurchaseAssumptions } from '../../types/database.types';
 import { newId } from '../../services/ids';
 import { makeDefaultAssumptions } from '../../services/purchase/purchaseAssumptions';
 import { supersede } from '../../services/purchase/priceQuotes';
 import { INITIAL_PRICE_QUOTES } from '../../services/initialMockData';
+
+function loadAssumptions(storageKey: string, tripId: string, today: string): PurchaseAssumptions {
+  const saved = localStorage.getItem(`${storageKey}_purchase_assumptions_${tripId}`);
+  return saved ? JSON.parse(saved) : makeDefaultAssumptions(tripId, today);
+}
 
 export function usePurchasesState(storageKey: string, tripId: string) {
   const today = new Date().toISOString().split('T')[0];
@@ -13,20 +18,30 @@ export function usePurchasesState(storageKey: string, tripId: string) {
     return saved ? JSON.parse(saved) : INITIAL_PRICE_QUOTES;
   });
 
-  const [assumptions, setAssumptions] = useState<PurchaseAssumptions>(() => {
-    const saved = localStorage.getItem(`${storageKey}_purchase_assumptions`);
-    return saved ? JSON.parse(saved) : makeDefaultAssumptions(tripId, today);
-  });
+  const [assumptions, setAssumptions] = useState<PurchaseAssumptions>(() =>
+    loadAssumptions(storageKey, tripId, today),
+  );
+  // Tracks which trip `assumptions` currently belongs to. Assumptions are
+  // seeded/loaded per trip_id (see Finding 1): when `tripId` changes we must
+  // not render even one frame of the previous trip's assumptions, so the
+  // re-derivation happens synchronously during render (React's documented
+  // "adjust state when a prop changes" pattern) rather than in a `useEffect`,
+  // which would only patch things in after that wrong frame already painted.
+  const [assumptionsTripId, setAssumptionsTripId] = useState(tripId);
+  if (tripId !== assumptionsTripId) {
+    setAssumptionsTripId(tripId);
+    setAssumptions(loadAssumptions(storageKey, tripId, today));
+  }
 
   useEffect(() => {
     localStorage.setItem(`${storageKey}_price_quotes`, JSON.stringify(priceQuotes));
   }, [priceQuotes, storageKey]);
 
   useEffect(() => {
-    localStorage.setItem(`${storageKey}_purchase_assumptions`, JSON.stringify(assumptions));
-  }, [assumptions, storageKey]);
+    localStorage.setItem(`${storageKey}_purchase_assumptions_${tripId}`, JSON.stringify(assumptions));
+  }, [assumptions, storageKey, tripId]);
 
-  const addPriceQuote = (q: Omit<PriceQuote, 'id' | 'created_at' | 'is_active'>) => {
+  const addPriceQuote = useCallback((q: Omit<PriceQuote, 'id' | 'created_at' | 'is_active'>) => {
     const quote: PriceQuote = {
       ...q,
       id: newId(),
@@ -34,18 +49,18 @@ export function usePurchasesState(storageKey: string, tripId: string) {
       is_active: true,
     };
     setPriceQuotes(prev => supersede(prev, quote));
-  };
+  }, []);
 
-  const deactivateQuote = (id: string) => {
+  const deactivateQuote = useCallback((id: string) => {
     setPriceQuotes(prev => prev.map(q => (q.id === id ? { ...q, is_active: false } : q)));
-  };
+  }, []);
 
-  const updateAssumptions = (patch: Partial<PurchaseAssumptions>) => {
+  const updateAssumptions = useCallback((patch: Partial<PurchaseAssumptions>) => {
     setAssumptions(prev => ({ ...prev, ...patch, updated_at: new Date().toISOString() }));
-  };
+  }, []);
 
   return useMemo(
     () => ({ priceQuotes, addPriceQuote, deactivateQuote, assumptions, updateAssumptions, today }),
-    [priceQuotes, assumptions, today],
+    [priceQuotes, addPriceQuote, deactivateQuote, assumptions, updateAssumptions, today],
   );
 }
