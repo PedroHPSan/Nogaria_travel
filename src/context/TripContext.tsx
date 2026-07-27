@@ -23,8 +23,6 @@ import type {
 import type { PurchaseDecision } from '../types/purchase.types';
 
 import {
-  INITIAL_TRIP,
-  INITIAL_PARTICIPANTS,
   INITIAL_FLIGHTS,
   INITIAL_ACCOMMODATIONS,
   INITIAL_TRANSPORTS,
@@ -45,6 +43,12 @@ import { newId } from '../services/ids';
 import { usePurchasesState } from '../features/purchases/usePurchasesState';
 import { decidePurchases } from '../services/purchase/purchaseDecisionEngine';
 import type { DecisionInput } from '../services/purchase/purchaseDecisionEngine';
+import { useWriteFailures } from '../data/useWriteFailures';
+import type { WriteFailure } from '../data/useWriteFailures';
+import { useTripsData } from '../data/useTripsData';
+import { useParticipantsData } from '../data/useParticipantsData';
+import { supabase } from '../services/supabaseClient';
+import type { SupabaseLike } from '../data/useTripsData';
 
 export interface DocumentFile {
   id: string;
@@ -84,12 +88,17 @@ interface TripContextType {
   convertAmount: (amountUSD: number) => number;
 
   setActiveTripId: (id: string) => void;
-  createTrip: (tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>) => void;
+  createTrip: (tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>) => string;
 
   participants: Participant[];
-  addParticipant: (p: Omit<Participant, 'id'>) => void;
+  addParticipant: (data: Omit<Participant, 'id' | 'age' | 'is_minor'>) => void;
   updateParticipant: (id: string, p: Partial<Participant>) => void;
   deleteParticipant: (id: string) => void;
+
+  tripDataLoading: boolean;
+  failures: WriteFailure[];
+  dismissFailure: (id: string) => void;
+  retryFailure: (id: string) => void;
 
   flights: Flight[];
   addFlight: (f: Omit<Flight, 'id'>) => void;
@@ -321,12 +330,24 @@ const INITIAL_EXPENSES: Expense[] = [
 ];
 
 export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { tenantMemberships, activeTenant: authActiveTenant } = useAuth();
+  const { tenantMemberships, activeTenantId, activeTenant: authActiveTenant } = useAuth();
   const tenants = tenantMemberships.map(m => m.tenant);
   const activeTenant = authActiveTenant;
   if (!activeTenant) {
     throw new Error('TripProvider rendered without an active tenant — it must be wrapped by AuthGate');
   }
+
+  const { failures, recordFailure, dismissFailure, retryFailure } = useWriteFailures();
+
+  const client = supabase as unknown as SupabaseLike;
+  const hoje = new Date().toISOString().split('T')[0];
+
+  const { trips, loading: tripsLoading, createTrip } = useTripsData({
+    client,
+    tenantId: activeTenantId,
+    nowIso: () => new Date().toISOString(),
+    recordFailure,
+  });
 
   // Currency & Live Exchange Rate State
   const [currency, setCurrency] = useState<Currency>(() => {
@@ -352,16 +373,31 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Load from localStorage or fallback to defaults
-  const [trips, setTrips] = useState<Trip[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_trips`);
-    return saved ? JSON.parse(saved) : [INITIAL_TRIP];
-  });
+  const [activeTripId, setActiveTripId] = useState<string | null>(() =>
+    localStorage.getItem(`${STORAGE_KEY}_activeTripId`),
+  );
 
-  const [activeTripId, setActiveTripId] = useState<string>(trips[0]?.id || INITIAL_TRIP.id);
+  // Se a viagem guardada sumiu (ou nunca existiu), cai na primeira disponível.
+  const activeTripIdResolvido =
+    activeTripId && trips.some(t => t.id === activeTripId) ? activeTripId : trips[0]?.id ?? null;
 
-  const [participants, setParticipants] = useState<Participant[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_participants`);
-    return saved ? JSON.parse(saved) : INITIAL_PARTICIPANTS;
+  useEffect(() => {
+    if (activeTripIdResolvido) {
+      localStorage.setItem(`${STORAGE_KEY}_activeTripId`, activeTripIdResolvido);
+    }
+  }, [activeTripIdResolvido]);
+
+  const {
+    participants,
+    loading: participantsLoading,
+    addParticipant,
+    updateParticipant,
+    deleteParticipant,
+  } = useParticipantsData({
+    client,
+    tripId: activeTripIdResolvido,
+    today: hoje,
+    recordFailure,
   });
 
   const [flights, setFlights] = useState<Flight[]>(() => {
@@ -441,8 +477,26 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Active Trip
   const activeTrip = useMemo(() => {
-    return trips.find(t => t.id === activeTripId) || trips[0] || INITIAL_TRIP;
-  }, [trips, activeTripId]);
+    const activeTripEncontrada = trips.find(t => t.id === activeTripIdResolvido) ?? trips[0] ?? null;
+
+    // Sem viagem o contexto ainda precisa existir, porque é dele que o wizard tira
+    // createTrip e addParticipant. Nenhuma view chega a renderizar com este objeto:
+    // o AuthGate mostra o wizard enquanto trips.length === 0 (Task 9).
+    return (
+      activeTripEncontrada ?? {
+        id: '',
+        tenant_id: activeTenantId ?? '',
+        title: '',
+        destination_main: '',
+        start_date: '',
+        end_date: '',
+        currency_base: 'USD' as const,
+        status: 'planning' as const,
+        created_at: '',
+        updated_at: '',
+      }
+    );
+  }, [trips, activeTripIdResolvido, activeTenantId]);
 
   const purchaseState = usePurchasesState(STORAGE_KEY, activeTrip.id, exchangeRate);
 
@@ -453,12 +507,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_exchangeRate`, exchangeRate.toString());
   }, [exchangeRate]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_trips`, JSON.stringify(trips));
-  }, [trips]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_participants`, JSON.stringify(participants));
-  }, [participants]);
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_flights`, JSON.stringify(flights));
   }, [flights]);
@@ -588,30 +636,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // CRUD Implementations
-  const createTrip = (tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>) => {
-    const newTrip: Trip = {
-      ...tripData,
-      id: newId(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    setTrips(prev => [...prev, newTrip]);
-    setActiveTripId(newTrip.id);
-  };
-
-  const addParticipant = (p: Omit<Participant, 'id'>) => {
-    const newP: Participant = { ...p, id: newId() };
-    setParticipants(prev => [...prev, newP]);
-  };
-
-  const updateParticipant = (id: string, p: Partial<Participant>) => {
-    setParticipants(prev => prev.map(item => (item.id === id ? { ...item, ...p } : item)));
-  };
-
-  const deleteParticipant = (id: string) => {
-    setParticipants(prev => prev.filter(item => item.id !== id));
-  };
-
   const addFlight = (f: Omit<Flight, 'id'>) => {
     const newF: Flight = { ...f, id: newId() };
     setFlights(prev => [...prev, newF]);
@@ -916,6 +940,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addParticipant,
         updateParticipant,
         deleteParticipant,
+
+        tripDataLoading: tripsLoading || participantsLoading,
+        failures,
+        dismissFailure,
+        retryFailure,
 
         flights,
         addFlight,

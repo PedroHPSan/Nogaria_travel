@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { TripProvider, useTrip } from './context/TripContext';
+import { TripWizard } from './features/onboarding/TripWizard';
 import { AuthProvider } from './context/AuthContext';
 import { AuthGate } from './features/auth/AuthGate';
 import { Header } from './components/Header';
@@ -16,6 +18,7 @@ import { DocumentsView } from './features/documents/DocumentsView';
 import { AuditView } from './features/audits/AuditView';
 import { AiCopilotView } from './features/ai/AiCopilotView';
 import { DailyBriefingView } from './features/briefing/DailyBriefingView';
+import { WriteFailureBanner } from './components/WriteFailureBanner';
 
 function MainAppContent() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
@@ -88,12 +91,47 @@ function MainAppContent() {
   );
 }
 
+const AppOuWizard = ({ children }: { children: ReactNode }) => {
+  const { trips, tripDataLoading, failures, dismissFailure, retryFailure } = useTrip();
+
+  const banner = <WriteFailureBanner failures={failures} onRetry={retryFailure} onDismiss={dismissFailure} />;
+
+  if (tripDataLoading) {
+    return (
+      <>
+        {banner}
+        <div className="flex min-h-screen items-center justify-center bg-slate-950">
+          <p className="text-sm text-slate-400">Carregando suas viagens…</p>
+        </div>
+      </>
+    );
+  }
+
+  if (trips.length === 0) {
+    return (
+      <>
+        {banner}
+        <TripWizard />
+      </>
+    );
+  }
+
+  return (
+    <>
+      {banner}
+      {children}
+    </>
+  );
+};
+
 export function App() {
   return (
     <AuthProvider>
       <AuthGate>
         <TripProvider>
-          <MainAppContent />
+          <AppOuWizard>
+            <MainAppContent />
+          </AppOuWizard>
         </TripProvider>
       </AuthGate>
     </AuthProvider>

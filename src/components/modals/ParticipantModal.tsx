@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
 import type { Participant } from '../../types/database.types';
+import { deriveAge } from '../../data/mappers/participantMapper';
 
 interface ParticipantModalProps {
   isOpen: boolean;
@@ -33,8 +34,6 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
   const [fullName, setFullName] = useState('');
   const [nickname, setNickname] = useState('');
   const [birthDate, setBirthDate] = useState('');
-  const [age, setAge] = useState<number>(30);
-  const [isMinor, setIsMinor] = useState(false);
   const [relationship, setRelationship] = useState('');
   const [responsibleId, setResponsibleId] = useState('');
   const [passportNumber, setPassportNumber] = useState('');
@@ -45,14 +44,13 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
   const [notes, setNotes] = useState('');
   const [budgetLimit, setBudgetLimit] = useState<number>(2000);
   const [avatarColor, setAvatarColor] = useState('bg-blue-500');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (initialData) {
       setFullName(initialData.full_name || '');
       setNickname(initialData.nickname || '');
       setBirthDate(initialData.birth_date || '');
-      setAge(initialData.age || 30);
-      setIsMinor(initialData.is_minor || false);
       setRelationship(initialData.relationship || '');
       setResponsibleId(initialData.responsible_participant_id || '');
       setPassportNumber(initialData.passport_number || '');
@@ -67,8 +65,6 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setFullName('');
       setNickname('');
       setBirthDate('');
-      setAge(30);
-      setIsMinor(false);
       setRelationship('');
       setResponsibleId('');
       setPassportNumber('');
@@ -80,11 +76,21 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setBudgetLimit(2000);
       setAvatarColor('bg-blue-500');
     }
+    setError('');
   }, [initialData, isOpen]);
+
+  const hoje = new Date().toISOString().split('T')[0];
+  const idadeCalculada = birthDate ? deriveAge(birthDate, hoje) : null;
+  const isMinor = idadeCalculada !== null && idadeCalculada < 18;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) return;
+
+    if (!birthDate) {
+      setError('Informe a data de nascimento.');
+      return;
+    }
 
     const dietaryArray = dietary
       .split(',')
@@ -95,9 +101,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       trip_id: tripId,
       full_name: fullName.trim(),
       nickname: nickname.trim() || undefined,
-      birth_date: birthDate || '1990-01-01',
-      age: Number(age) || 0,
-      is_minor: isMinor || Number(age) < 18,
+      birth_date: birthDate,
       relationship: relationship.trim() || 'Membro do Grupo',
       responsible_participant_id: isMinor ? responsibleId || undefined : undefined,
       passport_number: passportNumber.trim() || undefined,
@@ -145,32 +149,22 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Idade (Anos) *</label>
-            <input
-              type="number"
-              required
-              min="0"
-              max="120"
-              value={age}
-              onChange={e => {
-                const val = Number(e.target.value);
-                setAge(val);
-                if (val < 18) setIsMinor(true);
-              }}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data Nascimento</label>
+            <label className="block text-slate-300 font-semibold mb-1">Data Nascimento *</label>
             <input
               type="date"
+              required
               value={birthDate}
               onChange={e => setBirthDate(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
             />
+            {idadeCalculada !== null && (
+              <p className="mt-1 text-[11px] text-slate-500">
+                {idadeCalculada} anos
+                {idadeCalculada < 18 && ' — menor de idade, informe o responsável'}
+              </p>
+            )}
           </div>
 
           <div>
@@ -210,18 +204,12 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer text-slate-200 font-medium">
-            <input
-              type="checkbox"
-              checked={isMinor}
-              onChange={e => setIsMinor(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
-            />
-            É Menor de Idade (Requer controle legal e de atrações)
-          </label>
+        {isMinor && (
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+            <span className="text-slate-200 font-medium">
+              Menor de Idade (Requer controle legal e de atrações)
+            </span>
 
-          {isMinor && (
             <select
               value={responsibleId}
               onChange={e => setResponsibleId(e.target.value)}
@@ -236,8 +224,8 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
                   </option>
                 ))}
             </select>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
@@ -313,6 +301,8 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             ))}
           </div>
         </div>
+
+        {error && <p className="text-xs text-rose-400">{error}</p>}
 
         <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
           <button
