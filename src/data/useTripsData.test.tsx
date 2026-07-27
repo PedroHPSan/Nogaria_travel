@@ -28,6 +28,8 @@ function makeClient(opts: { rows?: unknown[]; insertError?: string } = {}): Supa
         Promise.resolve({
           error: opts.insertError ? { message: opts.insertError } : null,
         }),
+      update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+      delete: () => ({ eq: () => Promise.resolve({ error: null }) }),
     }),
   };
 }
@@ -77,6 +79,8 @@ describe('useTripsData', () => {
       from: () => ({
         select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
         insert: () => new Promise(r => { resolver = r; }),
+        update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+        delete: () => ({ eq: () => Promise.resolve({ error: null }) }),
       }),
     };
 

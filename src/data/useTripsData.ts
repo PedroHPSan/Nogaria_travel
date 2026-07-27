@@ -14,6 +14,12 @@ export interface SupabaseLike {
       eq: (column: string, value: string) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
     };
     insert: (values: unknown) => Promise<{ error: { message: string } | null }>;
+    update: (values: unknown) => {
+      eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
+    };
+    delete: () => {
+      eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
+    };
   };
 }
 
