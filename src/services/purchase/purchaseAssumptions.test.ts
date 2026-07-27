@@ -5,7 +5,7 @@ import {
   validateAssumptions,
 } from './purchaseAssumptions';
 
-const base = makeDefaultAssumptions('trip-1', '2026-07-26');
+const base = makeDefaultAssumptions('trip-1', '2026-07-26', 5.62);
 
 describe('makeDefaultAssumptions', () => {
   it('aplica os defaults acordados no spec', () => {
@@ -16,6 +16,10 @@ describe('makeDefaultAssumptions', () => {
     expect(base.customs_quota_usd_per_person).toBe(1000);
     expect(base.customs_excess_tax_pct).toBe(50);
     expect(base.safety_margin_pct).toBe(5);
+  });
+
+  it('usa a taxa recebida por parâmetro, não um valor fixo no código', () => {
+    expect(makeDefaultAssumptions('trip-1', '2026-07-26', 6.0).usd_brl_rate).toBe(6.0);
   });
 
   it('declara a referência legal, para que a premissa nunca fique implícita', () => {

@@ -15,10 +15,14 @@ const DEFAULT_SALES_TAX_BY_STATE: Record<string, number> = {
   MT: 0,
 };
 
-export function makeDefaultAssumptions(tripId: string, today: string): PurchaseAssumptions {
+export function makeDefaultAssumptions(
+  tripId: string,
+  today: string,
+  usdBrlRate: number,
+): PurchaseAssumptions {
   return {
     trip_id: tripId,
-    usd_brl_rate: 5.62,
+    usd_brl_rate: usdBrlRate,
     rate_source: 'manual',
     rate_date: today,
     default_sales_tax_pct: 7,

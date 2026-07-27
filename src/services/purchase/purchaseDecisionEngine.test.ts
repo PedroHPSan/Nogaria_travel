@@ -5,7 +5,7 @@ import { decidePurchases } from './purchaseDecisionEngine';
 import type { DecisionInput } from './purchaseDecisionEngine';
 
 const TODAY = '2026-07-26';
-const assumptions = makeDefaultAssumptions('trip-1', TODAY);
+const assumptions = makeDefaultAssumptions('trip-1', TODAY, 5.62);
 
 const pedro: Participant = {
   id: 'p-pedro',

@@ -4,7 +4,7 @@ import { makeDefaultAssumptions } from './purchaseAssumptions';
 import { allocateCustomsQuota, resolveQuotaOwner } from './customsQuota';
 import type { QuotaItemInput } from './customsQuota';
 
-const a = makeDefaultAssumptions('trip-1', '2026-07-26');
+const a = makeDefaultAssumptions('trip-1', '2026-07-26', 5.62);
 
 function participant(id: string, overrides: Partial<Participant> = {}): Participant {
   return {

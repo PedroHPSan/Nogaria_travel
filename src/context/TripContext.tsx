@@ -441,7 +441,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return trips.find(t => t.id === activeTripId) || trips[0] || INITIAL_TRIP;
   }, [trips, activeTripId]);
 
-  const purchaseState = usePurchasesState(STORAGE_KEY, activeTrip.id);
+  const purchaseState = usePurchasesState(STORAGE_KEY, activeTrip.id, exchangeRate);
 
   // Persist State to LocalStorage on Change
   useEffect(() => {
@@ -529,11 +529,21 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         quotes: purchaseState.priceQuotes.filter(q => q.trip_id === activeTrip.id),
         participants: participants.filter(p => p.trip_id === activeTrip.id),
         giftCards: giftCards.filter(g => g.trip_id === activeTrip.id),
-        assumptions: purchaseState.assumptions,
+        // The stored assumptions' usd_brl_rate is only a seed (see
+        // usePurchasesState) — TripContext's own `exchangeRate` is the single
+        // source of truth for USD/BRL app-wide, so it always wins here. This
+        // keeps the decision engine's BRL totals in sync with an edited rate
+        // even though the persisted assumptions record is not rewritten.
+        assumptions: {
+          ...purchaseState.assumptions,
+          usd_brl_rate: exchangeRate,
+          rate_source: 'Câmbio do app (TripContext)',
+          rate_date: purchaseState.today,
+        },
         today: purchaseState.today,
         luggages: luggages.filter(l => l.trip_id === activeTrip.id),
       }),
-    [purchases, purchaseState, participants, giftCards, luggages, activeTrip.id],
+    [purchases, purchaseState, participants, giftCards, luggages, activeTrip.id, exchangeRate],
   );
 
   const toggleResolveAudit = (id: string) => {
