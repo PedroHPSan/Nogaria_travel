@@ -28,6 +28,7 @@ export const PurchasesView: React.FC = () => {
     addPurchase,
     updatePurchase,
     deletePurchase,
+    markPurchaseBought,
     luggages,
     addLuggage,
     updateLuggage,
@@ -186,6 +187,7 @@ export const PurchasesView: React.FC = () => {
                   onDelete={deletePurchase}
                   onResearch={setQuoteItem}
                   onAiResearch={setResearchItem}
+                  onMarkBought={markPurchaseBought}
                 />
               );
             })}

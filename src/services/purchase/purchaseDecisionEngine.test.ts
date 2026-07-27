@@ -535,3 +535,31 @@ describe('decidePurchases — premissa de sales tax sem cotação americana (Fin
     expect(premise?.value).not.toMatch(/%/);
   });
 });
+
+describe('decidePurchases — snapshot congelado', () => {
+  it('devolve o snapshot em vez de recalcular quando o item já foi comprado', () => {
+    const snapshot = decidePurchases(cestaDoPedro())[0];
+
+    const congelado = decidePurchases({
+      ...cestaDoPedro(),
+      items: [
+        { ...purchase({ gift_card_id: 'gc-apple-01' }), status: 'bought', decision_snapshot: snapshot },
+      ],
+      // câmbio muito diferente: se recalculasse, o número mudaria
+      assumptions: { ...assumptions, usd_brl_rate: 9.99 },
+    })[0];
+
+    expect(congelado.us.desembarcado_brl).toBe(snapshot.us.desembarcado_brl);
+    expect(congelado.economia_brl).toBe(snapshot.economia_brl);
+  });
+
+  it('segue recalculando enquanto o item está planejado', () => {
+    const original = decidePurchases(cestaDoPedro())[0];
+    const recalculado = decidePurchases({
+      ...cestaDoPedro(),
+      assumptions: { ...assumptions, usd_brl_rate: 9.99 },
+    })[0];
+
+    expect(recalculado.us.desembarcado_brl).not.toBe(original.us.desembarcado_brl);
+  });
+});

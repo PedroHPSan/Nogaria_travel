@@ -119,6 +119,7 @@ interface TripContextType {
   addPurchase: (p: Omit<PurchaseItem, 'id'>) => void;
   updatePurchase: (id: string, p: Partial<PurchaseItem>) => void;
   deletePurchase: (id: string) => void;
+  markPurchaseBought: (id: string, actualPaidUsd: number) => void;
 
   priceQuotes: PriceQuote[];
   addPriceQuote: (q: Omit<PriceQuote, 'id' | 'created_at' | 'is_active'>) => void;
@@ -681,6 +682,19 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPurchases(prev => prev.filter(item => item.id !== id));
   };
 
+  // Congela a decisão vigente no momento da compra (RN-18/CA-11): o snapshot
+  // gravado aqui deixa de participar de `purchaseDecisions` como cálculo ao
+  // vivo — ver o early-return em decidePurchases — então mudar câmbio,
+  // premissas ou cotações depois não reescreve o registro do que foi decidido.
+  const markPurchaseBought = (id: string, actualPaidUsd: number) => {
+    const snapshot = purchaseDecisions.find(d => d.purchase_item_id === id);
+    updatePurchase(id, {
+      status: 'bought',
+      actual_paid_usd: actualPaidUsd,
+      decision_snapshot: snapshot,
+    });
+  };
+
   const addLuggage = (l: Omit<Luggage, 'id'>) => {
     const newL: Luggage = { ...l, id: newId() };
     setLuggages(prev => [...prev, newL]);
@@ -834,6 +848,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addPurchase,
         updatePurchase,
         deletePurchase,
+        markPurchaseBought,
 
         priceQuotes: purchaseState.priceQuotes,
         addPriceQuote: purchaseState.addPriceQuote,

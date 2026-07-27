@@ -23,9 +23,10 @@ interface Props {
   onDelete: (id: string) => void;
   onResearch: (item: PurchaseItem) => void;
   onAiResearch: (item: PurchaseItem) => void;
+  onMarkBought: (id: string, paid: number) => void;
 }
 
-export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, onEdit, onDelete, onResearch, onAiResearch }) => {
+export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, onEdit, onDelete, onResearch, onAiResearch, onMarkBought }) => {
   const [expanded, setExpanded] = useState(false);
   const style = VERDICT_STYLE[decision.verdict];
   const positiva = decision.economia_brl > 0;
@@ -94,6 +95,27 @@ export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, 
             </li>
           ))}
         </ul>
+      )}
+
+      {item.status === 'planned' && decision.verdict !== 'DADOS_INSUFICIENTES' && (
+        <button
+          onClick={() => {
+            const entrada = prompt('Valor efetivamente pago, em US$:', String(decision.us.liquido_usd));
+            if (entrada === null) return;
+            const valor = Number(entrada);
+            if (!Number.isFinite(valor) || valor < 0) return;
+            onMarkBought(item.id, valor);
+          }}
+          className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition"
+        >
+          Marcar como comprado
+        </button>
+      )}
+
+      {item.status === 'bought' && (
+        <div className="text-[11px] text-emerald-400 font-semibold">
+          Decidido em {decision.computed_at} • pago US$ {(item.actual_paid_usd ?? 0).toFixed(2)}
+        </div>
       )}
 
       {decision.verdict !== 'DADOS_INSUFICIENTES' && (

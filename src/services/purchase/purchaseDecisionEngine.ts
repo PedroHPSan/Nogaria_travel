@@ -244,6 +244,11 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
   const fx = fxMultiplier(a.usd_brl_rate, a.card_iof_pct, a.card_spread_pct);
 
   return items.map(item => {
+    // Item comprado exibe o que foi decidido, não o recálculo de hoje (RN-18).
+    if (item.decision_snapshot && item.status === 'bought') {
+      return item.decision_snapshot;
+    }
+
     const usQuote = usQuoteByItem.get(item.id);
     const brQuote = activeQuote(quotes, item.id, 'BR');
     const usNet = usNetByItem.get(item.id) ?? EMPTY_US_NET;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
 import type { PurchaseItem, Participant } from '../../types/database.types';
+import type { PurchaseVerdict } from '../../types/purchase.types';
 
 interface PurchaseModalProps {
   isOpen: boolean;
@@ -46,8 +47,12 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [status, setStatus] = useState<PurchaseItem['status']>('planned');
   const [linkUrl, setLinkUrl] = useState('');
   const [notes, setNotes] = useState('');
+  const [verdictOverride, setVerdictOverride] = useState<PurchaseVerdict | ''>('');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    setError('');
     if (initialData) {
       setProductName(initialData.product_name || '');
       setCategory(initialData.category || 'electronics');
@@ -64,6 +69,8 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       setStatus(initialData.status || 'planned');
       setLinkUrl(initialData.link_url || '');
       setNotes(initialData.notes || '');
+      setVerdictOverride(initialData.verdict_override ?? '');
+      setOverrideReason(initialData.override_reason ?? '');
     } else {
       setProductName('');
       setCategory('electronics');
@@ -80,12 +87,19 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       setStatus('planned');
       setLinkUrl('');
       setNotes('');
+      setVerdictOverride('');
+      setOverrideReason('');
     }
   }, [initialData, isOpen, participants]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!productName.trim() || !targetParticipantId) return;
+
+    if (verdictOverride !== '' && !overrideReason.trim()) {
+      setError('Explique o motivo ao sobrepor a recomendação do motor.');
+      return;
+    }
 
     onSave({
       trip_id: tripId,
@@ -103,7 +117,9 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       gift_card_eligible: giftCardEligible,
       status,
       link_url: linkUrl.trim() || undefined,
-      notes: notes.trim() || undefined
+      notes: notes.trim() || undefined,
+      verdict_override: verdictOverride === '' ? undefined : verdictOverride,
+      override_reason: verdictOverride === '' ? undefined : overrideReason.trim()
     });
     onClose();
   };
@@ -319,6 +335,39 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
           />
         </div>
+
+        <div>
+          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+            Sobrepor o veredito do motor (opcional)
+          </label>
+          <select
+            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white"
+            value={verdictOverride}
+            onChange={e => setVerdictOverride(e.target.value as PurchaseVerdict | '')}
+          >
+            <option value="">Usar a recomendação do motor</option>
+            <option value="COMPRAR_EUA">Comprar nos EUA</option>
+            <option value="COMPRAR_BRASIL">Comprar no Brasil</option>
+            <option value="AGUARDAR_PRECO">Aguardar preço</option>
+          </select>
+        </div>
+
+        {verdictOverride !== '' && (
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              Motivo da decisão manual
+            </label>
+            <textarea
+              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white"
+              rows={2}
+              value={overrideReason}
+              onChange={e => setOverrideReason(e.target.value)}
+              placeholder="Ex.: prefiro garantia nacional"
+            />
+          </div>
+        )}
+
+        {error && <p className="text-xs text-rose-400">{error}</p>}
 
         <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
           <button
