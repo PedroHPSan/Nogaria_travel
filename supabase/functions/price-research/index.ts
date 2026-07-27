@@ -1,5 +1,12 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { searchPrices } from './gemini.ts';
+import {
+  ALLOWED_MARKETS,
+  MAX_BRAND_LENGTH,
+  MAX_MARKETS,
+  MAX_MODEL_HINT_LENGTH,
+  MAX_PRODUCT_NAME_LENGTH,
+} from './types.ts';
 import type { PriceResearchRequest } from './types.ts';
 
 const CORS = {
@@ -13,6 +20,54 @@ const json = (body: unknown, status = 200) =>
     headers: { ...CORS, 'Content-Type': 'application/json' },
   });
 
+// Runtime validation of the request body. The 'US'|'BR' union in PriceResearchRequest is a
+// TypeScript-only guarantee that erases at runtime — an untrusted caller can send any JSON
+// shape, so every field consumed downstream (especially anything interpolated into the
+// Gemini prompt) must be re-checked here. Returns a pt-BR message naming the violation, or
+// null if the body is valid.
+function validateRequestBody(raw: unknown): { error: string } | { body: PriceResearchRequest } {
+  if (typeof raw !== 'object' || raw === null) {
+    return { error: 'Requisição incompleta.' };
+  }
+  const body = raw as Record<string, unknown>;
+
+  if (typeof body.trip_id !== 'string' || !body.trip_id) {
+    return { error: 'Requisição incompleta: trip_id ausente.' };
+  }
+  if (typeof body.product_name !== 'string' || !body.product_name) {
+    return { error: 'Requisição incompleta: product_name ausente.' };
+  }
+  if (body.product_name.length > MAX_PRODUCT_NAME_LENGTH) {
+    return { error: `product_name excede o limite de ${MAX_PRODUCT_NAME_LENGTH} caracteres.` };
+  }
+  if (body.brand !== undefined) {
+    if (typeof body.brand !== 'string' || body.brand.length > MAX_BRAND_LENGTH) {
+      return { error: `brand excede o limite de ${MAX_BRAND_LENGTH} caracteres.` };
+    }
+  }
+  if (body.model_hint !== undefined) {
+    if (typeof body.model_hint !== 'string' || body.model_hint.length > MAX_MODEL_HINT_LENGTH) {
+      return { error: `model_hint excede o limite de ${MAX_MODEL_HINT_LENGTH} caracteres.` };
+    }
+  }
+  if (!Array.isArray(body.markets) || body.markets.length === 0) {
+    return { error: 'Requisição incompleta: markets ausente.' };
+  }
+  if (body.markets.length > MAX_MARKETS) {
+    return { error: `markets excede o número de mercados suportados (máximo ${MAX_MARKETS}).` };
+  }
+  if (new Set(body.markets).size !== body.markets.length) {
+    return { error: 'markets contém valores duplicados.' };
+  }
+  for (const market of body.markets) {
+    if (typeof market !== 'string' || !(ALLOWED_MARKETS as readonly string[]).includes(market)) {
+      return { error: `Mercado inválido: "${String(market)}". Mercados suportados: ${ALLOWED_MARKETS.join(', ')}.` };
+    }
+  }
+
+  return { body: body as unknown as PriceResearchRequest };
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
@@ -20,9 +75,17 @@ Deno.serve(async (request) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) return json({ error: 'Sessão ausente.' }, 401);
 
+    // SUPABASE_ANON_KEY is the legacy auto-injected name; SUPABASE_PUBLISHABLE_KEY is the
+    // newer one this project uses elsewhere. Support both, fail closed if neither is set —
+    // cheap insurance against a dead-on-arrival deploy after a future key-naming migration.
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY');
+    if (!supabaseAnonKey) {
+      return json({ error: 'Configuração do servidor incompleta: chave anônima do Supabase ausente.' }, 500);
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      supabaseAnonKey,
       { global: { headers: { Authorization: authHeader } } },
     );
 
@@ -30,10 +93,16 @@ Deno.serve(async (request) => {
     const user = userData?.user;
     if (!user) return json({ error: 'Sessão inválida.' }, 401);
 
-    const body = (await request.json()) as PriceResearchRequest;
-    if (!body.trip_id || !body.product_name || !body.markets?.length) {
-      return json({ error: 'Requisição incompleta.' }, 400);
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return json({ error: 'Corpo da requisição não é um JSON válido.' }, 400);
     }
+
+    const validated = validateRequestBody(rawBody);
+    if ('error' in validated) return json({ error: validated.error }, 400);
+    const body = validated.body;
 
     // O trip_id só é visível se o usuário for membro do tenant — a própria RLS decide.
     const { data: trip } = await supabase
@@ -91,7 +160,7 @@ Deno.serve(async (request) => {
     // Gemini Flash: US$ 0,075 por 1M de entrada, US$ 0,30 por 1M de saída.
     const cost = (result.tokensIn / 1_000_000) * 0.075 + (result.tokensOut / 1_000_000) * 0.3;
 
-    await supabase.from('ai_usage_logs').insert({
+    const { error: usageInsertError } = await supabase.from('ai_usage_logs').insert({
       tenant_id: trip.tenant_id,
       user_name: user.email ?? user.id,
       function_name: 'price_research',
@@ -103,6 +172,18 @@ Deno.serve(async (request) => {
       timestamp: new Date().toISOString(),
     });
 
+    if (usageInsertError) {
+      // The daily-token and monthly-budget checks above derive their counters entirely by
+      // re-reading this table, so a silently failed insert switches off the only guardrail
+      // against runaway spend. The Gemini call has already happened and cost money by this
+      // point, so we still return the (already-paid-for) candidates — discarding them would
+      // waste the spend without fixing the accounting gap — but we log the failure server-side
+      // and tell the caller usage accounting is degraded via `usage.logged`.
+      console.error(
+        `[price-research] Falha ao registrar uso em ai_usage_logs (tenant ${trip.tenant_id}): ${usageInsertError.message}`,
+      );
+    }
+
     return json({
       candidates: result.candidates,
       usage: {
@@ -110,6 +191,7 @@ Deno.serve(async (request) => {
         tokens_out: result.tokensOut,
         cost_usd: Number(cost.toFixed(6)),
         elapsed_ms: elapsed,
+        logged: !usageInsertError,
       },
     });
   } catch (error) {

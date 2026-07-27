@@ -55,12 +55,22 @@ export async function searchPrices(
         temperature,
         responseMimeType: 'application/json',
         responseSchema: RESPONSE_SCHEMA,
+        // Explicit ceiling: bounds cost/latency of a single call and makes truncation
+        // predictable. Up to 3 candidates per market × 2 markets, each a small flat object —
+        // 2048 tokens is comfortably generous for that payload as JSON.
+        maxOutputTokens: 2048,
       },
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`Gemini respondeu ${response.status}: ${await response.text()}`);
+    // Log the raw upstream detail server-side only — Google's error bodies can carry
+    // model/project identifiers, quota-exhaustion text, or safety/policy rejection reasons,
+    // none of it pt-BR or appropriate to forward to the browser. Never log the request URL
+    // itself (it carries the API key as a query parameter).
+    const detail = await response.text();
+    console.error(`[price-research] Gemini API respondeu ${response.status}: ${detail}`);
+    throw new Error('Falha ao consultar o serviço de pesquisa de preços. Tente novamente mais tarde.');
   }
 
   const data = await response.json();
@@ -70,7 +80,8 @@ export async function searchPrices(
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error(`Resposta do Gemini não é JSON válido: ${text.slice(0, 200)}`);
+    console.error(`[price-research] Resposta do Gemini não é JSON válido: ${text.slice(0, 500)}`);
+    throw new Error('O serviço de pesquisa de preços retornou uma resposta inválida. Tente novamente.');
   }
 
   return {
