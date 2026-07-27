@@ -548,6 +548,30 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [purchases, purchaseState, participants, giftCards, luggages, activeTrip.id, exchangeRate],
   );
 
+  // Usado só por `addPurchase` (revisão Finding 2, rodada 2): um item
+  // recém-criado ainda não existe em `purchases`, então o `purchaseDecisions`
+  // memoizado acima (que só recalcula quando `purchases` muda) não o
+  // enxerga. Para congelar um item já criado como 'bought', o motor precisa
+  // rodar com um conjunto de itens que já inclua o candidato — daí não dar
+  // simplesmente para reusar `purchaseDecisions` aqui. Mantido como uma
+  // função separada (em vez de fatorar `purchaseDecisions` para cima dela)
+  // para não introduzir um novo aviso de exhaustive-deps no useMemo acima.
+  const decisionsForItemSet = (itemSet: PurchaseItem[]): PurchaseDecision[] =>
+    decidePurchases({
+      items: itemSet.filter(p => p.trip_id === activeTrip.id),
+      quotes: purchaseState.priceQuotes.filter(q => q.trip_id === activeTrip.id),
+      participants: participants.filter(p => p.trip_id === activeTrip.id),
+      giftCards: giftCards.filter(g => g.trip_id === activeTrip.id),
+      assumptions: {
+        ...purchaseState.assumptions,
+        usd_brl_rate: exchangeRate,
+        rate_source: 'Câmbio do app (TripContext)',
+        rate_date: purchaseState.today,
+      },
+      today: purchaseState.today,
+      luggages: luggages.filter(l => l.trip_id === activeTrip.id),
+    });
+
   const toggleResolveAudit = (id: string) => {
     setResolvedAuditIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
@@ -669,34 +693,55 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setGiftCards(prev => prev.filter(item => item.id !== id));
   };
 
-  const addPurchase = (p: Omit<PurchaseItem, 'id'>) => {
-    const newP: PurchaseItem = { ...p, id: newId() };
-    setPurchases(prev => [...prev, newP]);
+  // Ponto único da invariante do congelamento (RN-18/CA-11): TODA gravação de
+  // PurchaseItem passa por aqui — criação (addPurchase) e edição
+  // (updatePurchase), inclusive o <select> de Status do PurchaseModal em
+  // ambos os fluxos, que nunca chama markPurchaseBought diretamente. Duas
+  // cópias do mesmo guard (uma em cada função) foi exatamente o que faltou na
+  // rodada anterior: addPurchase ficou sem o guard e um item podia nascer já
+  // 'bought' sem snapshot (revisão Finding 2, rodada 2). `getLiveDecision` é
+  // avaliado só quando necessário porque, na criação, calcular a decisão
+  // exige rodar o motor com o conjunto de itens que já inclui o candidato —
+  // mais caro que o simples lookup usado na edição.
+  //
+  // Qualquer transição PARA 'bought' sem um snapshot já anexado ao patch tira
+  // um agora — senão o item nunca congela e recalcula ao vivo para sempre.
+  // Qualquer transição PARA FORA de 'bought' apaga o snapshot (e o valor
+  // pago) — senão reverter para 'planned' e marcar 'bought' de novo ressuscita
+  // o snapshot da compra anterior com os números de outra compra.
+  const freezeBoughtStatus = (
+    candidate: PurchaseItem,
+    wasBought: boolean,
+    getLiveDecision: () => PurchaseDecision | undefined,
+  ): PurchaseItem => {
+    if (candidate.status === 'bought' && !wasBought && !candidate.decision_snapshot) {
+      return { ...candidate, decision_snapshot: getLiveDecision() };
+    }
+    if (candidate.status !== 'bought' && wasBought) {
+      return { ...candidate, decision_snapshot: undefined, actual_paid_usd: undefined };
+    }
+    return candidate;
   };
 
-  // Fecha a porta dos fundos do dropdown de Status (CA-11 / revisão Finding 2):
-  // `updatePurchase` é o único ponto por onde TODA gravação de `purchases`
-  // passa (inclusive o <select> do PurchaseModal, que nunca chama
-  // markPurchaseBought), então a garantia do congelamento tem que morar aqui,
-  // não na UI. Qualquer transição PARA 'bought' sem um snapshot já anexado ao
-  // patch tira um agora — senão o item nunca congela e recalcula ao vivo para
-  // sempre. Qualquer transição PARA FORA de 'bought' apaga o snapshot (e o
-  // valor pago) — senão reverter para 'planned' e marcar 'bought' de novo
-  // ressuscita o snapshot da compra anterior com os números de outra compra.
+  const addPurchase = (p: Omit<PurchaseItem, 'id'>) => {
+    const draft: PurchaseItem = { ...p, id: newId() };
+    setPurchases(prev => {
+      const withDraft = [...prev, draft];
+      const frozenDraft = freezeBoughtStatus(draft, false, () =>
+        decisionsForItemSet(withDraft).find(d => d.purchase_item_id === draft.id),
+      );
+      return [...prev, frozenDraft];
+    });
+  };
+
   const updatePurchase = (id: string, p: Partial<PurchaseItem>) => {
     setPurchases(prev =>
       prev.map(item => {
         if (item.id !== id) return item;
         const updated: PurchaseItem = { ...item, ...p };
-
-        if (updated.status === 'bought' && item.status !== 'bought' && !updated.decision_snapshot) {
-          updated.decision_snapshot = purchaseDecisions.find(d => d.purchase_item_id === id);
-        } else if (updated.status !== 'bought' && item.status === 'bought') {
-          updated.decision_snapshot = undefined;
-          updated.actual_paid_usd = undefined;
-        }
-
-        return updated;
+        return freezeBoughtStatus(updated, item.status === 'bought', () =>
+          purchaseDecisions.find(d => d.purchase_item_id === id),
+        );
       }),
     );
   };
