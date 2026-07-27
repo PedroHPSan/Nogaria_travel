@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { AlertTriangle, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
-import type { PurchaseItem } from '../../types/database.types';
+import type { PriceQuote, PurchaseItem } from '../../types/database.types';
 import type { PurchaseDecision, PurchaseVerdict } from '../../types/purchase.types';
 import { PurchaseBreakdown } from './PurchaseBreakdown';
+import { PriceQuoteHistory } from './PriceQuoteHistory';
 
 const VERDICT_STYLE: Record<PurchaseVerdict, { label: string; className: string }> = {
   COMPRAR_EUA: { label: 'Comprar nos EUA', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
@@ -17,12 +18,13 @@ const brl = (n: number) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigi
 interface Props {
   item: PurchaseItem;
   decision: PurchaseDecision;
+  quotes: PriceQuote[];
   onEdit: (item: PurchaseItem) => void;
   onDelete: (id: string) => void;
   onResearch: (item: PurchaseItem) => void;
 }
 
-export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, onEdit, onDelete, onResearch }) => {
+export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, onEdit, onDelete, onResearch }) => {
   const [expanded, setExpanded] = useState(false);
   const style = VERDICT_STYLE[decision.verdict];
   const positiva = decision.economia_brl > 0;
@@ -95,6 +97,13 @@ export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, onEdit, 
           </button>
           {expanded && (
             <div className="pt-3 border-t border-slate-800">
+              <PriceQuoteHistory quotes={quotes} itemId={item.id} market="US" />
+              <button
+                onClick={() => onResearch(item)}
+                className="w-full mt-2 mb-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-[11px] transition"
+              >
+                Registrar nova cotação
+              </button>
               <PurchaseBreakdown decision={decision} />
             </div>
           )}

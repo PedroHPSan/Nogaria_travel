@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { PurchaseModal } from '../../components/modals/PurchaseModal';
 import { LuggageModal } from '../../components/modals/LuggageModal';
+import { PriceQuoteModal } from '../../components/modals/PriceQuoteModal';
 import { PurchaseDecisionCard } from './PurchaseDecisionCard';
 import type { PurchaseItem, Luggage } from '../../types/database.types';
 import {
@@ -26,6 +27,8 @@ export const PurchasesView: React.FC = () => {
     addLuggage,
     updateLuggage,
     deleteLuggage,
+    priceQuotes,
+    addPriceQuote,
     formatAmount
   } = useTrip();
 
@@ -38,6 +41,8 @@ export const PurchasesView: React.FC = () => {
 
   const [isLuggageModalOpen, setIsLuggageModalOpen] = useState(false);
   const [editingLuggage, setEditingLuggage] = useState<Luggage | null>(null);
+
+  const [quoteItem, setQuoteItem] = useState<PurchaseItem | null>(null);
 
   const tripPurchases = purchases.filter(p => p.trip_id === activeTrip.id);
   const tripLuggages = luggages.filter(l => l.trip_id === activeTrip.id);
@@ -130,9 +135,10 @@ export const PurchasesView: React.FC = () => {
                   key={p.id}
                   item={p}
                   decision={decision}
+                  quotes={priceQuotes}
                   onEdit={handleOpenEditPurchase}
                   onDelete={deletePurchase}
-                  onResearch={handleOpenEditPurchase}
+                  onResearch={setQuoteItem}
                 />
               );
             })}
@@ -243,6 +249,14 @@ export const PurchasesView: React.FC = () => {
         }}
         initialData={editingLuggage}
         participants={participants}
+        tripId={activeTrip.id}
+      />
+
+      <PriceQuoteModal
+        isOpen={quoteItem !== null}
+        onClose={() => setQuoteItem(null)}
+        onSave={addPriceQuote}
+        item={quoteItem}
         tripId={activeTrip.id}
       />
     </div>
