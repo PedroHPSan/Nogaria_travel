@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { PurchaseModal } from '../../components/modals/PurchaseModal';
 import { LuggageModal } from '../../components/modals/LuggageModal';
@@ -80,6 +80,15 @@ export const PurchasesView: React.FC = () => {
     if (usd_brl_rate !== undefined) setExchangeRate(usd_brl_rate);
     if (Object.keys(rest).length > 0) updateAssumptions(rest);
   };
+
+  // Stable object identity while assumptions/exchangeRate are unchanged, so
+  // AssumptionsModal's [isOpen, assumptions] effect doesn't re-fire (and
+  // reset an in-progress draft) on unrelated PurchasesView re-renders while
+  // the modal is open.
+  const assumptionsWithLiveRate = useMemo(
+    () => ({ ...assumptions, usd_brl_rate: exchangeRate }),
+    [assumptions, exchangeRate]
+  );
 
   const handleOpenAddLuggage = () => {
     setEditingLuggage(null);
@@ -296,7 +305,7 @@ export const PurchasesView: React.FC = () => {
       <AssumptionsModal
         isOpen={isAssumptionsOpen}
         onClose={() => setIsAssumptionsOpen(false)}
-        assumptions={{ ...assumptions, usd_brl_rate: exchangeRate }}
+        assumptions={assumptionsWithLiveRate}
         onSave={handleSaveAssumptions}
       />
     </div>

@@ -10,7 +10,23 @@ interface Props {
   onSave: (patch: Partial<PurchaseAssumptions>) => void;
 }
 
-const FIELDS: Array<{ key: keyof PurchaseAssumptions; label: string; hint: string }> = [
+// The numeric fields below are edited as free-text number inputs. A cleared
+// input yields '' — which must stay distinct from a deliberate 0 (a valid
+// value for card_spread_pct, default_sales_tax_pct, safety_margin_pct, etc.)
+// until submit time, when a blank field is rejected explicitly.
+type NumericAssumptionKey =
+  | 'usd_brl_rate'
+  | 'default_sales_tax_pct'
+  | 'card_iof_pct'
+  | 'card_spread_pct'
+  | 'customs_quota_usd_per_person'
+  | 'customs_excess_tax_pct'
+  | 'safety_margin_pct';
+
+type AssumptionsDraft = Omit<PurchaseAssumptions, NumericAssumptionKey> &
+  Record<NumericAssumptionKey, number | ''>;
+
+const FIELDS: Array<{ key: NumericAssumptionKey; label: string; hint: string }> = [
   { key: 'usd_brl_rate', label: 'Câmbio USD/BRL', hint: 'cotação usada em toda conversão' },
   { key: 'default_sales_tax_pct', label: 'Sales tax padrão (%)', hint: 'usada quando o estado é desconhecido' },
   { key: 'card_iof_pct', label: 'IOF do cartão (%)', hint: '3,38 no crédito internacional' },
@@ -21,7 +37,7 @@ const FIELDS: Array<{ key: keyof PurchaseAssumptions; label: string; hint: strin
 ];
 
 export const AssumptionsModal: React.FC<Props> = ({ isOpen, onClose, assumptions, onSave }) => {
-  const [draft, setDraft] = useState<PurchaseAssumptions>(assumptions);
+  const [draft, setDraft] = useState<AssumptionsDraft>(assumptions);
   const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
@@ -32,9 +48,15 @@ export const AssumptionsModal: React.FC<Props> = ({ isOpen, onClose, assumptions
   }, [isOpen, assumptions]);
 
   const handleSubmit = () => {
-    const found = validateAssumptions(draft);
+    const blanks = FIELDS.filter(f => draft[f.key] === '');
+    if (blanks.length > 0) {
+      return setErrors(blanks.map(f => `${f.label} não pode ficar em branco.`));
+    }
+
+    const toSave = draft as PurchaseAssumptions;
+    const found = validateAssumptions(toSave);
     if (found.length > 0) return setErrors(found);
-    onSave(draft);
+    onSave(toSave);
     onClose();
   };
 
@@ -48,8 +70,8 @@ export const AssumptionsModal: React.FC<Props> = ({ isOpen, onClose, assumptions
               className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white"
               type="number"
               step="0.01"
-              value={String(draft[f.key] ?? '')}
-              onChange={e => setDraft({ ...draft, [f.key]: Number(e.target.value) })}
+              value={draft[f.key]}
+              onChange={e => setDraft({ ...draft, [f.key]: e.target.value === '' ? '' : Number(e.target.value) })}
             />
             <p className="text-[10px] text-slate-500 mt-0.5">{f.hint}</p>
           </div>
