@@ -94,7 +94,13 @@ describe('useTripsData', () => {
   });
 
   it('devolve o uuid gerado, e ele é o id da viagem criada', async () => {
-    const { result } = renderHook(() => useTripsData(deps(makeClient())));
+    // client precisa ser criado uma vez fora do callback de renderHook: se
+    // criado dentro (`deps(makeClient())` inline), cada render gera um objeto
+    // `client` novo, e como o efeito de carga depende de `[client, tenantId]`,
+    // isso reexecuta o efeito a cada render — um loop só interrompido de fato
+    // no unmount, mascarado pelo waitFor "pegar" um instante com loading=false.
+    const client = makeClient();
+    const { result } = renderHook(() => useTripsData(deps(client)));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     let devolvido = '';
