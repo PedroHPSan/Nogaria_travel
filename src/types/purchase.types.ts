@@ -5,10 +5,10 @@ export type PurchaseVerdict =
   | 'AGUARDAR_PRECO'
   | 'DADOS_INSUFICIENTES';
 
-/** Uma linha nomeada do cálculo, com o parâmetro que a produziu. */
+/** Uma linha nomeada do cálculo, com o parâmetro que a produziu. A moeda é a do container (UsCostBreakdown = USD, BrCostBreakdown = BRL). */
 export interface CostLine {
   label: string;
-  amount_usd: number;
+  amount: number;
   parameter?: string;
 }
 

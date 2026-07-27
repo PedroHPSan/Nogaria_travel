@@ -41,6 +41,7 @@ interface UsNet {
   bruto_usd: number;
   gift_card_covered_usd: number;
   liquido_usd: number;
+  tax_pct: number;
 }
 
 const EMPTY_US_NET: UsNet = {
@@ -48,14 +49,23 @@ const EMPTY_US_NET: UsNet = {
   bruto_usd: 0,
   gift_card_covered_usd: 0,
   liquido_usd: 0,
+  tax_pct: 0,
 };
 
-/** Cadeia de custo do lado americano, até o líquido — antes da cota. */
+/**
+ * Cadeia de custo do lado americano, até o líquido — antes da cota.
+ *
+ * `availableGiftCardBalance`, quando informado, substitui `giftCard.current_balance`
+ * como teto de cobertura — usado por `decidePurchases` para ratear um mesmo gift card
+ * entre vários itens (RN-04), decrementando o saldo restante a cada item processado.
+ * Sem esse parâmetro, cai no saldo integral do cartão (uso avulso da função).
+ */
 export function computeUsNet(
   item: PurchaseItem,
   quote: PriceQuote,
   a: PurchaseAssumptions,
   giftCard?: GiftCard,
+  availableGiftCardBalance?: number,
 ): UsNet {
   const lines: CostLine[] = [];
 
@@ -64,7 +74,7 @@ export function computeUsNet(
   const base = round2(unit * qty);
   lines.push({
     label: `Preço ${quote.store_name} (x${qty})`,
-    amount_usd: base,
+    amount: base,
     parameter: `cotação de ${quote.observed_at}`,
   });
 
@@ -72,7 +82,7 @@ export function computeUsNet(
     ? round2(item.coupon_amount_usd)
     : round2((base * (item.coupon_pct ?? 0)) / 100);
   if (coupon > 0) {
-    lines.push({ label: 'Cupom/desconto', amount_usd: -coupon, parameter: 'cupom do item' });
+    lines.push({ label: 'Cupom/desconto', amount: -coupon, parameter: 'cupom do item' });
   }
 
   const subtotal = round2(Math.max(0, base - coupon));
@@ -82,19 +92,19 @@ export function computeUsNet(
   if (tax > 0) {
     lines.push({
       label: `Sales tax (${item.us_store_state ?? 'padrão'} ${taxPct}%)`,
-      amount_usd: tax,
+      amount: tax,
       parameter: 'sales_tax_pct_by_state',
     });
   }
 
   const freight = item.purchase_channel === 'online_us' ? round2(item.freight_usd ?? 0) : 0;
   if (freight > 0) {
-    lines.push({ label: 'Frete', amount_usd: freight, parameter: 'freight_usd' });
+    lines.push({ label: 'Frete', amount: freight, parameter: 'freight_usd' });
   }
 
   const bruto = round2(subtotal + tax + freight);
 
-  const balance = giftCard?.current_balance ?? 0;
+  const balance = availableGiftCardBalance ?? giftCard?.current_balance ?? 0;
   const covered = round2(Math.min(bruto, Math.max(0, balance)));
   const gcBenefit = giftCard
     ? round2((covered * giftCard.effective_savings_pct) / 100)
@@ -102,7 +112,7 @@ export function computeUsNet(
   if (gcBenefit > 0 && giftCard) {
     lines.push({
       label: `Gift card ${giftCard.store_brand} (${giftCard.effective_savings_pct}% efetivo)`,
-      amount_usd: -gcBenefit,
+      amount: -gcBenefit,
       parameter: 'giftCardCalculator.effective_savings_pct',
     });
   }
@@ -113,7 +123,7 @@ export function computeUsNet(
   if (cashback > 0) {
     lines.push({
       label: `Cashback (${item.cashback_pct}%)`,
-      amount_usd: -cashback,
+      amount: -cashback,
       parameter: 'cashback_pct',
     });
   }
@@ -123,6 +133,7 @@ export function computeUsNet(
     bruto_usd: bruto,
     gift_card_covered_usd: covered,
     liquido_usd: round2(bruto - gcBenefit - cashback),
+    tax_pct: taxPct,
   };
 }
 
@@ -134,28 +145,39 @@ export function computeBr(item: PurchaseItem, quote: PriceQuote): BrCostBreakdow
   const base = round2(Math.max(0, quote.price) * qty);
   lines.push({
     label: `Preço Brasil ${quote.store_name} (x${qty})`,
-    amount_usd: base,
+    amount: base,
     parameter: `cotação de ${quote.observed_at}`,
   });
 
   const cashback = round2((base * (item.br_cashback_pct ?? 0)) / 100);
   if (cashback > 0) {
-    lines.push({ label: 'Cashback Brasil', amount_usd: -cashback, parameter: 'br_cashback_pct' });
+    lines.push({ label: 'Cashback Brasil', amount: -cashback, parameter: 'br_cashback_pct' });
   }
 
   return { lines, br_liquido_brl: round2(base - cashback) };
 }
 
-function buildPremises(a: PurchaseAssumptions, item: PurchaseItem, taxPct: number): Premise[] {
+function buildPremises(
+  a: PurchaseAssumptions,
+  item: PurchaseItem,
+  hasUsQuote: boolean,
+  taxPct: number,
+): Premise[] {
   return [
     { label: 'Câmbio USD/BRL', value: a.usd_brl_rate.toFixed(2), source: `${a.rate_source} — ${a.rate_date}` },
     { label: 'IOF do cartão', value: `${a.card_iof_pct}%`, source: 'parâmetros da viagem' },
     { label: 'Spread do cartão', value: `${a.card_spread_pct}%`, source: 'parâmetros da viagem' },
-    {
-      label: 'Sales tax aplicada',
-      value: `${taxPct}%`,
-      source: item.us_store_state ? `estado ${item.us_store_state}` : 'alíquota padrão',
-    },
+    hasUsQuote
+      ? {
+          label: 'Sales tax aplicada',
+          value: `${taxPct}%`,
+          source: item.us_store_state ? `estado ${item.us_store_state}` : 'alíquota padrão',
+        }
+      : {
+          label: 'Sales tax aplicada',
+          value: 'não aplicável',
+          source: 'sem cotação americana ativa',
+        },
     {
       label: 'Cota por pessoa',
       value: `US$ ${a.customs_quota_usd_per_person}`,
@@ -184,6 +206,11 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
 
   const usNetByItem = new Map<string, UsNet>();
   const usQuoteByItem = new Map<string, PriceQuote>();
+  // Ledger de saldo restante por gift card (RN-04): um mesmo cartão compartilhado
+  // por vários itens não pode ser creditado integralmente em cada um deles.
+  const giftCardRemainingBalance = new Map<string, number>(
+    giftCards.map(g => [g.id, g.current_balance] as const),
+  );
 
   for (const item of items) {
     const usQuote = activeQuote(quotes, item.id, 'US');
@@ -192,7 +219,17 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
     const giftCard = item.gift_card_id
       ? giftCards.find(g => g.id === item.gift_card_id)
       : undefined;
-    usNetByItem.set(item.id, computeUsNet(item, usQuote, a, giftCard));
+    const availableBalance = giftCard
+      ? (giftCardRemainingBalance.get(giftCard.id) ?? giftCard.current_balance)
+      : undefined;
+    const usNet = computeUsNet(item, usQuote, a, giftCard, availableBalance);
+    if (giftCard) {
+      giftCardRemainingBalance.set(
+        giftCard.id,
+        round2((availableBalance ?? 0) - usNet.gift_card_covered_usd),
+      );
+    }
+    usNetByItem.set(item.id, usNet);
   }
 
   const quotaItems: QuotaItemInput[] = items
@@ -231,7 +268,7 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
     if (impostoCota > 0) {
       usLines.push({
         label: `Imposto de cota (${a.customs_excess_tax_pct}% sobre o excedente)`,
-        amount_usd: impostoCota,
+        amount: impostoCota,
         parameter: 'customs_excess_tax_pct',
       });
     }
@@ -333,8 +370,6 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
       verdict = 'INDIFERENTE';
     }
 
-    const taxPct = usQuote?.includes_tax ? 0 : salesTaxPct(a, item.us_store_state);
-
     return {
       purchase_item_id: item.id,
       verdict,
@@ -344,7 +379,7 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
       br,
       quota: quotaShare,
       alerts,
-      premises: buildPremises(a, item, taxPct),
+      premises: buildPremises(a, item, Boolean(usQuote), usNet.tax_pct),
       computed_at: today,
     };
   });

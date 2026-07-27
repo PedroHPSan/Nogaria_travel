@@ -142,6 +142,31 @@ describe('decidePurchases — regressão CA-02 com os dados do seed', () => {
   it('recomenda comprar nos EUA', () => {
     expect(iphone.verdict).toBe('COMPRAR_EUA');
   });
+
+  it('lista as linhas de custo nomeadas dos dois lados, não só os totais', () => {
+    expect(iphone.us.lines).toEqual([
+      { label: 'Preço Apple Store Millenia (x1)', amount: 1399, parameter: `cotação de ${TODAY}` },
+      { label: 'Sales tax (FL 7%)', amount: 97.93, parameter: 'sales_tax_pct_by_state' },
+      {
+        label: 'Gift card Apple Store (18.4% efetivo)',
+        amount: -55.2,
+        parameter: 'giftCardCalculator.effective_savings_pct',
+      },
+      { label: 'Cashback (4%)', amount: -47.88, parameter: 'cashback_pct' },
+      {
+        label: 'Imposto de cota (50% sobre o excedente)',
+        amount: 382.23,
+        parameter: 'customs_excess_tax_pct',
+      },
+    ]);
+    expect(iphone.br.lines).toEqual([
+      {
+        label: 'Preço Brasil Apple Store Millenia (x1)',
+        amount: 11499,
+        parameter: `cotação de ${TODAY}`,
+      },
+    ]);
+  });
 });
 
 describe('decidePurchases — CA-03, sem excedente de cota', () => {
@@ -448,5 +473,65 @@ describe('decidePurchases — degenerados', () => {
         today: TODAY,
       }),
     ).toEqual([]);
+  });
+});
+
+describe('decidePurchases — gift card compartilhado entre itens (RN-04, ledger)', () => {
+  it('não credita o saldo cheio em cada item: o segundo item só recebe o que sobrou do primeiro', () => {
+    const itemA = purchase({
+      id: 'pur-shared-a',
+      product_name: 'Item A',
+      cashback_pct: 0,
+      us_store_state: 'DE',
+      target_price_usd: 250,
+      gift_card_id: 'gc-apple-01',
+    });
+    const itemB = purchase({
+      id: 'pur-shared-b',
+      product_name: 'Item B',
+      cashback_pct: 0,
+      us_store_state: 'DE',
+      target_price_usd: 1000,
+      gift_card_id: 'gc-apple-01',
+    });
+
+    const decisions = decidePurchases({
+      items: [itemA, itemB],
+      quotes: [
+        quote({ id: 'q-us-a', purchase_item_id: 'pur-shared-a', price: 250 }),
+        quote({ id: 'q-us-b', purchase_item_id: 'pur-shared-b', price: 1000 }),
+      ],
+      participants: [pedro],
+      giftCards: [appleGiftCard],
+      assumptions,
+      today: TODAY,
+    });
+
+    const a = find(decisions, 'pur-shared-a');
+    const b = find(decisions, 'pur-shared-b');
+
+    // Saldo do cartão é 300. O item A (bruto 250) consome 250, deixando 50 de saldo.
+    expect(a.us.gift_card_covered_usd).toBe(250);
+    // O item B (bruto 1000) só pode receber o que sobrou (50), não o saldo cheio (300).
+    expect(b.us.gift_card_covered_usd).toBe(50);
+  });
+});
+
+describe('decidePurchases — premissa de sales tax sem cotação americana (Finding 3)', () => {
+  it('não afirma uma alíquota aplicada quando não há cotação dos EUA', () => {
+    const d = decidePurchases({
+      items: [purchase({})],
+      quotes: [quote({ id: 'q-br', market: 'BR', price: 11499, currency: 'BRL', includes_tax: true })],
+      participants: [pedro],
+      giftCards: [],
+      assumptions,
+      today: TODAY,
+    })[0];
+
+    expect(d.verdict).toBe('DADOS_INSUFICIENTES');
+    const premise = d.premises.find(p => p.label === 'Sales tax aplicada');
+    expect(premise).toBeDefined();
+    expect(premise?.value).toBe('não aplicável');
+    expect(premise?.value).not.toMatch(/%/);
   });
 });
