@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { TripProvider, useTrip } from './context/TripContext';
+import { TripWizard } from './features/onboarding/TripWizard';
 import { AuthProvider } from './context/AuthContext';
 import { AuthGate } from './features/auth/AuthGate';
 import { Header } from './components/Header';
@@ -90,12 +92,30 @@ function MainAppContent() {
   );
 }
 
+const AppOuWizard = ({ children }: { children: ReactNode }) => {
+  const { trips, tripDataLoading } = useTrip();
+
+  if (tripDataLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <p className="text-sm text-slate-400">Carregando suas viagens…</p>
+      </div>
+    );
+  }
+
+  if (trips.length === 0) return <TripWizard />;
+
+  return <>{children}</>;
+};
+
 export function App() {
   return (
     <AuthProvider>
       <AuthGate>
         <TripProvider>
-          <MainAppContent />
+          <AppOuWizard>
+            <MainAppContent />
+          </AppOuWizard>
         </TripProvider>
       </AuthGate>
     </AuthProvider>
