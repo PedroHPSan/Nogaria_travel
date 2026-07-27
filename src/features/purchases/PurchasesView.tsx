@@ -3,14 +3,17 @@ import { useTrip } from '../../context/TripContext';
 import { PurchaseModal } from '../../components/modals/PurchaseModal';
 import { LuggageModal } from '../../components/modals/LuggageModal';
 import { PriceQuoteModal } from '../../components/modals/PriceQuoteModal';
+import { AssumptionsModal } from '../../components/modals/AssumptionsModal';
 import { PurchaseDecisionCard } from './PurchaseDecisionCard';
-import type { PurchaseItem, Luggage } from '../../types/database.types';
+import { QuotaAllocationPanel } from './QuotaAllocationPanel';
+import type { PurchaseItem, Luggage, PurchaseAssumptions } from '../../types/database.types';
 import {
   ShoppingBag,
   Luggage as LuggageIcon,
   Plus,
   Edit2,
-  Trash2
+  Trash2,
+  SlidersHorizontal
 } from 'lucide-react';
 
 
@@ -29,6 +32,10 @@ export const PurchasesView: React.FC = () => {
     deleteLuggage,
     priceQuotes,
     addPriceQuote,
+    assumptions,
+    updateAssumptions,
+    exchangeRate,
+    setExchangeRate,
     formatAmount
   } = useTrip();
 
@@ -44,6 +51,8 @@ export const PurchasesView: React.FC = () => {
 
   const [quoteItem, setQuoteItem] = useState<PurchaseItem | null>(null);
 
+  const [isAssumptionsOpen, setIsAssumptionsOpen] = useState(false);
+
   const tripPurchases = purchases.filter(p => p.trip_id === activeTrip.id);
   const tripLuggages = luggages.filter(l => l.trip_id === activeTrip.id);
   const tripPriceQuotes = priceQuotes.filter(q => q.trip_id === activeTrip.id);
@@ -58,6 +67,18 @@ export const PurchasesView: React.FC = () => {
   const handleOpenEditPurchase = (p: PurchaseItem) => {
     setEditingPurchase(p);
     setIsPurchaseModalOpen(true);
+  };
+
+  // TripContext's `exchangeRate` is the single source of truth for USD/BRL
+  // (see purchaseDecisions in TripContext.tsx, which always overrides
+  // assumptions.usd_brl_rate with it). Saving usd_brl_rate through
+  // updateAssumptions would therefore be a silent no-op on every verdict, so
+  // that one field is routed to setExchangeRate instead; every other field
+  // still goes through updateAssumptions.
+  const handleSaveAssumptions = (patch: Partial<PurchaseAssumptions>) => {
+    const { usd_brl_rate, ...rest } = patch;
+    if (usd_brl_rate !== undefined) setExchangeRate(usd_brl_rate);
+    if (Object.keys(rest).length > 0) updateAssumptions(rest);
   };
 
   const handleOpenAddLuggage = () => {
@@ -118,14 +139,25 @@ export const PurchasesView: React.FC = () => {
               <span className="text-xs text-purple-400 font-semibold">Total Estimado: {formatAmount(totalTargetUsd)}</span>
             </div>
 
-            <button
-              onClick={handleOpenAddPurchase}
-              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              Nova Compra
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsAssumptionsOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-1.5"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                Parâmetros
+              </button>
+              <button
+                onClick={handleOpenAddPurchase}
+                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                Nova Compra
+              </button>
+            </div>
           </div>
+
+          <QuotaAllocationPanel decisions={purchaseDecisions} participants={participants} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripPurchases.map(p => {
@@ -259,6 +291,13 @@ export const PurchasesView: React.FC = () => {
         onSave={addPriceQuote}
         item={quoteItem}
         tripId={activeTrip.id}
+      />
+
+      <AssumptionsModal
+        isOpen={isAssumptionsOpen}
+        onClose={() => setIsAssumptionsOpen(false)}
+        assumptions={{ ...assumptions, usd_brl_rate: exchangeRate }}
+        onSave={handleSaveAssumptions}
       />
     </div>
   );
