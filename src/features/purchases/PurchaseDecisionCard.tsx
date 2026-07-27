@@ -97,7 +97,16 @@ export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, 
           </button>
           {expanded && (
             <div className="pt-3 border-t border-slate-800">
-              <PriceQuoteHistory quotes={quotes} itemId={item.id} market="US" />
+              <div className="space-y-3">
+                <div>
+                  <div className="text-[10px] font-semibold text-slate-400 mb-1">Histórico de preços — EUA</div>
+                  <PriceQuoteHistory quotes={quotes} itemId={item.id} market="US" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-semibold text-slate-400 mb-1">Histórico de preços — Brasil</div>
+                  <PriceQuoteHistory quotes={quotes} itemId={item.id} market="BR" />
+                </div>
+              </div>
               <button
                 onClick={() => onResearch(item)}
                 className="w-full mt-2 mb-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-[11px] transition"

@@ -36,6 +36,7 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
   const handleSubmit = () => {
     if (!storeName.trim()) return setError('Informe a loja.');
     if (price === '' || Number(price) <= 0) return setError('Preço deve ser maior que zero.');
+    if (!observedAt) return setError('Informe a data da cotação.');
     if (observedAt > new Date().toISOString().split('T')[0]) return setError('Data não pode ser futura.');
 
     onSave({

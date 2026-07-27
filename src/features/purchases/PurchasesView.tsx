@@ -46,6 +46,7 @@ export const PurchasesView: React.FC = () => {
 
   const tripPurchases = purchases.filter(p => p.trip_id === activeTrip.id);
   const tripLuggages = luggages.filter(l => l.trip_id === activeTrip.id);
+  const tripPriceQuotes = priceQuotes.filter(q => q.trip_id === activeTrip.id);
 
   // Math summary
   const totalTargetUsd = tripPurchases.reduce((sum, p) => sum + p.target_price_usd * p.quantity, 0);
@@ -135,7 +136,7 @@ export const PurchasesView: React.FC = () => {
                   key={p.id}
                   item={p}
                   decision={decision}
-                  quotes={priceQuotes}
+                  quotes={tripPriceQuotes}
                   onEdit={handleOpenEditPurchase}
                   onDelete={deletePurchase}
                   onResearch={setQuoteItem}
