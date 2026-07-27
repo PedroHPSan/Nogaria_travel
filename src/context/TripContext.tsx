@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import type {
   Trip,
   Tenant,
@@ -44,6 +44,7 @@ import { useAuth } from './AuthContext';
 import { newId } from '../services/ids';
 import { usePurchasesState } from '../features/purchases/usePurchasesState';
 import { decidePurchases } from '../services/purchase/purchaseDecisionEngine';
+import type { DecisionInput } from '../services/purchase/purchaseDecisionEngine';
 
 export interface DocumentFile {
   id: string;
@@ -524,44 +525,31 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, [activeTrip, participants, flights, accommodations, transports, itinerary, giftCards, purchases, expenses, resolvedAuditIds]);
 
-  const purchaseDecisions = useMemo(
-    () =>
-      decidePurchases({
-        items: purchases.filter(p => p.trip_id === activeTrip.id),
-        quotes: purchaseState.priceQuotes.filter(q => q.trip_id === activeTrip.id),
-        participants: participants.filter(p => p.trip_id === activeTrip.id),
-        giftCards: giftCards.filter(g => g.trip_id === activeTrip.id),
-        // The stored assumptions' usd_brl_rate is only a seed (see
-        // usePurchasesState) — TripContext's own `exchangeRate` is the single
-        // source of truth for USD/BRL app-wide, so it always wins here. This
-        // keeps the decision engine's BRL totals in sync with an edited rate
-        // even though the persisted assumptions record is not rewritten.
-        assumptions: {
-          ...purchaseState.assumptions,
-          usd_brl_rate: exchangeRate,
-          rate_source: 'Câmbio do app (TripContext)',
-          rate_date: purchaseState.today,
-        },
-        today: purchaseState.today,
-        luggages: luggages.filter(l => l.trip_id === activeTrip.id),
-      }),
-    [purchases, purchaseState, participants, giftCards, luggages, activeTrip.id, exchangeRate],
-  );
-
-  // Usado só por `addPurchase` (revisão Finding 2, rodada 2): um item
-  // recém-criado ainda não existe em `purchases`, então o `purchaseDecisions`
-  // memoizado acima (que só recalcula quando `purchases` muda) não o
-  // enxerga. Para congelar um item já criado como 'bought', o motor precisa
-  // rodar com um conjunto de itens que já inclua o candidato — daí não dar
-  // simplesmente para reusar `purchaseDecisions` aqui. Mantido como uma
-  // função separada (em vez de fatorar `purchaseDecisions` para cima dela)
-  // para não introduzir um novo aviso de exhaustive-deps no useMemo acima.
-  const decisionsForItemSet = (itemSet: PurchaseItem[]): PurchaseDecision[] =>
-    decidePurchases({
+  // Single input-assembly point for the decision engine (final-review Finding
+  // 1): `purchaseDecisions`, `addPurchase`, and `updatePurchase` all funnel
+  // through this instead of each carrying its own copy of the
+  // quotes/participants/giftCards/assumptions/luggages assembly — that
+  // duplication was exactly the seam where `updatePurchase` drifted from
+  // `addPurchase`'s correct pattern. `itemSet` is the raw (unfiltered)
+  // purchases array; the trip filter happens in here.
+  //
+  // Wrapped in `useCallback` (not a plain per-render function) specifically
+  // so `purchaseDecisions` below can depend on this function's identity
+  // instead of re-listing every underlying piece of state — this is what
+  // lets the helper be shared without tripping `react-hooks/exhaustive-deps`
+  // (a previous round duplicated the assembly to dodge that warning; this
+  // is the "solve it properly" fix instead).
+  const buildDecisionInput = useCallback(
+    (itemSet: PurchaseItem[]): DecisionInput => ({
       items: itemSet.filter(p => p.trip_id === activeTrip.id),
       quotes: purchaseState.priceQuotes.filter(q => q.trip_id === activeTrip.id),
       participants: participants.filter(p => p.trip_id === activeTrip.id),
       giftCards: giftCards.filter(g => g.trip_id === activeTrip.id),
+      // The stored assumptions' usd_brl_rate is only a seed (see
+      // usePurchasesState) — TripContext's own `exchangeRate` is the single
+      // source of truth for USD/BRL app-wide, so it always wins here. This
+      // keeps the decision engine's BRL totals in sync with an edited rate
+      // even though the persisted assumptions record is not rewritten.
       assumptions: {
         ...purchaseState.assumptions,
         usd_brl_rate: exchangeRate,
@@ -570,7 +558,24 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
       today: purchaseState.today,
       luggages: luggages.filter(l => l.trip_id === activeTrip.id),
-    });
+    }),
+    [activeTrip.id, purchaseState, participants, giftCards, exchangeRate, luggages],
+  );
+
+  const purchaseDecisions = useMemo(
+    () => decidePurchases(buildDecisionInput(purchases)),
+    [purchases, buildDecisionInput],
+  );
+
+  // Used by `addPurchase` and `updatePurchase` (final-review Finding 1): a
+  // brand-new or just-edited item isn't reflected in `purchaseDecisions`
+  // above (memoized off the pre-write `purchases` state), so freezing a
+  // decision at write time needs to run the engine against an item set that
+  // already substitutes the draft/updated record in place of the old one.
+  const decisionsForItemSet = useCallback(
+    (itemSet: PurchaseItem[]): PurchaseDecision[] => decidePurchases(buildDecisionInput(itemSet)),
+    [buildDecisionInput],
+  );
 
   const toggleResolveAudit = (id: string) => {
     setResolvedAuditIds(prev =>
@@ -735,15 +740,23 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updatePurchase = (id: string, p: Partial<PurchaseItem>) => {
-    setPurchases(prev =>
-      prev.map(item => {
-        if (item.id !== id) return item;
-        const updated: PurchaseItem = { ...item, ...p };
-        return freezeBoughtStatus(updated, item.status === 'bought', () =>
-          purchaseDecisions.find(d => d.purchase_item_id === id),
-        );
-      }),
-    );
+    setPurchases(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      const updated: PurchaseItem = { ...item, ...p };
+      // final-review Finding 1: a single edit can change quantity, the
+      // quota-owner fields, and flip status to 'bought' all at once. The
+      // decision must be computed against a basket where `updated` (the
+      // POST-edit record) stands in for the old item — never against the
+      // stale `purchaseDecisions` memo, which was still built from the
+      // pre-edit `prev` — or the frozen snapshot would contradict the
+      // record it's attached to.
+      const withUpdated = prev.map(i => (i.id === id ? updated : i));
+      const frozen = freezeBoughtStatus(updated, item.status === 'bought', () =>
+        decisionsForItemSet(withUpdated).find(d => d.purchase_item_id === id),
+      );
+      return prev.map(i => (i.id === id ? frozen : i));
+    });
   };
 
   const deletePurchase = (id: string) => {

@@ -200,7 +200,6 @@ export interface PurchaseItem {
   warranty_risk?: 'none' | 'low' | 'medium' | 'high';
   expected_weight_kg?: number;
   quota_owner_id?: string;
-  decision_id?: string;
   verdict_override?: PurchaseVerdict;
   override_reason?: string;
   actual_paid_usd?: number;
