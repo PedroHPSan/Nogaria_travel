@@ -71,4 +71,22 @@ describe('useWriteFailures', () => {
     act(() => result.current.retryFailure('nao-existe'));
     expect(result.current.failures).toEqual([]);
   });
+
+  it('duas chamadas seguidas de tentar de novo para o mesmo id só chamam o retry uma vez', () => {
+    // Simula o que um double-invoke do StrictMode faria com o updater de setFailures:
+    // a segunda chamada não deve reexecutar o retry guardado.
+    const { result } = renderHook(() => useWriteFailures());
+    const retry = vi.fn();
+
+    act(() =>
+      result.current.recordFailure({ entity: 'Viagem', operation: 'criar', label: 'A', retry }),
+    );
+    const id = result.current.failures[0].id;
+
+    act(() => result.current.retryFailure(id));
+    act(() => result.current.retryFailure(id));
+
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(result.current.failures).toHaveLength(0);
+  });
 });

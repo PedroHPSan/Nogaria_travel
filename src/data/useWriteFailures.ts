@@ -23,13 +23,14 @@ export function useWriteFailures() {
     setFailures(prev => prev.filter(f => f.id !== id));
   }, []);
 
-  const retryFailure = useCallback((id: string) => {
-    setFailures(prev => {
-      const alvo = prev.find(f => f.id === id);
-      if (alvo) alvo.retry();
-      return prev.filter(f => f.id !== id);
-    });
-  }, []);
+  const retryFailure = useCallback(
+    (id: string) => {
+      const alvo = failures.find(f => f.id === id);
+      setFailures(prev => prev.filter(f => f.id !== id));
+      alvo?.retry();
+    },
+    [failures],
+  );
 
   return { failures, recordFailure, dismissFailure, retryFailure };
 }
