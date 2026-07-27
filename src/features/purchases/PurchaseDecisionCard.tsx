@@ -102,8 +102,12 @@ export const PurchaseDecisionCard: React.FC<Props> = ({ item, decision, quotes, 
           onClick={() => {
             const entrada = prompt('Valor efetivamente pago, em US$:', String(decision.us.liquido_usd));
             if (entrada === null) return;
-            const valor = Number(entrada);
-            if (!Number.isFinite(valor) || valor < 0) return;
+            const textoLimpo = entrada.trim();
+            const valor = Number(textoLimpo);
+            if (textoLimpo === '' || !Number.isFinite(valor) || valor < 0) {
+              alert('Valor pago inválido. Informe um número maior ou igual a zero, em US$.');
+              return;
+            }
             onMarkBought(item.id, valor);
           }}
           className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition"

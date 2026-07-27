@@ -213,6 +213,35 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
   );
 
   for (const item of items) {
+    // Item comprado e congelado contribui aos ledgers compartilhados (cota,
+    // saldo de gift card) com as figuras já decididas no snapshot — nunca com
+    // a cotação/gift card recalculados ao vivo (Finding 1 da revisão). Sem
+    // isto, superar a cotação (ou o saldo de gift card) de um item já pago
+    // desloca silenciosamente a cota/imposto de um irmão ainda planejado, já
+    // que a cota é um pool por titular somado sobre `usNetByItem`.
+    if (item.decision_snapshot && item.status === 'bought') {
+      const frozenUs = item.decision_snapshot.us;
+      usNetByItem.set(item.id, {
+        lines: frozenUs.lines,
+        bruto_usd: frozenUs.bruto_usd,
+        gift_card_covered_usd: frozenUs.gift_card_covered_usd,
+        liquido_usd: frozenUs.liquido_usd,
+        tax_pct: 0, // não usado: itens congelados nunca chegam a buildPremises.
+      });
+      if (item.gift_card_id) {
+        const giftCard = giftCards.find(g => g.id === item.gift_card_id);
+        if (giftCard) {
+          const availableBalance =
+            giftCardRemainingBalance.get(giftCard.id) ?? giftCard.current_balance;
+          giftCardRemainingBalance.set(
+            giftCard.id,
+            round2(availableBalance - frozenUs.gift_card_covered_usd),
+          );
+        }
+      }
+      continue;
+    }
+
     const usQuote = activeQuote(quotes, item.id, 'US');
     if (!usQuote) continue;
     usQuoteByItem.set(item.id, usQuote);

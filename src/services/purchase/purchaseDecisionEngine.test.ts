@@ -3,6 +3,7 @@ import type { GiftCard, Participant, PriceQuote, PurchaseItem } from '../../type
 import { makeDefaultAssumptions } from './purchaseAssumptions';
 import { decidePurchases } from './purchaseDecisionEngine';
 import type { DecisionInput } from './purchaseDecisionEngine';
+import { supersede } from './priceQuotes';
 
 const TODAY = '2026-07-26';
 const assumptions = makeDefaultAssumptions('trip-1', TODAY, 5.62);
@@ -561,5 +562,43 @@ describe('decidePurchases — snapshot congelado', () => {
     })[0];
 
     expect(recalculado.us.desembarcado_brl).not.toBe(original.us.desembarcado_brl);
+  });
+});
+
+describe('decidePurchases — a cota compartilhada não vaza de um item comprado (Finding 1)', () => {
+  it('superar a cotação do iPhone já comprado não move o imposto de cota nem o veredito do Watch, ainda planejado', () => {
+    const basket = cestaDoPedro();
+    const before = decidePurchases(basket);
+    const iphoneSnapshot = find(before, 'pur-iphone');
+    const watchBefore = find(before, 'pur-watch');
+
+    // Isola a variável: nada além da cotação do iPhone muda — mesmas
+    // assumptions, mesmo gift card, mesmos participantes.
+    const iphoneUsQuote = basket.quotes.find(q => q.id === 'q-us')!;
+    const quotesWithSupersededIphone = supersede(basket.quotes, {
+      ...iphoneUsQuote,
+      id: 'q-us-2',
+      price: 999,
+      created_at: `${TODAY}T11:00:00Z`,
+    });
+
+    const after = decidePurchases({
+      ...basket,
+      items: [
+        { ...basket.items[0], status: 'bought', decision_snapshot: iphoneSnapshot },
+        basket.items[1],
+      ],
+      quotes: quotesWithSupersededIphone,
+    });
+
+    const iphoneAfter = find(after, 'pur-iphone');
+    const watchAfter = find(after, 'pur-watch');
+
+    // O item comprado permanece congelado...
+    expect(iphoneAfter.us.desembarcado_brl).toBe(iphoneSnapshot.us.desembarcado_brl);
+    // ...e o irmão ainda planejado, que compartilha a mesma cota (p-pedro),
+    // não se move um centavo por causa da cotação superada do iPhone.
+    expect(watchAfter.us.imposto_cota_usd).toBe(watchBefore.us.imposto_cota_usd);
+    expect(watchAfter.verdict).toBe(watchBefore.verdict);
   });
 });

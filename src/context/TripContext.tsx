@@ -674,8 +674,31 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPurchases(prev => [...prev, newP]);
   };
 
+  // Fecha a porta dos fundos do dropdown de Status (CA-11 / revisão Finding 2):
+  // `updatePurchase` é o único ponto por onde TODA gravação de `purchases`
+  // passa (inclusive o <select> do PurchaseModal, que nunca chama
+  // markPurchaseBought), então a garantia do congelamento tem que morar aqui,
+  // não na UI. Qualquer transição PARA 'bought' sem um snapshot já anexado ao
+  // patch tira um agora — senão o item nunca congela e recalcula ao vivo para
+  // sempre. Qualquer transição PARA FORA de 'bought' apaga o snapshot (e o
+  // valor pago) — senão reverter para 'planned' e marcar 'bought' de novo
+  // ressuscita o snapshot da compra anterior com os números de outra compra.
   const updatePurchase = (id: string, p: Partial<PurchaseItem>) => {
-    setPurchases(prev => prev.map(item => (item.id === id ? { ...item, ...p } : item)));
+    setPurchases(prev =>
+      prev.map(item => {
+        if (item.id !== id) return item;
+        const updated: PurchaseItem = { ...item, ...p };
+
+        if (updated.status === 'bought' && item.status !== 'bought' && !updated.decision_snapshot) {
+          updated.decision_snapshot = purchaseDecisions.find(d => d.purchase_item_id === id);
+        } else if (updated.status !== 'bought' && item.status === 'bought') {
+          updated.decision_snapshot = undefined;
+          updated.actual_paid_usd = undefined;
+        }
+
+        return updated;
+      }),
+    );
   };
 
   const deletePurchase = (id: string) => {
@@ -686,8 +709,25 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // gravado aqui deixa de participar de `purchaseDecisions` como cálculo ao
   // vivo — ver o early-return em decidePurchases — então mudar câmbio,
   // premissas ou cotações depois não reescreve o registro do que foi decidido.
+  //
+  // Esta é uma API pública de `useTrip()` — não confia só no único chamador
+  // de UI atual (revisão Finding 3): valida aqui o valor pago e a existência
+  // de uma decisão calculável, recusando a gravação (sem congelar nada) em
+  // vez de aceitar um valor inválido ou um snapshot vazio.
   const markPurchaseBought = (id: string, actualPaidUsd: number) => {
+    if (!Number.isFinite(actualPaidUsd) || actualPaidUsd < 0) {
+      console.error(
+        `markPurchaseBought: valor pago inválido (${actualPaidUsd}) para o item ${id}; nada foi gravado.`,
+      );
+      return;
+    }
     const snapshot = purchaseDecisions.find(d => d.purchase_item_id === id);
+    if (!snapshot) {
+      console.error(
+        `markPurchaseBought: nenhuma decisão calculada encontrada para o item ${id}; nada foi gravado.`,
+      );
+      return;
+    }
     updatePurchase(id, {
       status: 'bought',
       actual_paid_usd: actualPaidUsd,
