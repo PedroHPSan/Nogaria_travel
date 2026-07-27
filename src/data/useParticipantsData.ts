@@ -76,70 +76,64 @@ export function useParticipantsData({ client, tripId, today, recordFailure }: Pa
 
   const updateParticipant = useCallback(
     (id: string, patch: Partial<Participant>) => {
-      setParticipants(prev => {
-        const anterior = prev.find(x => x.id === id);
-        if (!anterior) return prev;
+      const anterior = participants.find(x => x.id === id);
+      if (!anterior) return;
 
-        const bruto = { ...anterior, ...patch };
-        const idade = deriveAge(bruto.birth_date, today);
-        const atualizado: Participant = { ...bruto, age: idade, is_minor: idade < 18 };
+      const bruto = { ...anterior, ...patch };
+      const idade = deriveAge(bruto.birth_date, today);
+      const atualizado: Participant = { ...bruto, age: idade, is_minor: idade < 18 };
 
-        const escrever = () => {
-          setParticipants(atual => atual.map(x => (x.id === id ? atualizado : x)));
-          client
-            .from('participants')
-            .update(participantToInsert(atualizado, today))
-            .eq('id', id)
-            .then(({ error }) => {
-              if (!error) return;
-              // Reverte para o valor exato de antes, não para um valor recalculado.
-              setParticipants(atual => atual.map(x => (x.id === id ? anterior : x)));
-              recordFailure({
-                entity: 'Participante',
-                operation: 'atualizar',
-                label: anterior.full_name,
-                retry: escrever,
-              });
+      const escrever = () => {
+        setParticipants(atual => atual.map(x => (x.id === id ? atualizado : x)));
+        client
+          .from('participants')
+          .update(participantToInsert(atualizado, today))
+          .eq('id', id)
+          .then(({ error }) => {
+            if (!error) return;
+            // Reverte para o valor exato de antes, não para um valor recalculado.
+            setParticipants(atual => atual.map(x => (x.id === id ? anterior : x)));
+            recordFailure({
+              entity: 'Participante',
+              operation: 'atualizar',
+              label: anterior.full_name,
+              retry: escrever,
             });
-        };
+          });
+      };
 
-        escrever();
-        return prev.map(x => (x.id === id ? atualizado : x));
-      });
+      escrever();
     },
-    [client, today, recordFailure],
+    [client, today, recordFailure, participants],
   );
 
   const deleteParticipant = useCallback(
     (id: string) => {
-      setParticipants(prev => {
-        const removido = prev.find(x => x.id === id);
-        if (!removido) return prev;
+      const removido = participants.find(x => x.id === id);
+      if (!removido) return;
 
-        const escrever = () => {
-          setParticipants(atual => atual.filter(x => x.id !== id));
-          client
-            .from('participants')
-            .delete()
-            .eq('id', id)
-            .then(({ error }) => {
-              if (!error) return;
-              // Devolve a linha inteira, não uma casca.
-              setParticipants(atual => [...atual, removido]);
-              recordFailure({
-                entity: 'Participante',
-                operation: 'excluir',
-                label: removido.full_name,
-                retry: escrever,
-              });
+      const escrever = () => {
+        setParticipants(atual => atual.filter(x => x.id !== id));
+        client
+          .from('participants')
+          .delete()
+          .eq('id', id)
+          .then(({ error }) => {
+            if (!error) return;
+            // Devolve a linha inteira, não uma casca.
+            setParticipants(atual => [...atual, removido]);
+            recordFailure({
+              entity: 'Participante',
+              operation: 'excluir',
+              label: removido.full_name,
+              retry: escrever,
             });
-        };
+          });
+      };
 
-        escrever();
-        return prev.filter(x => x.id !== id);
-      });
+      escrever();
     },
-    [client, recordFailure],
+    [client, recordFailure, participants],
   );
 
   return { participants, loading, addParticipant, updateParticipant, deleteParticipant };

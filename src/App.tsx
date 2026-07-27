@@ -22,13 +22,12 @@ import { WriteFailureBanner } from './components/WriteFailureBanner';
 
 function MainAppContent() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
-  const { auditFindings, failures, dismissFailure, retryFailure } = useTrip();
+  const { auditFindings } = useTrip();
 
   const unresolvedAuditCount = auditFindings.filter(f => !f.resolved).length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
-      <WriteFailureBanner failures={failures} onRetry={retryFailure} onDismiss={dismissFailure} />
       <Header
         onOpenAudit={() => setActiveTab('audit')}
         onOpenAi={() => setActiveTab('ai')}
@@ -93,19 +92,36 @@ function MainAppContent() {
 }
 
 const AppOuWizard = ({ children }: { children: ReactNode }) => {
-  const { trips, tripDataLoading } = useTrip();
+  const { trips, tripDataLoading, failures, dismissFailure, retryFailure } = useTrip();
+
+  const banner = <WriteFailureBanner failures={failures} onRetry={retryFailure} onDismiss={dismissFailure} />;
 
   if (tripDataLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <p className="text-sm text-slate-400">Carregando suas viagens…</p>
-      </div>
+      <>
+        {banner}
+        <div className="flex min-h-screen items-center justify-center bg-slate-950">
+          <p className="text-sm text-slate-400">Carregando suas viagens…</p>
+        </div>
+      </>
     );
   }
 
-  if (trips.length === 0) return <TripWizard />;
+  if (trips.length === 0) {
+    return (
+      <>
+        {banner}
+        <TripWizard />
+      </>
+    );
+  }
 
-  return <>{children}</>;
+  return (
+    <>
+      {banner}
+      {children}
+    </>
+  );
 };
 
 export function App() {

@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { StrictMode } from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderHook, act, waitFor, cleanup } from '@testing-library/react';
 import { useParticipantsData } from './useParticipantsData';
@@ -136,6 +137,52 @@ describe('useParticipantsData', () => {
     expect(voltou.dietary_restrictions).toEqual(['sem lactose']);
     expect(voltou.notes).toBe('alérgica a amendoim');
     expect(voltou.height_cm).toBe(150);
+  });
+
+  it('em StrictMode, updateParticipant chamado uma vez só dispara um update()', async () => {
+    const updateSpy = vi.fn(() => ({ eq: () => Promise.resolve({ error: null }) }));
+    const client: SupabaseLike = {
+      from: () => ({
+        select: () => ({ eq: () => Promise.resolve({ data: [linhaDebora], error: null }) }),
+        insert: () => Promise.resolve({ error: null }),
+        update: updateSpy,
+        delete: () => ({ eq: () => Promise.resolve({ error: null }) }),
+      }),
+    };
+
+    const { result } = renderHook(() => useParticipantsData(deps(client)), {
+      wrapper: ({ children }) => <StrictMode>{children}</StrictMode>,
+    });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.updateParticipant(linhaDebora.id, { full_name: 'Nome Novo' });
+    });
+
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('em StrictMode, deleteParticipant chamado uma vez só dispara um delete()', async () => {
+    const deleteSpy = vi.fn(() => ({ eq: () => Promise.resolve({ error: null }) }));
+    const client: SupabaseLike = {
+      from: () => ({
+        select: () => ({ eq: () => Promise.resolve({ data: [linhaDebora], error: null }) }),
+        insert: () => Promise.resolve({ error: null }),
+        update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+        delete: deleteSpy,
+      }),
+    };
+
+    const { result } = renderHook(() => useParticipantsData(deps(client)), {
+      wrapper: ({ children }) => <StrictMode>{children}</StrictMode>,
+    });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.deleteParticipant(linhaDebora.id);
+    });
+
+    expect(deleteSpy).toHaveBeenCalledTimes(1);
   });
 
   it('não consulta o banco sem viagem ativa', async () => {
