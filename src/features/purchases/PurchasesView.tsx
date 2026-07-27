@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { PurchaseModal } from '../../components/modals/PurchaseModal';
 import { LuggageModal } from '../../components/modals/LuggageModal';
+import { PurchaseDecisionCard } from './PurchaseDecisionCard';
 import type { PurchaseItem, Luggage } from '../../types/database.types';
 import {
   ShoppingBag,
@@ -17,6 +18,7 @@ export const PurchasesView: React.FC = () => {
     activeTrip,
     participants,
     purchases,
+    purchaseDecisions,
     addPurchase,
     updatePurchase,
     deletePurchase,
@@ -121,77 +123,17 @@ export const PurchasesView: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripPurchases.map(p => {
-              const participant = participants.find(part => part.id === p.target_participant_id);
+              const decision = purchaseDecisions.find(d => d.purchase_item_id === p.id);
+              if (!decision) return null;
               return (
-                <div key={p.id} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4 relative">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
-                        <ShoppingBag className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-base text-white">{p.product_name}</h4>
-                        <p className="text-xs text-slate-400">{p.brand || 'Marca'} • {p.store_name || 'Loja EUA'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        p.priority === 'high' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' : 'bg-slate-800 text-slate-400'
-                      }`}>
-                        {p.priority === 'high' ? 'Alta Prioridade' : p.priority}
-                      </span>
-
-                      <button
-                        onClick={() => handleOpenEditPurchase(p)}
-                        className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`Deseja excluir "${p.product_name}"?`)) deletePurchase(p.id);
-                        }}
-                        className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                      <div className="text-slate-400 text-[10px]">Preço Alvo EUA</div>
-                      <div className="font-bold text-emerald-400 text-sm">{formatAmount(p.target_price_usd)} (x{p.quantity})</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                      <div className="text-slate-400 text-[10px]">Preço Ref. Brasil</div>
-                      <div className="font-bold text-white text-sm">
-                        {p.brl_equivalent_price ? `R$ ${p.brl_equivalent_price.toLocaleString()}` : 'N/A'}
-                      </div>
-                    </div>
-                  </div>
-
-
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-800">
-                    <span className="text-slate-400 flex items-center gap-1.5">
-                      Responsável:
-                      <strong className="text-slate-200">{participant?.full_name || 'Desconhecido'}</strong>
-                    </span>
-
-                    {p.gift_card_eligible && (
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                        Gift Card OK
-                      </span>
-                    )}
-                  </div>
-
-                  {p.notes && (
-                    <div className="text-xs text-slate-400 p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                      <span className="text-purple-400 font-semibold">Notas:</span> {p.notes}
-                    </div>
-                  )}
-                </div>
+                <PurchaseDecisionCard
+                  key={p.id}
+                  item={p}
+                  decision={decision}
+                  onEdit={handleOpenEditPurchase}
+                  onDelete={deletePurchase}
+                  onResearch={handleOpenEditPurchase}
+                />
               );
             })}
           </div>
