@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useWriteFailures } from './useWriteFailures';
@@ -88,5 +89,23 @@ describe('useWriteFailures', () => {
 
     expect(retry).toHaveBeenCalledTimes(1);
     expect(result.current.failures).toHaveLength(0);
+  });
+
+  it('sob StrictMode, uma única chamada a retryFailure dispara o retry armazenado exatamente uma vez', () => {
+    const retry = vi.fn();
+    const { result } = renderHook(() => useWriteFailures(), {
+      wrapper: ({ children }) => <React.StrictMode>{children}</React.StrictMode>,
+    });
+
+    act(() => {
+      result.current.recordFailure({ entity: 'Viagem', operation: 'criar', label: 'A', retry });
+    });
+    const id = result.current.failures[0].id;
+
+    act(() => {
+      result.current.retryFailure(id);
+    });
+
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 });
