@@ -23,7 +23,7 @@ const participanteVazio = (): RascunhoParticipante => ({
 
 export const TripWizard: React.FC = () => {
   const { createTrip, addParticipant, setActiveTripId } = useTrip();
-  const { activeTenantId } = useAuth();
+  const { profile, tenantMemberships, activeTenantId, setActiveTenantId, signOut } = useAuth();
 
   const [passo, setPasso] = useState<1 | 2 | 3>(1);
   const [erro, setErro] = useState('');
@@ -95,7 +95,34 @@ export const TripWizard: React.FC = () => {
   const campo = 'w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 p-4">
+      <div className="mb-4 flex w-full max-w-2xl items-center justify-between px-2 text-xs text-slate-400">
+        <div>
+          Conectado como <strong className="text-white">{profile?.email}</strong>
+        </div>
+        <div className="flex items-center gap-3">
+          {tenantMemberships.length > 1 && (
+            <select
+              value={activeTenantId ?? ''}
+              onChange={e => setActiveTenantId(e.target.value)}
+              className="rounded bg-slate-900 border border-slate-700 px-2 py-1 text-slate-200"
+            >
+              {tenantMemberships.map(m => (
+                <option key={m.tenant.id} value={m.tenant.id}>
+                  {m.tenant.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={() => signOut()}
+            className="text-rose-400 hover:text-rose-300 font-semibold"
+          >
+            Sair da Conta
+          </button>
+        </div>
+      </div>
+
       <div className="glass-panel w-full max-w-2xl rounded-2xl p-8">
         <div className="mb-6 flex items-center gap-3">
           {passo === 1 && <Plane className="text-blue-400" size={22} />}

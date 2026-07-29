@@ -31,7 +31,7 @@ import {
   INITIAL_PURCHASES,
   INITIAL_TASKS,
   INITIAL_DECISIONS,
-  INITIAL_AI_PROVIDERS,
+  INITIAL_AI_CONFIGS,
   INITIAL_AI_LOGS
 } from '../services/initialMockData';
 
@@ -462,7 +462,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [aiProviders, setAiProviders] = useState<AiProviderConfig[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_aiProviders`);
-    return saved ? JSON.parse(saved) : INITIAL_AI_PROVIDERS;
+    return saved ? JSON.parse(saved) : INITIAL_AI_CONFIGS;
   });
 
   const [aiLogs, setAiLogs] = useState<AiUsageLog[]>(() => {
