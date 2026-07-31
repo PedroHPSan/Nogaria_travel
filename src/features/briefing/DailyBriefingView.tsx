@@ -16,6 +16,9 @@ import {
   Ruler
 } from 'lucide-react';
 
+const BRIEFING_ITEM_THRESHOLD = 8;
+const BRIEFING_ITEM_LIMIT = 5;
+
 export const DailyBriefingView: React.FC = () => {
   const {
     activeTrip,
@@ -84,9 +87,21 @@ export const DailyBriefingView: React.FC = () => {
 
     if (dayItems.length > 0) {
       speech += `Temos ${dayItems.length} atividades programadas no Roteiro. `;
-      dayItems.forEach(item => {
-        speech += `${item.time_start || ''}: ${item.title} em ${item.location || city}. `;
-      });
+      if (dayItems.length > BRIEFING_ITEM_THRESHOLD) {
+        const sTierItems = dayItems.filter(item => item.priority_tier === 'S');
+        const highlightedItems = (sTierItems.length > 0 ? sTierItems : dayItems).slice(0, BRIEFING_ITEM_LIMIT);
+        highlightedItems.forEach(item => {
+          speech += `${item.time_start || ''}: ${item.title} em ${item.location || city}. `;
+        });
+        const remainingCount = dayItems.length - highlightedItems.length;
+        if (remainingCount > 0) {
+          speech += `...e mais ${remainingCount} atividades no parque. `;
+        }
+      } else {
+        dayItems.forEach(item => {
+          speech += `${item.time_start || ''}: ${item.title} em ${item.location || city}. `;
+        });
+      }
     } else {
       speech += `Dia livre para compras nos outlets e passeios flexíveis. `;
     }
