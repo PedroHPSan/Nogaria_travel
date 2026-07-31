@@ -146,6 +146,26 @@ export interface ItineraryItem {
   min_age_years?: number;
   child_friendly: boolean;
   notes?: string;
+  park?: string;
+  area?: string;
+  base_order?: number;
+  item_type?: 'attraction' | 'show' | 'experience' | 'character';
+  priority_tier?: 'S' | 'A' | 'B' | 'C';
+  lightning_lane?: 'none' | 'genie_plus' | 'individual' | 'express';
+  lightning_lane_priority_rank?: number;
+  single_rider?: boolean;
+  child_switch?: boolean;
+  recommended_window?: string;
+  early_closure_risk?: boolean;
+  operational_status?: 'operating' | 'scheduled_closure' | 'temporarily_closed' | 'refurbishment';
+  counts_toward_completion?: boolean;
+  participant_status?: Record<string, 'pending' | 'done' | 'skipped' | 'height_restricted' | 'not_applicable'>;
+  plan_b?: string;
+  time_is_estimated?: boolean;
+  show_block_start?: string;
+  show_block_end?: string;
+  recommended_arrival_min_before?: number;
+  last_showtime_of_day?: boolean;
 }
 
 export interface GiftCard {
