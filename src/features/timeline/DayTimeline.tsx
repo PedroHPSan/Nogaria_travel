@@ -24,6 +24,14 @@ const STATUS_STYLES: Record<string, string> = {
   not_applicable: 'bg-slate-800 text-slate-500 border-slate-700',
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendente',
+  done: 'Concluído',
+  skipped: 'Pulado',
+  height_restricted: 'Restrição de altura',
+  not_applicable: 'Não aplicável',
+};
+
 function nextParticipantStatus(current?: string): 'pending' | 'done' | 'skipped' {
   if (current === 'done') return 'skipped';
   if (current === 'skipped') return 'pending';
@@ -132,6 +140,11 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
                         {!isShow && item.time_is_estimated && (
                           <span className="text-[10px] text-slate-500">~ horário estimado</span>
                         )}
+                        {item.counts_toward_completion === false && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-900 text-slate-500 border border-slate-800">
+                            Não conta para cobertura
+                          </span>
+                        )}
                       </div>
                       <h4 className="font-bold text-base text-white mt-0.5">{item.title}</h4>
                     </div>
@@ -156,7 +169,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
                       <button
                         key={pId}
                         onClick={() => handleStatusClick(item, pId)}
-                        title={`${p.full_name}: ${status}`}
+                        title={`${p.full_name}: ${STATUS_LABELS[status] ?? status}`}
                         className={`px-2 py-1 rounded-lg border text-[10px] font-bold flex items-center gap-1.5 transition ${
                           STATUS_STYLES[status] ?? STATUS_STYLES.pending
                         }`}
@@ -164,7 +177,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
                         <span className={`w-4 h-4 rounded-full ${p.avatar_color} text-white text-[9px] font-bold flex items-center justify-center`}>
                           {p.nickname ? p.nickname[0] : p.full_name[0]}
                         </span>
-                        {status}
+                        {STATUS_LABELS[status] ?? status}
                       </button>
                     );
                   })}
