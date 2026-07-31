@@ -10,7 +10,8 @@ import {
   FileText,
   ShieldCheck,
   Bot,
-  Volume2
+  Volume2,
+  Clock
 } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 
@@ -20,6 +21,7 @@ export type NavTab =
   | 'participants'
   | 'logistics'
   | 'itinerary'
+  | 'timeline'
   | 'purchases'
   | 'financial'
   | 'tasks_decisions'
@@ -48,6 +50,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'participants', label: `Grupo (${participants.length})`, icon: Users },
     { id: 'logistics', label: 'Logística', icon: Plane },
     { id: 'itinerary', label: 'Roteiro & Atrações', icon: CalendarDays },
+    { id: 'timeline', label: 'Cronologia', icon: Clock },
     { id: 'purchases', label: 'Compras & Malas', icon: ShoppingBag },
     { id: 'financial', label: 'Gift Cards & Financial', icon: CreditCard },
     { id: 'tasks_decisions', label: 'Pendências', icon: CheckSquare, badge: pendingTaskCount > 0 ? pendingTaskCount : undefined },
