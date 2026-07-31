@@ -67,6 +67,7 @@ The custom domain **`nogaria.store`** (registered via Locaweb) is attached to th
 ### Services (`src/services/`) — pure functions, two different timings
 
 - **`auditEngine.ts`** — `runFullTripAudit()` derives `AuditFinding[]` from the whole trip. Called inside a `useMemo` in `TripContext`, so findings recompute on every data change; `rerunAudit()` is intentionally a no-op. Only the *resolved* flags are persisted (as an ID array in `resolvedAuditIds`), never the findings themselves. The unresolved count feeds the Audit tab badge in `App.tsx`.
+- **`coverageEngine.ts`** — same pattern as `auditEngine.ts`: `computeCoverage(items, participants)` derives per-type and per-participant done/total counts (plus an overall percent) from `ItineraryItem.participant_status`, called on every render from `src/features/timeline/` (the "Cronologia" tab's `DayTimeline`/`MonthCalendar`), never persisted. Eligibility (`min_height_cm`/`min_age_years` vs. the participant) gates the per-participant denominator, generalizing the height-alert comparison `ItineraryView.tsx` already does for Gabi — but as of the roteiro-dos-parques data, no park item actually sets `min_height_cm`/`min_age_years`, so that eligibility gate is unexercised by real data today.
 - **`giftCardCalculator.ts`** — applied at **write** time, not render time. `addGiftCard`/`updateGiftCard` in the context recompute and store `net_cost`, `cashback_amount`, `effective_savings`, `effective_savings_pct` on the record. Any new code path that mutates a gift card must recompute these or the denormalized fields go stale.
 - **`exchangeRateService.ts`** — formatting/conversion only, with a hardcoded `DEFAULT_RATE = 5.62`. Nothing fetches a live rate despite the name and the `exchangeRateDate` field.
 
@@ -80,6 +81,8 @@ Each `src/features/<domain>/<Name>View.tsx` owns its modal open/close state and 
 
 All modals wrap `components/modals/BaseModal.tsx`, which supplies the overlay, header, Escape-to-close, and body-scroll lock. Modals live in the shared `components/modals/` directory, not next to their feature.
 
+`src/features/timeline/` (the "Cronologia" tab) is a variant of this pattern with no modal: `TimelineView.tsx` owns `viewMode`/`selectedDate` and filters `itinerary` to `category === 'park'` itself, then composes two presentational sub-components (`DayTimeline.tsx`, `MonthCalendar.tsx`) that take props rather than calling `useTrip()` for their data (though `DayTimeline` does call `useTrip()` for `updateItineraryItem`, since it owns the participant-status click handler).
+
 ### Styling
 
 Tailwind v4 via the `@tailwindcss/vite` plugin; `src/index.css` uses `@import "tailwindcss"` and defines the `.glass-panel` / `.glass-card` utilities the UI leans on heavily.
@@ -90,7 +93,7 @@ Icons are `lucide-react` throughout (16 files). `recharts`, `date-fns`, `clsx`, 
 
 ## Gotchas
 
-- **`auditEngine.ts` and `AiCopilotView.tsx` are hardcoded to one specific trip.** The audit matches participants by `nickname === 'Pedro'` / `'Gabi'` and `age === 12`, and string-matches the literal timestamp `'2026-09-19T17:30'`. The AI Copilot is not an LLM at all — it's a `setTimeout` plus keyword `if/else` chain returning canned Portuguese text about this trip. The `AiProviderConfig` / `AiUsageLog` settings UI is decorative; no provider is ever called. Generalizing either module means removing hardcoded names, ages, and dates.
+- **`auditEngine.ts`, `AiCopilotView.tsx`, and `MonthCalendar.tsx` are hardcoded to one specific trip.** The audit matches participants by `nickname === 'Pedro'` / `'Gabi'` and `age === 12`, and string-matches the literal timestamp `'2026-09-19T17:30'`. The AI Copilot is not an LLM at all — it's a `setTimeout` plus keyword `if/else` chain returning canned Portuguese text about this trip. The `AiProviderConfig` / `AiUsageLog` settings UI is decorative; no provider is ever called. `src/features/timeline/MonthCalendar.tsx` hardcodes `YEAR = 2026` / `MONTH = 9` instead of deriving the grid from `activeTrip.start_date`, deliberately (per the fatia 2 spec, since the trip fits in one month) but the same generalization caveat applies. Generalizing any of these means removing hardcoded names, ages, dates, or the fixed year/month.
 - **`DocumentFile` and `LoyaltyAccount` are declared twice** — in `database.types.ts` *and* again in `TripContext.tsx`, which exports its own copies. The context and everything downstream use the `TripContext` versions. Edit both, or consolidate, to avoid drift.
 - **`Participant.age` is a stored field, not derived** from `birth_date`, and the audit logic reads it directly. Updating a birth date without updating `age` silently breaks age-restriction findings. (The SQL table has `birth_date` and no `age` column.)
 - **tsconfig is strict in ways that break builds late:** `noUnusedLocals` and `noUnusedParameters` turn unused variables into build failures (`npm run dev` won't catch them — only `npm run build`). `verbatimModuleSyntax` requires `import type` for type-only imports. `erasableSyntaxOnly` forbids enums and constructor parameter properties.

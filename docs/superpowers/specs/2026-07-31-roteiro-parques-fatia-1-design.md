@@ -27,7 +27,7 @@ Cada fatia tem seu próprio spec e plano. Esta fatia só entrega dado estruturad
 | Motor de recálculo automático (fila/clima) | Vai ser construído, mas como fatias 3-4 separadas — não faz parte desta fatia |
 | Origem dos gatilhos do motor | APIs externas (fila + clima), não entrada manual — detalhado na fatia 4 |
 | Cobertura (`cobertura_atracoes`, etc.) | Fica para a fatia 2, onde há UI para exibir — construir agora seria especulativo |
-| Migração Supabase para as colunas novas | Fora de escopo — `TripContext` não fala com Supabase para dado de viagem ainda (ver CLAUDE.md); adicionar coluna ao schema remoto hoje seria schema morto |
+| Migração Supabase para as colunas novas | **Atualizado no início da fatia 2**: as colunas novas foram migradas para `itinerary_items` (`20260731160000_add_roteiro_fields_to_itinerary_items.sql`) e os 195 itens dos 7 parques foram inseridos no Supabase remoto, substituindo as 7 linhas genéricas de "dia no parque" que ainda estavam lá. `TripContext` continua sem falar com Supabase para dado de viagem — o dado remoto existe mas não é lido pelo app ainda; feito antecipadamente para servir de base à fatia 2 |
 | Atrações fechadas (Jurassic Park River Adventure, etc.) | Entram como linhas com `operational_status` e `counts_toward_completion: false`, não são omitidas |
 
 ## Modelo de dados
