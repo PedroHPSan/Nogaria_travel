@@ -24,6 +24,8 @@ export interface RoteiroRowExtra {
   description?: string;
   timeStartOverride?: string;
   timeIsEstimated?: boolean;
+  minHeightCm?: number;
+  childSwitch?: boolean;
 }
 
 export type RoteiroRow = [
@@ -87,7 +89,8 @@ export function buildParkDay(config: ParkDayConfig, rows: RoteiroRow[]): Itinera
       lightning_lane: extra.lightningLane ?? 'none',
       lightning_lane_priority_rank: extra.lightningLaneRank,
       single_rider: false,
-      child_switch: false,
+      child_switch: extra.childSwitch ?? false,
+      min_height_cm: extra.minHeightCm,
       early_closure_risk: extra.earlyClosureRisk ?? false,
       operational_status: operationalStatus,
       counts_toward_completion: extra.countsTowardCompletion ?? (operationalStatus === 'operating'),
