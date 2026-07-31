@@ -6,7 +6,7 @@ const ROWS: RoteiroRow[] = [
   [3, "Exploração de Pandora e Valley of Mo'ara", 'Pandora', 'experience', 'B'],
   [4, 'Kilimanjaro Safaris', 'Africa', 'attraction', 'S', { lightningLane: 'genie_plus', lightningLaneRank: 2 }],
   [5, 'Gorilla Falls Exploration Trail', 'Africa', 'experience', 'A'],
-  [6, 'Festival of the Lion King', 'Africa', 'show', 'S'],
+  [6, 'Festival of the Lion King', 'Africa', 'show', 'S', { showDurationMin: 30 }],
   [7, 'Wildlife Express Train', "Rafiki's Planet Watch", 'experience', 'B', { description: 'Trajeto de ida; o retorno faz parte da mesma experiência.' }],
   [8, 'Affection Section', "Rafiki's Planet Watch", 'experience', 'B'],
   [9, 'Conservation Station', "Rafiki's Planet Watch", 'experience', 'B'],

@@ -36,11 +36,11 @@ const ROWS: RoteiroRow[] = [
   [33, 'Swiss Family Treehouse', 'Adventureland', 'attraction', 'C'],
   [34, 'Walt Disney World Railroad', 'Main Street, U.S.A.', 'attraction', 'B', { earlyClosureRisk: true }],
   [35, 'Main Street Vehicles', 'Main Street, U.S.A.', 'attraction', 'C', { earlyClosureRisk: true, description: 'Rodar somente se estiver operando no dia.' }],
-  [36, 'Disney Adventure Friends Cavalcade', 'Castelo / rota do desfile', 'show'],
-  [37, "Mickey's Magical Friendship Faire", 'Castelo / rota do desfile', 'show'],
-  [38, 'Disney Festival of Fantasy Parade', 'Castelo / rota do desfile', 'show'],
-  [39, 'Disney Starlight: Dream the Night Away', 'Castelo / rota do desfile', 'show'],
-  [40, 'Happily Ever After', 'Castelo / rota do desfile', 'show', undefined, { lastShowtimeOfDay: true, description: 'Show final obrigatório de fogos.' }],
+  [36, 'Disney Adventure Friends Cavalcade', 'Castelo / rota do desfile', 'show', undefined, { showDurationMin: 10 }],
+  [37, "Mickey's Magical Friendship Faire", 'Castelo / rota do desfile', 'show', undefined, { showDurationMin: 20 }],
+  [38, 'Disney Festival of Fantasy Parade', 'Castelo / rota do desfile', 'show', undefined, { showDurationMin: 20 }],
+  [39, 'Disney Starlight: Dream the Night Away', 'Castelo / rota do desfile', 'show', undefined, { showDurationMin: 15 }],
+  [40, 'Happily Ever After', 'Castelo / rota do desfile', 'show', undefined, { lastShowtimeOfDay: true, showDurationMin: 18, description: 'Show final obrigatório de fogos.' }],
 ];
 
 export const MAGIC_KINGDOM_ITEMS = buildParkDay(

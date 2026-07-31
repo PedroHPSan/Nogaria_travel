@@ -26,6 +26,7 @@ export interface RoteiroRowExtra {
   timeIsEstimated?: boolean;
   minHeightCm?: number;
   childSwitch?: boolean;
+  showDurationMin?: number;
 }
 
 export type RoteiroRow = [
@@ -58,6 +59,8 @@ function minutesToTime(minutes: number): string {
   return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 }
 
+const DEFAULT_SHOW_DURATION_MIN = 20;
+
 export function buildParkDay(config: ParkDayConfig, rows: RoteiroRow[]): ItineraryItem[] {
   const openMinutes = timeToMinutes(config.openTime);
   const closeMinutes = timeToMinutes(config.closeTime);
@@ -67,6 +70,11 @@ export function buildParkDay(config: ParkDayConfig, rows: RoteiroRow[]): Itinera
     const operationalStatus = extra.operationalStatus ?? 'operating';
     const timeStart = extra.timeStartOverride ?? minutesToTime(openMinutes + spacing * (order - 0.5));
     const timeIsEstimated = extra.timeIsEstimated ?? extra.timeStartOverride === undefined;
+    const showBlockStart = type === 'show' ? timeStart : undefined;
+    const showBlockEnd =
+      type === 'show'
+        ? minutesToTime(timeToMinutes(timeStart) + (extra.showDurationMin ?? DEFAULT_SHOW_DURATION_MIN))
+        : undefined;
 
     const item: ItineraryItem = {
       id: `${config.parkKey}-${String(order).padStart(3, '0')}`,
@@ -97,6 +105,8 @@ export function buildParkDay(config: ParkDayConfig, rows: RoteiroRow[]): Itinera
       participant_status: {},
       time_is_estimated: timeIsEstimated,
       last_showtime_of_day: extra.lastShowtimeOfDay ?? false,
+      show_block_start: showBlockStart,
+      show_block_end: showBlockEnd,
     };
 
     return item;
