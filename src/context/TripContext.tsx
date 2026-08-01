@@ -26,7 +26,6 @@ import {
   INITIAL_FLIGHTS,
   INITIAL_ACCOMMODATIONS,
   INITIAL_TRANSPORTS,
-  INITIAL_ITINERARY,
   INITIAL_GIFT_CARDS,
   INITIAL_PURCHASES,
   INITIAL_TASKS,
@@ -47,6 +46,7 @@ import { useWriteFailures } from '../data/useWriteFailures';
 import type { WriteFailure } from '../data/useWriteFailures';
 import { useTripsData } from '../data/useTripsData';
 import { useParticipantsData } from '../data/useParticipantsData';
+import { useItineraryData } from '../data/useItineraryData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
 
@@ -400,6 +400,18 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     recordFailure,
   });
 
+  const {
+    itinerary,
+    loading: itineraryLoading,
+    addItineraryItem,
+    updateItineraryItem,
+    deleteItineraryItem,
+  } = useItineraryData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+  });
+
   const [flights, setFlights] = useState<Flight[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_flights`);
     return saved ? JSON.parse(saved) : INITIAL_FLIGHTS;
@@ -413,11 +425,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [transports, setTransports] = useState<TransportReservation[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_transports`);
     return saved ? JSON.parse(saved) : INITIAL_TRANSPORTS;
-  });
-
-  const [itinerary, setItinerary] = useState<ItineraryItem[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_itinerary`);
-    return saved ? JSON.parse(saved) : INITIAL_ITINERARY;
   });
 
   const [giftCards, setGiftCards] = useState<GiftCard[]>(() => {
@@ -516,9 +523,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_transports`, JSON.stringify(transports));
   }, [transports]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_itinerary`, JSON.stringify(itinerary));
-  }, [itinerary]);
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_giftCards`, JSON.stringify(giftCards));
   }, [giftCards]);
@@ -673,19 +677,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteTransport = (id: string) => {
     setTransports(prev => prev.filter(item => item.id !== id));
-  };
-
-  const addItineraryItem = (i: Omit<ItineraryItem, 'id'>) => {
-    const newI: ItineraryItem = { ...i, id: newId() };
-    setItinerary(prev => [...prev, newI]);
-  };
-
-  const updateItineraryItem = (id: string, i: Partial<ItineraryItem>) => {
-    setItinerary(prev => prev.map(item => (item.id === id ? { ...item, ...i } : item)));
-  };
-
-  const deleteItineraryItem = (id: string) => {
-    setItinerary(prev => prev.filter(item => item.id !== id));
   };
 
   const addGiftCard = (g: Omit<GiftCard, 'id' | 'net_cost' | 'cashback_amount' | 'effective_savings' | 'effective_savings_pct'>) => {
@@ -941,7 +932,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateParticipant,
         deleteParticipant,
 
-        tripDataLoading: tripsLoading || participantsLoading,
+        tripDataLoading: tripsLoading || participantsLoading || itineraryLoading,
         failures,
         dismissFailure,
         retryFailure,
