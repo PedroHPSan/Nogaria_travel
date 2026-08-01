@@ -182,6 +182,9 @@ interface TripContextType {
 const TripContext = createContext<TripContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'ANTIGRAVITY_TRAVEL_PLATFORM_V1';
+// A chave `${STORAGE_KEY}_itinerary` é órfã desde a migração do itinerário para o Supabase
+// (ver src/data/useItineraryData.ts) — nada mais lê ou escreve nela. Inofensiva (limpa no
+// logout junto com o resto do prefixo), pode ser removida futuramente.
 
 const INITIAL_DOCUMENTS: DocumentFile[] = [
   {

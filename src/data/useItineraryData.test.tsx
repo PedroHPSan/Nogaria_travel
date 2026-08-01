@@ -203,6 +203,39 @@ describe('useItineraryData', () => {
     expect(deleteSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('ordena os itens carregados por date, depois time_start, depois base_order', async () => {
+    const itemTarde = { ...linhaSevenDwarfs, id: 'a', date: '2026-09-08', time_start: '14:00:00', base_order: 5, title: 'Tarde' };
+    const itemManha = { ...linhaSevenDwarfs, id: 'b', date: '2026-09-08', time_start: '08:00:00', base_order: 1, title: 'Manhã' };
+    const itemDiaAnterior = { ...linhaSevenDwarfs, id: 'c', date: '2026-09-07', time_start: '20:00:00', base_order: 1, title: 'Dia anterior' };
+    const itemMesmoHorarioOrderMaior = { ...linhaSevenDwarfs, id: 'd', date: '2026-09-08', time_start: '08:00:00', base_order: 9, title: 'Mesmo horário, order maior' };
+
+    const client = makeClient({ rows: [itemTarde, itemManha, itemDiaAnterior, itemMesmoHorarioOrderMaior] });
+    const { result } = renderHook(() => useItineraryData(deps(client)));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.itinerary.map(i => i.title)).toEqual([
+      'Dia anterior',
+      'Manhã',
+      'Mesmo horário, order maior',
+      'Tarde',
+    ]);
+  });
+
+  it('reinsere a linha revertida do delete na posição cronológica correta, não só no fim', async () => {
+    const itemManha = { ...linhaSevenDwarfs, id: 'a', date: '2026-09-07', time_start: '07:00:00', base_order: 1, title: 'Manhã' };
+    const itemTarde = { ...linhaSevenDwarfs, id: 'b', date: '2026-09-07', time_start: '18:00:00', base_order: 1, title: 'Tarde' };
+    // linhaSevenDwarfs (id 25ac...) é 08:40 — deve ficar entre Manhã e Tarde após o rollback do delete.
+    const client = makeClient({ rows: [itemManha, itemTarde, linhaSevenDwarfs], error: 'delete falhou' });
+    const { result } = renderHook(() => useItineraryData(deps(client)));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => { result.current.deleteItineraryItem(linhaSevenDwarfs.id); });
+
+    await waitFor(() => expect(result.current.itinerary).toHaveLength(3));
+    expect(result.current.itinerary.map(i => i.title)).toEqual(['Manhã', 'Seven Dwarfs Mine Train', 'Tarde']);
+  });
+
   it('não consulta o banco sem viagem ativa', async () => {
     const from = vi.fn();
     const client = { from } as unknown as SupabaseLike;
