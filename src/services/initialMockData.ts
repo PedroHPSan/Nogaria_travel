@@ -508,6 +508,7 @@ export const INITIAL_PURCHASES: PurchaseItem[] = [
   }
 ];
 
+// Não é mais lido pelo app (itinerary_items agora vem do Supabase, ver src/data/useItineraryData.ts) — mantido como registro histórico do que foi semeado no banco.
 export const INITIAL_ITINERARY: ItineraryItem[] = [
   {
     id: 'b0000000-0000-4000-8000-000000000001',
