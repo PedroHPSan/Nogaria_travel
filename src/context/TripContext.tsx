@@ -47,6 +47,7 @@ import type { WriteFailure } from '../data/useWriteFailures';
 import { useTripsData } from '../data/useTripsData';
 import { useParticipantsData } from '../data/useParticipantsData';
 import { useItineraryData } from '../data/useItineraryData';
+import { useExpensesData } from '../data/useExpensesData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
 
@@ -445,9 +446,17 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : INITIAL_LUGGAGE;
   });
 
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_expenses`);
-    return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
+  const {
+    expenses,
+    loading: expensesLoading,
+    addExpense,
+    updateExpense,
+    deleteExpense,
+  } = useExpensesData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackExpenses: INITIAL_EXPENSES,
   });
 
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -824,19 +833,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLuggages(prev => prev.filter(item => item.id !== id));
   };
 
-  const addExpense = (e: Omit<Expense, 'id'>) => {
-    const newE: Expense = { ...e, id: newId() };
-    setExpenses(prev => [...prev, newE]);
-  };
-
-  const updateExpense = (id: string, e: Partial<Expense>) => {
-    setExpenses(prev => prev.map(item => (item.id === id ? { ...item, ...e } : item)));
-  };
-
-  const deleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(item => item.id !== id));
-  };
-
   const addTask = (t: Omit<Task, 'id' | 'created_at'>) => {
     const newT: Task = { ...t, id: newId(), created_at: new Date().toISOString() };
     setTasks(prev => [...prev, newT]);
@@ -935,7 +931,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateParticipant,
         deleteParticipant,
 
-        tripDataLoading: tripsLoading || participantsLoading || itineraryLoading,
+        tripDataLoading: tripsLoading || participantsLoading || itineraryLoading || expensesLoading,
         failures,
         dismissFailure,
         retryFailure,

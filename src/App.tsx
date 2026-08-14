@@ -19,6 +19,7 @@ import { DocumentsView } from './features/documents/DocumentsView';
 import { AuditView } from './features/audits/AuditView';
 import { AiCopilotView } from './features/ai/AiCopilotView';
 import { DailyBriefingView } from './features/briefing/DailyBriefingView';
+import { DREView } from './features/financial/DREView';
 import { WriteFailureBanner } from './components/WriteFailureBanner';
 
 function MainAppContent() {
@@ -45,6 +46,10 @@ function MainAppContent() {
           <DashboardView
             onNavigate={(tab) => setActiveTab(tab)}
           />
+        )}
+
+        {activeTab === 'dre' && (
+          <DREView />
         )}
 
         {activeTab === 'briefing' && (

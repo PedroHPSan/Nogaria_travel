@@ -11,13 +11,15 @@ import {
   ShieldCheck,
   Bot,
   Volume2,
-  Clock
+  Clock,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 
 export type NavTab =
   | 'dashboard'
   | 'briefing'
+  | 'dre'
   | 'participants'
   | 'logistics'
   | 'itinerary'
@@ -46,6 +48,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   const tabs: { id: NavTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
     { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard },
+    { id: 'dre', label: 'DRE & Orçamento', icon: FileSpreadsheet },
     { id: 'briefing', label: 'Briefing do Dia', icon: Volume2 },
     { id: 'participants', label: `Grupo (${participants.length})`, icon: Users },
     { id: 'logistics', label: 'Logística', icon: Plane },
