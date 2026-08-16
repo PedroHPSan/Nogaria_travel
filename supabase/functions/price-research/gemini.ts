@@ -77,27 +77,33 @@ export async function searchPrices(
   const today = new Date().toISOString().split('T')[0];
   const produto = [req.brand, req.product_name, req.model_hint].filter(Boolean).join(' ');
 
+  const destinationContext = req.destination
+    ? `Localidade/Roteiro da viagem: ${req.destination}. Priorize lojas físicas, grandes varejistas e outlets conhecidos e acessíveis nessa região (ex: Apple Store em shoppings locais como Millenia/Florida Mall, Best Buy, Target, Walmart, Premium Outlets, Sawgrass Mills).`
+    : 'Priorize lojas oficiais e grandes varejistas consolidados nos EUA e Brasil.';
+
   const prompt = [
-    `Pesquise o preço atual de varejo de: ${produto}.`,
-    `Mercados: ${req.markets.join(' e ')}. US = varejo nos Estados Unidos, preço SEM sales tax.`,
+    `Pesquise o preço atual e lojas de varejo recomendadas para: ${produto}.`,
+    destinationContext,
+    `Mercados: ${req.markets.join(' e ')}.`,
+    `US = varejo nos Estados Unidos, preço SEM sales tax (mencione em source_note a loja/shopping/outlet sugerido na região ou condição).`,
     `BR = varejo no Brasil, preço COM impostos, em reais.`,
-    `Devolva até 3 candidatos por mercado, de lojas reconhecidas e confiáveis, com a URL da fonte.`,
+    `Devolva até 3 candidatos por mercado, de lojas reconhecidas e confiáveis, com a URL da fonte oficial/varejista.`,
     `Use ${today} como observed_at quando a fonte não informar a data exata.`,
-    `Não invente preço: se não encontrar ofertas reais, devolva a lista vazia.`,
+    `Não invente preço: se não encontrar ofertas reais para o item, devolva a lista vazia.`,
     '',
     'IMPORTANTE: Responda EXCLUSIVAMENTE em formato JSON (sem markdown adicional, sem texto explicativo antes ou depois) no seguinte formato:',
     '{',
     '  "candidates": [',
     '    {',
     '      "market": "US" ou "BR",',
-    '      "store_name": "Nome da Loja",',
+    '      "store_name": "Nome da Loja (ex: Apple Store Millenia, Best Buy Florida Mall, Target)",',
     '      "price": 999.99,',
     '      "currency": "USD" ou "BRL",',
     '      "price_kind": "list" ou "promo" ou "used" ou "refurbished",',
     '      "url": "https://...",',
     '      "observed_at": "YYYY-MM-DD",',
     '      "confidence": "high" ou "medium" ou "low",',
-    '      "source_note": "observação opcional"',
+    '      "source_note": "Dica de compra local ou observação da loja"',
     '    }',
     '  ]',
     '}',

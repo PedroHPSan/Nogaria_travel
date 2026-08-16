@@ -329,6 +329,7 @@ export const PurchasesView: React.FC = () => {
         onClose={() => setResearchItem(null)}
         item={researchItem}
         tripId={activeTrip.id}
+        destination={activeTrip.destination_main}
         userId={session?.user?.id ?? ''}
         onAccept={addPriceQuote}
       />

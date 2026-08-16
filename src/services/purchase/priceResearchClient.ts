@@ -26,6 +26,7 @@ export interface PriceResearchInput {
   product_name: string;
   brand?: string;
   model_hint?: string;
+  destination?: string;
   markets: Market[];
 }
 

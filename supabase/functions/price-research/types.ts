@@ -4,6 +4,7 @@ export interface PriceResearchRequest {
   product_name: string;
   brand?: string;
   model_hint?: string;
+  destination?: string;
   markets: Array<'US' | 'BR'>;
 }
 
@@ -25,16 +26,10 @@ export interface PriceResearchResponse {
 }
 
 // Bounds enforced on every incoming request before any Gemini call is made.
-// These exist to cap the cost of a single request (see task-10 review finding 1) —
-// they are independent of, and in addition to, the daily/monthly ai_usage_logs budget checks.
-//
-// - MAX_PRODUCT_NAME_LENGTH / MAX_BRAND_LENGTH / MAX_MODEL_HINT_LENGTH: generous for any
-//   real product listing (e.g. "Apple MacBook Pro 16-inch M4 Max 48GB RAM 1TB SSD Space Black"
-//   is ~65 chars; even verbose retail titles with every spec rarely exceed 150), while bounding
-//   how much attacker-controlled text can be interpolated into the Gemini prompt.
 export const MAX_PRODUCT_NAME_LENGTH = 200;
 export const MAX_BRAND_LENGTH = 100;
 export const MAX_MODEL_HINT_LENGTH = 100;
+export const MAX_DESTINATION_LENGTH = 120;
 
 // Only 'US' and 'BR' are valid markets today, so the request can never legitimately need
 // more than one of each — this also caps how many market segments the prompt fans out to.

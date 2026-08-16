@@ -7,6 +7,7 @@ import {
   DEFAULT_FREE_TIER_DAILY_TOKENS,
   DEFAULT_FREE_TIER_RPM_LIMIT,
   MAX_BRAND_LENGTH,
+  MAX_DESTINATION_LENGTH,
   MAX_MARKETS,
   MAX_MODEL_HINT_LENGTH,
   MAX_PRODUCT_NAME_LENGTH,
@@ -52,6 +53,11 @@ function validateRequestBody(raw: unknown): { error: string } | { body: PriceRes
   if (body.model_hint !== undefined) {
     if (typeof body.model_hint !== 'string' || body.model_hint.length > MAX_MODEL_HINT_LENGTH) {
       return { error: `model_hint excede o limite de ${MAX_MODEL_HINT_LENGTH} caracteres.` };
+    }
+  }
+  if (body.destination !== undefined) {
+    if (typeof body.destination !== 'string' || body.destination.length > MAX_DESTINATION_LENGTH) {
+      return { error: `destination excede o limite de ${MAX_DESTINATION_LENGTH} caracteres.` };
     }
   }
   if (!Array.isArray(body.markets) || body.markets.length === 0) {
