@@ -4,22 +4,12 @@ import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
 import { newId } from '../services/ids';
 import { itineraryFromRow, itineraryToInsert, type ItineraryItemRow } from './mappers/itineraryMapper';
+import { sortItineraryChronologically } from '../services/itinerarySort';
 
 export interface ItineraryDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-}
-
-/**
- * Ordena cronologicamente: date, depois time_start, depois base_order como desempate final.
- * O select do Supabase não usa `.order()` (ver ItineraryDataDeps/SupabaseLike), então a
- * ordenação é aplicada aqui, no cliente, após o mapeamento.
- */
-function ordenarCronologico(a: ItineraryItem, b: ItineraryItem): number {
-  if (a.date !== b.date) return a.date.localeCompare(b.date);
-  if (a.time_start !== b.time_start) return a.time_start.localeCompare(b.time_start);
-  return (a.base_order ?? 0) - (b.base_order ?? 0);
 }
 
 export function useItineraryData({ client, tripId, recordFailure }: ItineraryDataDeps) {
@@ -43,7 +33,7 @@ export function useItineraryData({ client, tripId, recordFailure }: ItineraryDat
       .then(({ data, error }) => {
         if (cancelado) return;
         if (!error && data) {
-          setItinerary((data as ItineraryItemRow[]).map(itineraryFromRow).sort(ordenarCronologico));
+          setItinerary(sortItineraryChronologically((data as ItineraryItemRow[]).map(itineraryFromRow)));
         }
         setLoading(false);
       });
@@ -56,7 +46,7 @@ export function useItineraryData({ client, tripId, recordFailure }: ItineraryDat
       const item: ItineraryItem = { ...data, id: newId() };
 
       const escrever = () => {
-        setItinerary(prev => [...prev, item]);
+        setItinerary(prev => sortItineraryChronologically([...prev, item]));
         client
           .from('itinerary_items')
           .insert(itineraryToInsert(item))
@@ -85,14 +75,14 @@ export function useItineraryData({ client, tripId, recordFailure }: ItineraryDat
       const atualizado: ItineraryItem = { ...anterior, ...patch };
 
       const escrever = () => {
-        setItinerary(atual => atual.map(x => (x.id === id ? atualizado : x)));
+        setItinerary(atual => sortItineraryChronologically(atual.map(x => (x.id === id ? atualizado : x))));
         client
           .from('itinerary_items')
           .update(itineraryToInsert(atualizado))
           .eq('id', id)
           .then(({ error }) => {
             if (!error) return;
-            setItinerary(atual => atual.map(x => (x.id === id ? anterior : x)));
+            setItinerary(atual => sortItineraryChronologically(atual.map(x => (x.id === id ? anterior : x))));
             recordFailure({
               entity: 'Item de roteiro',
               operation: 'atualizar',
@@ -120,7 +110,7 @@ export function useItineraryData({ client, tripId, recordFailure }: ItineraryDat
           .eq('id', id)
           .then(({ error }) => {
             if (!error) return;
-            setItinerary(atual => [...atual, removido].sort(ordenarCronologico));
+            setItinerary(atual => sortItineraryChronologically([...atual, removido]));
             recordFailure({
               entity: 'Item de roteiro',
               operation: 'excluir',

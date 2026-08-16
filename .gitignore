@@ -29,6 +29,7 @@ dist-ssr
 
 # Supabase CLI local state
 supabase/.temp
+.cache_mcp.json
 
 # Subagent-driven-development scratch (progress ledger, task briefs, review packages)
 .superpowers/

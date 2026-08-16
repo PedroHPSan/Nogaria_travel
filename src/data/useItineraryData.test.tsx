@@ -247,4 +247,45 @@ describe('useItineraryData', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(from).not.toHaveBeenCalled();
   });
+
+  it('mantém ordem cronológica ao adicionar um item com horário intermediário', async () => {
+    const itemManha = { ...linhaSevenDwarfs, id: 'a', date: '2026-09-07', time_start: '07:00:00', title: 'Cedo' };
+    const itemNoite = { ...linhaSevenDwarfs, id: 'b', date: '2026-09-07', time_start: '20:00:00', title: 'Tarde da Noite' };
+
+    const client = makeClient({ rows: [itemManha, itemNoite] });
+    const { result } = renderHook(() => useItineraryData(deps(client)));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.addItineraryItem({
+        trip_id: 'trip-1',
+        date: '2026-09-07',
+        time_start: '12:00',
+        city: 'Orlando',
+        title: 'Almoço',
+        category: 'restaurant',
+        participant_ids: [],
+        status: 'planned',
+        child_friendly: true,
+      });
+    });
+
+    expect(result.current.itinerary.map(i => i.title)).toEqual(['Cedo', 'Almoço', 'Tarde da Noite']);
+  });
+
+  it('reordena cronologicamente quando um item é atualizado com novo horário', async () => {
+    const item1 = { ...linhaSevenDwarfs, id: 'a', date: '2026-09-07', time_start: '08:00:00', title: 'Item 1' };
+    const item2 = { ...linhaSevenDwarfs, id: 'b', date: '2026-09-07', time_start: '12:00:00', title: 'Item 2' };
+
+    const client = makeClient({ rows: [item1, item2] });
+    const { result } = renderHook(() => useItineraryData(deps(client)));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.updateItineraryItem('a', { time_start: '18:00' });
+    });
+
+    expect(result.current.itinerary.map(i => i.title)).toEqual(['Item 2', 'Item 1']);
+  });
 });
+

@@ -3,6 +3,7 @@ import { AlertTriangle, Clapperboard } from 'lucide-react';
 import { useTrip } from '../../context/TripContext';
 import { computeCoverage } from '../../services/coverageEngine';
 import type { ItineraryItem, Participant } from '../../types/database.types';
+import { sortItineraryChronologically } from '../../services/itinerarySort';
 
 interface DayTimelineProps {
   items: ItineraryItem[];
@@ -61,7 +62,7 @@ function findConflictingShow(item: ItineraryItem, dayItems: ItineraryItem[]): It
 export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants }) => {
   const { updateItineraryItem } = useTrip();
 
-  const sortedItems = [...items].sort((a, b) => a.time_start.localeCompare(b.time_start));
+  const sortedItems = sortItineraryChronologically(items);
   const coverage = computeCoverage(items, participants);
 
   const handleStatusClick = (item: ItineraryItem, participantId: string) => {

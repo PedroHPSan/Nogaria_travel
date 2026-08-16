@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTrip } from '../../context/TripContext';
+import { sortItineraryChronologically } from '../../services/itinerarySort';
 import {
   Volume2,
   Play,
@@ -52,7 +53,7 @@ export const DailyBriefingView: React.FC = () => {
 
   // Filter items for selected date
   const dayItems = useMemo(() => {
-    return itinerary.filter(i => i.date === selectedDate);
+    return sortItineraryChronologically(itinerary.filter(i => i.date === selectedDate));
   }, [itinerary, selectedDate]);
 
   const dayAccommodations = useMemo(() => {

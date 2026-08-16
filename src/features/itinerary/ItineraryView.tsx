@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ItineraryModal } from '../../components/modals/ItineraryModal';
 import type { ItineraryItem } from '../../types/database.types';
+import { sortItineraryChronologically } from '../../services/itinerarySort';
 import {
   CalendarDays,
   Plus,
@@ -20,16 +21,25 @@ export const ItineraryView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const tripItinerary = itinerary.filter(i => i.trip_id === activeTrip.id);
+  const tripItinerary = useMemo(
+    () => itinerary.filter(i => i.trip_id === activeTrip.id),
+    [itinerary, activeTrip.id],
+  );
 
   // Available unique dates
-  const availableDates = Array.from(new Set(tripItinerary.map(i => i.date))).sort();
+  const availableDates = useMemo(
+    () => Array.from(new Set(tripItinerary.map(i => i.date).filter(Boolean))).sort(),
+    [tripItinerary],
+  );
 
-  const filteredItinerary = tripItinerary.filter(item => {
-    if (selectedDate !== 'all' && item.date !== selectedDate) return false;
-    if (selectedCategory !== 'all' && item.category !== selectedCategory) return false;
-    return true;
-  });
+  const filteredItinerary = useMemo(() => {
+    const filtered = tripItinerary.filter(item => {
+      if (selectedDate !== 'all' && item.date !== selectedDate) return false;
+      if (selectedCategory !== 'all' && item.category !== selectedCategory) return false;
+      return true;
+    });
+    return sortItineraryChronologically(filtered);
+  }, [tripItinerary, selectedDate, selectedCategory]);
 
   const handleOpenAdd = () => {
     setEditingItem(null);
