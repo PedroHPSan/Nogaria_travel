@@ -2,6 +2,10 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { searchPrices } from './gemini.ts';
 import {
   ALLOWED_MARKETS,
+  DEFAULT_AI_MODEL,
+  DEFAULT_FREE_TIER_DAILY_REQUESTS,
+  DEFAULT_FREE_TIER_DAILY_TOKENS,
+  DEFAULT_FREE_TIER_RPM_LIMIT,
   MAX_BRAND_LENGTH,
   MAX_MARKETS,
   MAX_MODEL_HINT_LENGTH,
@@ -120,10 +124,16 @@ Deno.serve(async (request) => {
       .order('is_default', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!config) return json({ error: 'Nenhum provedor de IA ativo configurado.' }, 400);
 
-    const today = new Date().toISOString().split('T')[0];
+    const modelName = config?.model_name || DEFAULT_AI_MODEL;
+    const modelTemperature = Number(config?.temperature ?? 0.2);
+    const dailyTokenLimit = config?.daily_token_limit ?? DEFAULT_FREE_TIER_DAILY_TOKENS;
+    const monthlyBudgetUsd = config?.monthly_budget_usd ? Number(config.monthly_budget_usd) : null;
+
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
     const monthStart = `${today.slice(0, 7)}-01`;
+    const oneMinuteAgo = new Date(now.getTime() - 60_000).toISOString();
 
     const { data: usage } = await supabase
       .from('ai_usage_logs')
@@ -132,29 +142,48 @@ Deno.serve(async (request) => {
       .gte('timestamp', monthStart);
 
     const rows = usage ?? [];
-    const tokensHoje = rows
-      .filter(r => String(r.timestamp).startsWith(today))
-      .reduce((s, r) => s + (r.tokens_input ?? 0) + (r.tokens_output ?? 0), 0);
-    const custoMes = rows.reduce((s, r) => s + Number(r.estimated_cost_usd ?? 0), 0);
 
-    if (config.daily_token_limit && tokensHoje >= config.daily_token_limit) {
+    // 1. Guardrail de RPM (Proteção contra estouro de requisições por minuto do Free Tier)
+    const requestsLastMinute = rows.filter(r => String(r.timestamp) >= oneMinuteAgo).length;
+    if (requestsLastMinute >= DEFAULT_FREE_TIER_RPM_LIMIT) {
       return json(
-        { error: `Limite diário de ${config.daily_token_limit} tokens atingido. Reseta amanhã.` },
+        { error: 'Muitas pesquisas em sequência. Aguarde alguns segundos para respeitar o limite gratuito.' },
         429,
       );
     }
-    if (config.monthly_budget_usd && custoMes >= Number(config.monthly_budget_usd)) {
+
+    // 2. Guardrail de RPD (Proteção contra estouro de requisições por dia)
+    const rowsHoje = rows.filter(r => String(r.timestamp).startsWith(today));
+    if (rowsHoje.length >= DEFAULT_FREE_TIER_DAILY_REQUESTS) {
       return json(
-        { error: `Orçamento mensal de US$ ${config.monthly_budget_usd} esgotado. Reseta no dia 1º.` },
+        { error: `Limite diário de ${DEFAULT_FREE_TIER_DAILY_REQUESTS} pesquisas gratuitas atingido. Reseta amanhã.` },
+        429,
+      );
+    }
+
+    // 3. Guardrail de Tokens Diários
+    const tokensHoje = rowsHoje.reduce((s, r) => s + (r.tokens_input ?? 0) + (r.tokens_output ?? 0), 0);
+    if (tokensHoje >= dailyTokenLimit) {
+      return json(
+        { error: `Limite diário de ${dailyTokenLimit.toLocaleString()} tokens atingido. Reseta amanhã.` },
+        429,
+      );
+    }
+
+    // 4. Guardrail de Orçamento Mensal
+    const custoMes = rows.reduce((s, r) => s + Number(r.estimated_cost_usd ?? 0), 0);
+    if (monthlyBudgetUsd !== null && custoMes >= monthlyBudgetUsd) {
+      return json(
+        { error: `Orçamento mensal de US$ ${monthlyBudgetUsd.toFixed(2)} esgotado. Reseta no dia 1º.` },
         429,
       );
     }
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!apiKey) return json({ error: 'GEMINI_API_KEY não configurada.' }, 500);
+    if (!apiKey) return json({ error: 'GEMINI_API_KEY não configurada nas secrets do Supabase.' }, 500);
 
     const started = Date.now();
-    const result = await searchPrices(body, apiKey, config.model_name, Number(config.temperature ?? 0.2));
+    const result = await searchPrices(body, apiKey, modelName, modelTemperature);
     const elapsed = Date.now() - started;
 
     // Gemini Flash: US$ 0,075 por 1M de entrada, US$ 0,30 por 1M de saída.
@@ -165,7 +194,7 @@ Deno.serve(async (request) => {
       user_name: user.email ?? user.id,
       function_name: 'price_research',
       provider: 'gemini',
-      model: config.model_name,
+      model: modelName,
       tokens_input: result.tokensIn,
       tokens_output: result.tokensOut,
       estimated_cost_usd: Number(cost.toFixed(6)),

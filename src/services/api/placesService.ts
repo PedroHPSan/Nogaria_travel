@@ -20,6 +20,9 @@ export interface DiningPlace {
   kidFriendly: boolean;
   lactoseFreeFriendly: boolean;
   budgetSavingTip: string;
+  rating?: number;
+  userRatingsTotal?: number;
+  isOpenNow?: boolean;
   mapsUrl?: string;
   source: 'google' | 'tripadvisor' | 'cache';
 }

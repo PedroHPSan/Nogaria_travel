@@ -40,3 +40,10 @@ export const MAX_MODEL_HINT_LENGTH = 100;
 // more than one of each — this also caps how many market segments the prompt fans out to.
 export const ALLOWED_MARKETS = ['US', 'BR'] as const;
 export const MAX_MARKETS = ALLOWED_MARKETS.length;
+
+// Free Tier Protections & Hard Caps
+export const DEFAULT_FREE_TIER_DAILY_REQUESTS = 100;
+export const DEFAULT_FREE_TIER_RPM_LIMIT = 8;
+export const DEFAULT_FREE_TIER_DAILY_TOKENS = 50_000;
+export const DEFAULT_AI_MODEL = 'gemini-1.5-flash';
+
