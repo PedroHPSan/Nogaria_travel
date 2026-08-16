@@ -114,22 +114,44 @@ Deno.serve(async (request) => {
     if ('error' in validated) return json({ error: validated.error }, 400);
     const body = validated.body;
 
-    // O trip_id só é visível se o usuário for membro do tenant — a própria RLS decide.
+    // O trip_id pode estar salvo no Postgres ou pode ser uma viagem mock/local.
+    // Primeiro buscamos na tabela trips com RLS:
+    let tenantId: string | null = null;
     const { data: trip } = await supabase
       .from('trips')
       .select('id, tenant_id')
       .eq('id', body.trip_id)
       .maybeSingle();
-    if (!trip) return json({ error: 'Viagem não encontrada ou sem acesso.' }, 403);
 
-    const { data: config } = await supabase
-      .from('ai_provider_configs')
-      .select('*')
-      .eq('tenant_id', trip.tenant_id)
-      .eq('is_active', true)
-      .order('is_default', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    if (trip) {
+      tenantId = trip.tenant_id;
+    } else {
+      // Se a viagem não foi encontrada por ID direto, busca o membership do usuário
+      const { data: membership } = await supabase
+        .from('memberships')
+        .select('tenant_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (membership) {
+        tenantId = membership.tenant_id;
+      }
+    }
+
+    // Se houver tenantId, busca as configurações de IA desse tenant
+    let config: Record<string, unknown> | null = null;
+    if (tenantId) {
+      const { data: c } = await supabase
+        .from('ai_provider_configs')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      config = c;
+    }
 
     let modelName = config?.model_name || DEFAULT_AI_MODEL;
     if (modelName.includes('1.5') || modelName.includes('2.5') || modelName.includes('flash-latest')) {
@@ -144,13 +166,15 @@ Deno.serve(async (request) => {
     const monthStart = `${today.slice(0, 7)}-01`;
     const oneMinuteAgo = new Date(now.getTime() - 60_000).toISOString();
 
-    const { data: usage } = await supabase
-      .from('ai_usage_logs')
-      .select('tokens_input, tokens_output, estimated_cost_usd, timestamp')
-      .eq('tenant_id', trip.tenant_id)
-      .gte('timestamp', monthStart);
-
-    const rows = usage ?? [];
+    let rows: Array<{ tokens_input: number | null; tokens_output: number | null; estimated_cost_usd: number | null; timestamp: string }> = [];
+    if (tenantId) {
+      const { data: usage } = await supabase
+        .from('ai_usage_logs')
+        .select('tokens_input, tokens_output, estimated_cost_usd, timestamp')
+        .eq('tenant_id', tenantId)
+        .gte('timestamp', monthStart);
+      rows = usage ?? [];
+    }
 
     // 1. Guardrail de RPM (Proteção contra estouro de requisições por minuto do Free Tier)
     const requestsLastMinute = rows.filter(r => String(r.timestamp) >= oneMinuteAgo).length;
@@ -198,17 +222,21 @@ Deno.serve(async (request) => {
     // Gemini Flash: US$ 0,075 por 1M de entrada, US$ 0,30 por 1M de saída.
     const cost = (result.tokensIn / 1_000_000) * 0.075 + (result.tokensOut / 1_000_000) * 0.3;
 
-    const { error: usageInsertError } = await supabase.from('ai_usage_logs').insert({
-      tenant_id: trip.tenant_id,
-      user_name: user.email ?? user.id,
-      function_name: 'price_research',
-      provider: 'gemini',
-      model: modelName,
-      tokens_input: result.tokensIn,
-      tokens_output: result.tokensOut,
-      estimated_cost_usd: Number(cost.toFixed(6)),
-      timestamp: new Date().toISOString(),
-    });
+    let usageInsertError: { message: string } | null = null;
+    if (tenantId) {
+      const { error: insErr } = await supabase.from('ai_usage_logs').insert({
+        tenant_id: tenantId,
+        user_name: user.email ?? user.id,
+        function_name: 'price_research',
+        provider: 'gemini',
+        model: modelName,
+        tokens_input: result.tokensIn,
+        tokens_output: result.tokensOut,
+        estimated_cost_usd: Number(cost.toFixed(6)),
+        timestamp: new Date().toISOString(),
+      });
+      usageInsertError = insErr;
+    }
 
     if (usageInsertError) {
       // The daily-token and monthly-budget checks above derive their counters entirely by

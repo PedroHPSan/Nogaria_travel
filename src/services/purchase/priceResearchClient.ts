@@ -42,16 +42,32 @@ const NOT_DEPLOYED_ERROR = 'Pesquisa automática indisponível no momento. Regis
 // documented failure (400/401/403/500/429). A 404 from a not-yet-deployed function, or any
 // gateway-level failure, may not return that JSON shape at all — swallow the parse failure
 // and fall back to a generic pt-BR message rather than surfacing raw text or a stack trace.
-async function extractServerMessage(response: Response): Promise<string | undefined> {
-  try {
-    const body = await response.json();
-    if (body && typeof body === 'object' && typeof (body as { error?: unknown }).error === 'string') {
-      return (body as { error: string }).error;
+async function extractServerMessage(error: unknown): Promise<string | undefined> {
+  if (error instanceof FunctionsHttpError && error.context) {
+    try {
+      if (error.context instanceof Response) {
+        const body = await error.context.clone().json();
+        if (body && typeof body === 'object' && typeof (body as { error?: unknown }).error === 'string') {
+          return (body as { error: string }).error;
+        }
+      } else if (typeof error.context === 'object' && error.context !== null && 'error' in error.context) {
+        return String((error.context as { error: unknown }).error);
+      }
+    } catch {
+      try {
+        if (error.context instanceof Response) {
+          const text = await error.context.clone().text();
+          if (text) return text;
+        }
+      } catch {
+        // ignore
+      }
     }
-    return undefined;
-  } catch {
-    return undefined;
   }
+  if (error instanceof Error && error.message && !error.message.includes('FunctionsFetchError')) {
+    return error.message;
+  }
+  return undefined;
 }
 
 /**
@@ -65,23 +81,20 @@ export async function researchPrices(input: PriceResearchInput): Promise<PriceRe
     const { data, error } = await supabase.functions.invoke('price-research', { body: input });
 
     if (error) {
-      if (error instanceof FunctionsHttpError && error.context instanceof Response) {
-        const status = error.context.status;
-        const message = await extractServerMessage(error.context);
-        if (status === 404) {
-          return { candidates: [], error: message ?? NOT_DEPLOYED_ERROR };
-        }
-        return { candidates: [], error: message ?? GENERIC_ERROR };
+      const message = await extractServerMessage(error);
+      return { candidates: [], error: message ?? GENERIC_ERROR };
+    }
+
+    if (!data || !Array.isArray(data.candidates)) {
+      if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+        return { candidates: [], error: data.error };
       }
       return { candidates: [], error: GENERIC_ERROR };
     }
 
-    if (!data || !Array.isArray(data.candidates)) {
-      return { candidates: [], error: GENERIC_ERROR };
-    }
-
     return { candidates: data.candidates as PriceQuoteCandidate[] };
-  } catch {
-    return { candidates: [], error: GENERIC_ERROR };
+  } catch (err: unknown) {
+    const message = await extractServerMessage(err);
+    return { candidates: [], error: message ?? GENERIC_ERROR };
   }
 }
