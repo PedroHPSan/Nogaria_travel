@@ -49,6 +49,10 @@ import { useItineraryData } from '../data/useItineraryData';
 import { useExpensesData } from '../data/useExpensesData';
 import { usePurchasesData } from '../data/usePurchasesData';
 import { useGiftCardsData } from '../data/useGiftCardsData';
+import { useFlightsData } from '../data/useFlightsData';
+import { useAccommodationsData } from '../data/useAccommodationsData';
+import { useTransportsData } from '../data/useTransportsData';
+import { useLuggagesData } from '../data/useLuggagesData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
 
@@ -417,19 +421,40 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     recordFailure,
   });
 
-  const [flights, setFlights] = useState<Flight[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_flights`);
-    return saved ? JSON.parse(saved) : INITIAL_FLIGHTS;
+  const {
+    flights,
+    addFlight,
+    updateFlight,
+    deleteFlight,
+  } = useFlightsData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackFlights: INITIAL_FLIGHTS,
   });
 
-  const [accommodations, setAccommodations] = useState<Accommodation[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_accommodations`);
-    return saved ? JSON.parse(saved) : INITIAL_ACCOMMODATIONS;
+  const {
+    accommodations,
+    addAccommodation,
+    updateAccommodation,
+    deleteAccommodation,
+  } = useAccommodationsData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackAccommodations: INITIAL_ACCOMMODATIONS,
   });
 
-  const [transports, setTransports] = useState<TransportReservation[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_transports`);
-    return saved ? JSON.parse(saved) : INITIAL_TRANSPORTS;
+  const {
+    transports,
+    addTransport,
+    updateTransport,
+    deleteTransport,
+  } = useTransportsData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackTransports: INITIAL_TRANSPORTS,
   });
 
   const {
@@ -456,9 +481,16 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fallbackPurchases: INITIAL_PURCHASES,
   });
 
-  const [luggages, setLuggages] = useState<Luggage[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_luggages`);
-    return saved ? JSON.parse(saved) : INITIAL_LUGGAGE;
+  const {
+    luggages,
+    addLuggage,
+    updateLuggage,
+    deleteLuggage,
+  } = useLuggagesData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackLuggages: INITIAL_LUGGAGE,
   });
 
   const {
@@ -666,45 +698,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Audit updates automatically through useMemo
   };
 
-  // CRUD Implementations
-  const addFlight = (f: Omit<Flight, 'id'>) => {
-    const newF: Flight = { ...f, id: newId() };
-    setFlights(prev => [...prev, newF]);
-  };
 
-  const updateFlight = (id: string, f: Partial<Flight>) => {
-    setFlights(prev => prev.map(item => (item.id === id ? { ...item, ...f } : item)));
-  };
-
-  const deleteFlight = (id: string) => {
-    setFlights(prev => prev.filter(item => item.id !== id));
-  };
-
-  const addAccommodation = (a: Omit<Accommodation, 'id'>) => {
-    const newA: Accommodation = { ...a, id: newId() };
-    setAccommodations(prev => [...prev, newA]);
-  };
-
-  const updateAccommodation = (id: string, a: Partial<Accommodation>) => {
-    setAccommodations(prev => prev.map(item => (item.id === id ? { ...item, ...a } : item)));
-  };
-
-  const deleteAccommodation = (id: string) => {
-    setAccommodations(prev => prev.filter(item => item.id !== id));
-  };
-
-  const addTransport = (t: Omit<TransportReservation, 'id'>) => {
-    const newT: TransportReservation = { ...t, id: newId() };
-    setTransports(prev => [...prev, newT]);
-  };
-
-  const updateTransport = (id: string, t: Partial<TransportReservation>) => {
-    setTransports(prev => prev.map(item => (item.id === id ? { ...item, ...t } : item)));
-  };
-
-  const deleteTransport = (id: string) => {
-    setTransports(prev => prev.filter(item => item.id !== id));
-  };
 
   // Ponto único da invariante do congelamento (RN-18/CA-11): TODA gravação de
   // PurchaseItem passa por aqui — criação (addPurchase) e edição
@@ -774,18 +768,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const addLuggage = (l: Omit<Luggage, 'id'>) => {
-    const newL: Luggage = { ...l, id: newId() };
-    setLuggages(prev => [...prev, newL]);
-  };
 
-  const updateLuggage = (id: string, l: Partial<Luggage>) => {
-    setLuggages(prev => prev.map(item => (item.id === id ? { ...item, ...l } : item)));
-  };
-
-  const deleteLuggage = (id: string) => {
-    setLuggages(prev => prev.filter(item => item.id !== id));
-  };
 
   const addTask = (t: Omit<Task, 'id' | 'created_at'>) => {
     const newT: Task = { ...t, id: newId(), created_at: new Date().toISOString() };
