@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ItineraryModal } from '../../components/modals/ItineraryModal';
+import { DiningRadarModal } from '../../components/modals/DiningRadarModal';
+import { AttractionGuideModal } from '../../components/modals/AttractionGuideModal';
 import type { ItineraryItem } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
 import {
@@ -8,7 +10,11 @@ import {
   Plus,
   Edit2,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Utensils,
+  Sparkles,
+  Share2,
+  Check
 } from 'lucide-react';
 
 
@@ -18,6 +24,11 @@ export const ItineraryView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
 
+  const [isDiningRadarOpen, setIsDiningRadarOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const [selectedGuideItem, setSelectedGuideItem] = useState<ItineraryItem | null>(null);
+
+  const [copiedDate, setCopiedDate] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -51,6 +62,40 @@ export const ItineraryView: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleOpenGuide = (item: ItineraryItem) => {
+    setSelectedGuideItem(item);
+    setIsGuideModalOpen(true);
+  };
+
+  const handleCopyDayForWhatsApp = () => {
+    const targetItems = filteredItinerary;
+    if (targetItems.length === 0) return;
+
+    const dateStr = selectedDate !== 'all' 
+      ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR') 
+      : 'Geral da Viagem';
+
+    let text = `🇺🇸 *NOGÁRIA USA 2026 - ROTEIRO DO DIA (${dateStr})*\n\n`;
+
+    targetItems.forEach((item, _idx) => {
+      text += `📍 *${item.time_start || 'Horário Livre'}* • ${item.title} (${item.city})\n`;
+      text += `   🏷️ Categoria: ${item.category.toUpperCase()}\n`;
+      if (item.min_height_cm) {
+        text += `   ⚠️ Altura Mínima: ${item.min_height_cm}cm (Gabi: 100cm)\n`;
+      }
+      if (item.notes) {
+        text += `   💡 Estratégia: ${item.notes}\n`;
+      }
+      text += `\n`;
+    });
+
+    text += `✨ *Dica:* Água gelada gratuita nos balcões de serviço rápido e pausas para a Gabi à tarde!\n`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedDate(selectedDate);
+    setTimeout(() => setCopiedDate(null), 2500);
+  };
+
   const gabi = participants.find(p => p.nickname === 'Gabi' || p.age <= 4);
 
   return (
@@ -65,13 +110,24 @@ export const ItineraryView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Nova Atividade
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setIsDiningRadarOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+          >
+            <Utensils className="w-3.5 h-3.5 text-amber-400" />
+            Comer Barato ($)
+          </button>
+
+          <button
+            onClick={handleOpenAdd}
+            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            Nova Atividade
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -108,6 +164,24 @@ export const ItineraryView: React.FC = () => {
             <option value="tour">🗽 Passeios</option>
           </select>
         </div>
+
+        <button
+          type="button"
+          onClick={handleCopyDayForWhatsApp}
+          className="ml-auto px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+        >
+          {copiedDate ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+              Copiado com Sucesso!
+            </>
+          ) : (
+            <>
+              <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+              Copiar para WhatsApp
+            </>
+          )}
+        </button>
       </div>
 
       {/* Timeline Items */}
@@ -148,6 +222,15 @@ export const ItineraryView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenGuide(item)}
+                      className="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold text-xs flex items-center gap-1 transition shadow-sm"
+                      title="Ver Guia e Dicas Estratégicas"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      Dicas & Estratégia
+                    </button>
                     <button
                       onClick={() => handleOpenEdit(item)}
                       className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
@@ -225,6 +308,18 @@ export const ItineraryView: React.FC = () => {
         initialData={editingItem}
         participants={participants}
         tripId={activeTrip.id}
+      />
+
+      <DiningRadarModal
+        isOpen={isDiningRadarOpen}
+        onClose={() => setIsDiningRadarOpen(false)}
+        initialDestination={activeTrip.destination_main.includes('Miami') ? 'Orlando / Kissimmee' : 'Orlando / Kissimmee'}
+      />
+
+      <AttractionGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+        item={selectedGuideItem}
       />
     </div>
   );

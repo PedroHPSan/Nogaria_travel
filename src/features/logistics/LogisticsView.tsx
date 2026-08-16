@@ -3,6 +3,8 @@ import { useTrip } from '../../context/TripContext';
 import { FlightModal } from '../../components/modals/FlightModal';
 import { AccommodationModal } from '../../components/modals/AccommodationModal';
 import { TransportModal } from '../../components/modals/TransportModal';
+import { DiningRadarModal } from '../../components/modals/DiningRadarModal';
+import { HotelServicesModal } from '../../components/modals/HotelServicesModal';
 import type { Flight, Accommodation, TransportReservation } from '../../types/database.types';
 import {
   Plane,
@@ -12,7 +14,9 @@ import {
   Edit2,
   Trash2,
   AlertTriangle,
-  Clock
+  Clock,
+  Utensils,
+  ShieldPlus
 } from 'lucide-react';
 
 export const LogisticsView: React.FC = () => {
@@ -45,6 +49,15 @@ export const LogisticsView: React.FC = () => {
 
   const [isTrModalOpen, setIsTrModalOpen] = useState(false);
   const [editingTr, setEditingTr] = useState<TransportReservation | null>(null);
+
+  const [isDiningRadarOpen, setIsDiningRadarOpen] = useState(false);
+  const [diningDestination, setDiningDestination] = useState('Orlando / Kissimmee');
+
+  const [isHotelServicesOpen, setIsHotelServicesOpen] = useState(false);
+  const [selectedHotelForServices, setSelectedHotelForServices] = useState<{ name: string; city: string }>({
+    name: 'Celebration Suites (Kissimmee)',
+    city: 'Kissimmee',
+  });
 
   const tripFlights = flights.filter(f => f.trip_id === activeTrip.id);
   const tripAccs = accommodations.filter(a => a.trip_id === activeTrip.id);
@@ -229,15 +242,42 @@ export const LogisticsView: React.FC = () => {
       {/* SUB-TAB: ACCOMMODATIONS */}
       {activeSubTab === 'accommodations' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Hospedagens & Resorts Registrados</h3>
-            <button
-              onClick={handleOpenAddAcc}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              Nova Hospedagem
-            </button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-white">Hospedagens & Resorts Registrados</h3>
+              <p className="text-xs text-slate-400">Consulte serviços e refeições econômicas próximas a cada hotel.</p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedHotelForServices({ name: 'Hotéis em Orlando/Kissimmee', city: 'Kissimmee' });
+                  setIsHotelServicesOpen(true);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+              >
+                <ShieldPlus className="w-3.5 h-3.5 text-blue-400" />
+                Farmácias & Mercados
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDiningDestination('Orlando / Kissimmee');
+                  setIsDiningRadarOpen(true);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+              >
+                <Utensils className="w-3.5 h-3.5 text-amber-400" />
+                Alimentação Econômica ($)
+              </button>
+              <button
+                onClick={handleOpenAddAcc}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                Nova Hospedagem
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -304,9 +344,32 @@ export const LogisticsView: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-800 flex-wrap gap-2">
                   <span className="text-slate-400">Total USD: <strong className="text-emerald-400">US$ {a.price_total}</strong></span>
-                  <span className="text-slate-400">Reserva: <strong className="text-white font-mono">{a.confirmation_code || 'N/A'}</strong></span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedHotelForServices({ name: a.name, city: a.city });
+                        setIsHotelServicesOpen(true);
+                      }}
+                      className="text-[11px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 transition"
+                    >
+                      <ShieldPlus className="w-3 h-3" />
+                      Serviços
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDiningDestination(a.city.includes('Miami') ? 'Miami Beach, FL' : 'Orlando / Kissimmee');
+                        setIsDiningRadarOpen(true);
+                      }}
+                      className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition"
+                    >
+                      <Utensils className="w-3 h-3" />
+                      Comer Barato
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -423,6 +486,19 @@ export const LogisticsView: React.FC = () => {
         initialData={editingTr}
         participants={participants}
         tripId={activeTrip.id}
+      />
+
+      <DiningRadarModal
+        isOpen={isDiningRadarOpen}
+        onClose={() => setIsDiningRadarOpen(false)}
+        initialDestination={diningDestination}
+      />
+
+      <HotelServicesModal
+        isOpen={isHotelServicesOpen}
+        onClose={() => setIsHotelServicesOpen(false)}
+        hotelName={selectedHotelForServices.name}
+        hotelCity={selectedHotelForServices.city}
       />
     </div>
   );

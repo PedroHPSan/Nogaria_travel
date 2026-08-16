@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
+import { StoreRadarModal } from './StoreRadarModal';
+import { Search } from 'lucide-react';
 import type { PurchaseItem, Participant } from '../../types/database.types';
 import type { PurchaseVerdict } from '../../types/purchase.types';
 
@@ -50,6 +52,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [verdictOverride, setVerdictOverride] = useState<PurchaseVerdict | ''>('');
   const [overrideReason, setOverrideReason] = useState('');
   const [error, setError] = useState('');
+  const [isStoreRadarOpen, setIsStoreRadarOpen] = useState(false);
 
   useEffect(() => {
     setError('');
@@ -174,14 +177,26 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Loja Alvo (Física ou Online)</label>
-            <input
-              type="text"
-              value={storeName}
-              onChange={e => setStoreName(e.target.value)}
-              placeholder="Ex: Apple Store Millenia, Target, Best Buy"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-slate-300 font-semibold">Loja Alvo (Física ou Online)</label>
+              <button
+                type="button"
+                onClick={() => setIsStoreRadarOpen(true)}
+                className="text-[11px] text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 transition"
+              >
+                <Search className="w-3 h-3" />
+                Buscar Loja
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={storeName}
+                onChange={e => setStoreName(e.target.value)}
+                placeholder="Ex: Apple Store Aventura, Target, Best Buy"
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
           </div>
         </div>
 
@@ -385,6 +400,18 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           </button>
         </div>
       </form>
+
+      <StoreRadarModal
+        isOpen={isStoreRadarOpen}
+        onClose={() => setIsStoreRadarOpen(false)}
+        onSelectStore={(selectedStore, address) => {
+          setStoreName(selectedStore);
+          if (address && !notes.includes(address)) {
+            setNotes(prev => (prev ? `${prev}\nEndereço: ${address}` : `Endereço: ${address}`));
+          }
+        }}
+        initialQuery={brand || productName || storeName || 'Apple Store'}
+      />
     </BaseModal>
   );
 };

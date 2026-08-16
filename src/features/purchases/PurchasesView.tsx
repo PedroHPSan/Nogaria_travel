@@ -6,6 +6,8 @@ import { LuggageModal } from '../../components/modals/LuggageModal';
 import { PriceQuoteModal } from '../../components/modals/PriceQuoteModal';
 import { PriceResearchModal } from '../../components/modals/PriceResearchModal';
 import { AssumptionsModal } from '../../components/modals/AssumptionsModal';
+import { StoreRadarModal } from '../../components/modals/StoreRadarModal';
+import { FreeTierBadge } from '../../components/common/FreeTierBadge';
 import { PurchaseDecisionCard } from './PurchaseDecisionCard';
 import { QuotaAllocationPanel } from './QuotaAllocationPanel';
 import type { PurchaseItem, Luggage, PurchaseAssumptions } from '../../types/database.types';
@@ -15,7 +17,8 @@ import {
   Plus,
   Edit2,
   Trash2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Search
 } from 'lucide-react';
 
 
@@ -57,6 +60,7 @@ export const PurchasesView: React.FC = () => {
   const [researchItem, setResearchItem] = useState<PurchaseItem | null>(null);
 
   const [isAssumptionsOpen, setIsAssumptionsOpen] = useState(false);
+  const [isStoreRadarOpen, setIsStoreRadarOpen] = useState(false);
 
   const tripPurchases = purchases.filter(p => p.trip_id === activeTrip.id);
   const tripLuggages = luggages.filter(l => l.trip_id === activeTrip.id);
@@ -147,13 +151,24 @@ export const PurchasesView: React.FC = () => {
       {/* SUB-TAB: PURCHASES */}
       {activeSubTab === 'purchases' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-white">Lista de Desejos & Produtos Planejados</h3>
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-sm font-bold text-white">Lista de Desejos & Produtos Planejados</h3>
+                <FreeTierBadge />
+              </div>
               <span className="text-xs text-purple-400 font-semibold">Total Estimado: {formatAmount(totalTargetUsd)}</span>
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsStoreRadarOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/60 border border-purple-800/50 text-purple-200 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+              >
+                <Search className="w-3.5 h-3.5 text-purple-400" />
+                Radar de Lojas
+              </button>
               <button
                 onClick={() => setIsAssumptionsOpen(true)}
                 className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-1.5"
@@ -323,6 +338,12 @@ export const PurchasesView: React.FC = () => {
         onClose={() => setIsAssumptionsOpen(false)}
         assumptions={assumptionsWithLiveRate}
         onSave={handleSaveAssumptions}
+      />
+
+      <StoreRadarModal
+        isOpen={isStoreRadarOpen}
+        onClose={() => setIsStoreRadarOpen(false)}
+        destination={activeTrip.destination_main.includes('Miami') ? 'Orlando, FL' : 'Orlando, FL'}
       />
     </div>
   );
