@@ -53,6 +53,11 @@ import { useFlightsData } from '../data/useFlightsData';
 import { useAccommodationsData } from '../data/useAccommodationsData';
 import { useTransportsData } from '../data/useTransportsData';
 import { useLuggagesData } from '../data/useLuggagesData';
+import { useTasksData } from '../data/useTasksData';
+import { useDecisionsData } from '../data/useDecisionsData';
+import { useLoyaltyData } from '../data/useLoyaltyData';
+import { useAiData } from '../data/useAiData';
+import { useAuditResolutionsData } from '../data/useAuditResolutionsData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
 
@@ -506,14 +511,29 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fallbackExpenses: INITIAL_EXPENSES,
   });
 
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_tasks`);
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+  const {
+    tasks,
+    addTask,
+    updateTask,
+    deleteTask,
+    toggleTaskStatus,
+  } = useTasksData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackTasks: INITIAL_TASKS,
   });
 
-  const [decisions, setDecisions] = useState<Decision[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_decisions`);
-    return saved ? JSON.parse(saved) : INITIAL_DECISIONS;
+  const {
+    decisions,
+    addDecision,
+    updateDecision,
+    deleteDecision,
+  } = useDecisionsData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackDecisions: INITIAL_DECISIONS,
   });
 
   const [documents, setDocuments] = useState<DocumentFile[]>(() => {
@@ -521,24 +541,37 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : INITIAL_DOCUMENTS;
   });
 
-  const [loyaltyAccounts, setLoyaltyAccounts] = useState<LoyaltyAccount[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_loyalty`);
-    return saved ? JSON.parse(saved) : INITIAL_LOYALTY;
+  const {
+    loyaltyAccounts,
+    addLoyaltyAccount,
+    updateLoyaltyAccount,
+    deleteLoyaltyAccount,
+  } = useLoyaltyData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackLoyalty: INITIAL_LOYALTY,
   });
 
-  const [aiProviders, setAiProviders] = useState<AiProviderConfig[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_aiProviders`);
-    return saved ? JSON.parse(saved) : INITIAL_AI_CONFIGS;
+  const {
+    aiConfigs: aiProviders,
+    aiLogs,
+    updateAiConfig: updateAiProvider,
+    addAiLog,
+  } = useAiData({
+    client,
+    tenantId: activeTenantId,
+    recordFailure,
+    fallbackConfigs: INITIAL_AI_CONFIGS,
+    fallbackLogs: INITIAL_AI_LOGS,
   });
 
-  const [aiLogs, setAiLogs] = useState<AiUsageLog[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_aiLogs`);
-    return saved ? JSON.parse(saved) : INITIAL_AI_LOGS;
-  });
-
-  const [resolvedAuditIds, setResolvedAuditIds] = useState<string[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_resolvedAudits`);
-    return saved ? JSON.parse(saved) : [];
+  const {
+    resolvedAuditIds,
+    toggleResolveAudit,
+  } = useAuditResolutionsData({
+    client,
+    tripId: activeTripIdResolvido,
   });
 
   // Active Trip
@@ -688,12 +721,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [buildDecisionInput],
   );
 
-  const toggleResolveAudit = (id: string) => {
-    setResolvedAuditIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
-
   const rerunAudit = () => {
     // Audit updates automatically through useMemo
   };
@@ -770,42 +797,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
 
-  const addTask = (t: Omit<Task, 'id' | 'created_at'>) => {
-    const newT: Task = { ...t, id: newId(), created_at: new Date().toISOString() };
-    setTasks(prev => [...prev, newT]);
-  };
-
-  const updateTask = (id: string, t: Partial<Task>) => {
-    setTasks(prev => prev.map(item => (item.id === id ? { ...item, ...t } : item)));
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(item => item.id !== id));
-  };
-
-  const toggleTaskStatus = (id: string) => {
-    setTasks(prev =>
-      prev.map(item => {
-        if (item.id !== id) return item;
-        const newStatus = item.status === 'completed' ? 'pending' : 'completed';
-        return { ...item, status: newStatus };
-      })
-    );
-  };
-
-  const addDecision = (d: Omit<Decision, 'id'>) => {
-    const newD: Decision = { ...d, id: newId() };
-    setDecisions(prev => [...prev, newD]);
-  };
-
-  const updateDecision = (id: string, d: Partial<Decision>) => {
-    setDecisions(prev => prev.map(item => (item.id === id ? { ...item, ...d } : item)));
-  };
-
-  const deleteDecision = (id: string) => {
-    setDecisions(prev => prev.filter(item => item.id !== id));
-  };
-
   const addDocument = (doc: Omit<DocumentFile, 'id' | 'uploaded_at'>) => {
     const newDoc: DocumentFile = {
       ...doc,
@@ -817,32 +808,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteDocument = (id: string) => {
     setDocuments(prev => prev.filter(item => item.id !== id));
-  };
-
-  const addLoyaltyAccount = (acc: Omit<LoyaltyAccount, 'id'>) => {
-    const newLoy: LoyaltyAccount = { ...acc, id: newId() };
-    setLoyaltyAccounts(prev => [...prev, newLoy]);
-  };
-
-  const updateLoyaltyAccount = (id: string, acc: Partial<LoyaltyAccount>) => {
-    setLoyaltyAccounts(prev => prev.map(item => (item.id === id ? { ...item, ...acc } : item)));
-  };
-
-  const deleteLoyaltyAccount = (id: string) => {
-    setLoyaltyAccounts(prev => prev.filter(item => item.id !== id));
-  };
-
-  const updateAiProvider = (id: string, config: Partial<AiProviderConfig>) => {
-    setAiProviders(prev => prev.map(item => (item.id === id ? { ...item, ...config } : item)));
-  };
-
-  const addAiLog = (log: Omit<AiUsageLog, 'id' | 'timestamp'>) => {
-    const newLog: AiUsageLog = {
-      ...log,
-      id: newId(),
-      timestamp: new Date().toISOString()
-    };
-    setAiLogs(prev => [newLog, ...prev]);
   };
 
   return (
