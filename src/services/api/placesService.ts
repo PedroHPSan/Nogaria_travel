@@ -207,7 +207,7 @@ export async function searchStores(
       fromCache: false,
       quota: getLocalQuotaStatus(),
     };
-  } catch (_err) {
+  } catch {
     // Fallback gracefully on network / CORS / Quota errors
     const fallback = getCuratedFallbackStores(query, destination);
     return {
@@ -426,7 +426,7 @@ export async function searchBudgetDining(
       fromCache: false,
       quota: getLocalQuotaStatus(),
     };
-  } catch (_err) {
+  } catch {
     const fallback = getCuratedBudgetDining(destination, maxPriceLevel, category);
     return {
       places: fallback,
@@ -694,7 +694,7 @@ export async function searchHotelServices(
       fromCache: false,
       quota: getLocalQuotaStatus(),
     };
-  } catch (_err) {
+  } catch {
     const fallback = getCuratedHotelServices(destination, categoryFilter);
     return {
       places: fallback,

@@ -1,19 +1,16 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> **Padrão de Desenvolvimento:** Todas as diretrizes universais de Clean Code, eficiência e loops de trabalho estão definidas em [AGENTS.md](./AGENTS.md). Este arquivo contém apenas os detalhes específicos de arquitetura e infraestrutura deste projeto.
 
 ## Commands
 
 ```bash
 npm run dev       # Vite dev server with HMR
-npm run build     # tsc -b && vite build  — typecheck runs first and will fail the build
-npm run lint      # oxlint (not ESLint)
+npm run build     # tsc -b && vite build — typecheck + production bundle
+npm run test      # vitest run — suíte completa de testes unitários e de integração
+npm run lint      # oxlint
 npm run preview   # serve the production build
 ```
-
-There is **no test framework installed** — no test runner, no test files, no `test` script. Don't reference or invent one; if tests are wanted, that's a setup decision to raise with the user first.
-
-`npm run lint` currently emits two known warnings (`react/only-export-components`), on `TripContext.tsx` and `AuthContext.tsx` — both export a provider component and a `useX` hook from the same file, which is the accepted pattern in this codebase for context modules. A clean lint run means "only those two warnings".
 
 ## Architecture
 
