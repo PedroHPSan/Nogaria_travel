@@ -125,7 +125,10 @@ Deno.serve(async (request) => {
       .limit(1)
       .maybeSingle();
 
-    const modelName = config?.model_name || DEFAULT_AI_MODEL;
+    let modelName = config?.model_name || DEFAULT_AI_MODEL;
+    if (modelName.includes('1.5') || modelName.includes('2.5') || modelName.includes('flash-latest')) {
+      modelName = DEFAULT_AI_MODEL;
+    }
     const modelTemperature = Number(config?.temperature ?? 0.2);
     const dailyTokenLimit = config?.daily_token_limit ?? DEFAULT_FREE_TIER_DAILY_TOKENS;
     const monthlyBudgetUsd = config?.monthly_budget_usd ? Number(config.monthly_budget_usd) : null;

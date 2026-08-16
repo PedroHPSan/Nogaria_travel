@@ -108,7 +108,6 @@ export async function searchPrices(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      tools: [{ google_search: {} }],
       generationConfig: {
         temperature,
         maxOutputTokens: 2048,
