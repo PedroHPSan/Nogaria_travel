@@ -35,7 +35,6 @@ import {
 } from '../services/initialMockData';
 
 import { runFullTripAudit } from '../services/auditEngine';
-import { calculateGiftCardNetCost } from '../services/giftCardCalculator';
 import { formatCurrencyValue, convertCurrency } from '../services/exchangeRateService';
 import { useAuth } from './AuthContext';
 import { newId } from '../services/ids';
@@ -48,6 +47,8 @@ import { useTripsData } from '../data/useTripsData';
 import { useParticipantsData } from '../data/useParticipantsData';
 import { useItineraryData } from '../data/useItineraryData';
 import { useExpensesData } from '../data/useExpensesData';
+import { usePurchasesData } from '../data/usePurchasesData';
+import { useGiftCardsData } from '../data/useGiftCardsData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
 
@@ -431,14 +432,28 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : INITIAL_TRANSPORTS;
   });
 
-  const [giftCards, setGiftCards] = useState<GiftCard[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_giftCards`);
-    return saved ? JSON.parse(saved) : INITIAL_GIFT_CARDS;
+  const {
+    giftCards,
+    addGiftCard,
+    updateGiftCard,
+    deleteGiftCard,
+  } = useGiftCardsData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackGiftCards: INITIAL_GIFT_CARDS,
   });
 
-  const [purchases, setPurchases] = useState<PurchaseItem[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_purchases`);
-    return saved ? JSON.parse(saved) : INITIAL_PURCHASES;
+  const {
+    purchases,
+    addPurchase: addPurchaseRaw,
+    updatePurchase: updatePurchaseRaw,
+    deletePurchase,
+  } = usePurchasesData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackPurchases: INITIAL_PURCHASES,
   });
 
   const [luggages, setLuggages] = useState<Luggage[]>(() => {
@@ -691,56 +706,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTransports(prev => prev.filter(item => item.id !== id));
   };
 
-  const addGiftCard = (g: Omit<GiftCard, 'id' | 'net_cost' | 'cashback_amount' | 'effective_savings' | 'effective_savings_pct'>) => {
-    const calc = calculateGiftCardNetCost(g.nominal_value, g.paid_amount, g.cashback_pct);
-    const newG: GiftCard = {
-      ...g,
-      id: newId(),
-      net_cost: calc.netCost,
-      cashback_amount: calc.cashbackValue,
-      effective_savings: calc.effectiveSavingsUSD,
-      effective_savings_pct: calc.effectiveSavingsPct
-    };
-    setGiftCards(prev => [...prev, newG]);
-  };
-
-  const updateGiftCard = (id: string, g: Partial<GiftCard>) => {
-    setGiftCards(prev =>
-      prev.map(item => {
-        if (item.id !== id) return item;
-        const updated = { ...item, ...g };
-        const calc = calculateGiftCardNetCost(updated.nominal_value, updated.paid_amount, updated.cashback_pct);
-        return {
-          ...updated,
-          net_cost: calc.netCost,
-          cashback_amount: calc.cashbackValue,
-          effective_savings: calc.effectiveSavingsUSD,
-          effective_savings_pct: calc.effectiveSavingsPct
-        };
-      })
-    );
-  };
-
-  const deleteGiftCard = (id: string) => {
-    setGiftCards(prev => prev.filter(item => item.id !== id));
-  };
-
   // Ponto único da invariante do congelamento (RN-18/CA-11): TODA gravação de
   // PurchaseItem passa por aqui — criação (addPurchase) e edição
   // (updatePurchase), inclusive o <select> de Status do PurchaseModal em
-  // ambos os fluxos, que nunca chama markPurchaseBought diretamente. Duas
-  // cópias do mesmo guard (uma em cada função) foi exatamente o que faltou na
-  // rodada anterior: addPurchase ficou sem o guard e um item podia nascer já
-  // 'bought' sem snapshot (revisão Finding 2, rodada 2). `getLiveDecision` é
-  // avaliado só quando necessário porque, na criação, calcular a decisão
-  // exige rodar o motor com o conjunto de itens que já inclui o candidato —
-  // mais caro que o simples lookup usado na edição.
-  //
-  // Qualquer transição PARA 'bought' sem um snapshot já anexado ao patch tira
-  // um agora — senão o item nunca congela e recalcula ao vivo para sempre.
-  // Qualquer transição PARA FORA de 'bought' apaga o snapshot (e o valor
-  // pago) — senão reverter para 'planned' e marcar 'bought' de novo ressuscita
-  // o snapshot da compra anterior com os números de outra compra.
+  // ambos os fluxos, que nunca chama markPurchaseBought diretamente.
   const freezeBoughtStatus = (
     candidate: PurchaseItem,
     wasBought: boolean,
@@ -757,37 +726,22 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addPurchase = (p: Omit<PurchaseItem, 'id'>) => {
     const draft: PurchaseItem = { ...p, id: newId() };
-    setPurchases(prev => {
-      const withDraft = [...prev, draft];
-      const frozenDraft = freezeBoughtStatus(draft, false, () =>
-        decisionsForItemSet(withDraft).find(d => d.purchase_item_id === draft.id),
-      );
-      return [...prev, frozenDraft];
-    });
+    const withDraft = [...purchases, draft];
+    const frozenDraft = freezeBoughtStatus(draft, false, () =>
+      decisionsForItemSet(withDraft).find(d => d.purchase_item_id === draft.id),
+    );
+    addPurchaseRaw(frozenDraft);
   };
 
   const updatePurchase = (id: string, p: Partial<PurchaseItem>) => {
-    setPurchases(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      const updated: PurchaseItem = { ...item, ...p };
-      // final-review Finding 1: a single edit can change quantity, the
-      // quota-owner fields, and flip status to 'bought' all at once. The
-      // decision must be computed against a basket where `updated` (the
-      // POST-edit record) stands in for the old item — never against the
-      // stale `purchaseDecisions` memo, which was still built from the
-      // pre-edit `prev` — or the frozen snapshot would contradict the
-      // record it's attached to.
-      const withUpdated = prev.map(i => (i.id === id ? updated : i));
-      const frozen = freezeBoughtStatus(updated, item.status === 'bought', () =>
-        decisionsForItemSet(withUpdated).find(d => d.purchase_item_id === id),
-      );
-      return prev.map(i => (i.id === id ? frozen : i));
-    });
-  };
-
-  const deletePurchase = (id: string) => {
-    setPurchases(prev => prev.filter(item => item.id !== id));
+    const item = purchases.find(i => i.id === id);
+    if (!item) return;
+    const updated: PurchaseItem = { ...item, ...p };
+    const withUpdated = purchases.map(i => (i.id === id ? updated : i));
+    const frozen = freezeBoughtStatus(updated, item.status === 'bought', () =>
+      decisionsForItemSet(withUpdated).find(d => d.purchase_item_id === id),
+    );
+    updatePurchaseRaw(id, frozen);
   };
 
   // Congela a decisão vigente no momento da compra (RN-18/CA-11): o snapshot
