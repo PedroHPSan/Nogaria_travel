@@ -58,6 +58,7 @@ import { useDecisionsData } from '../data/useDecisionsData';
 import { useLoyaltyData } from '../data/useLoyaltyData';
 import { useAiData } from '../data/useAiData';
 import { useAuditResolutionsData } from '../data/useAuditResolutionsData';
+import { useDocumentsData } from '../data/useDocumentsData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
 
@@ -550,9 +551,15 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fallbackDecisions: INITIAL_DECISIONS,
   });
 
-  const [documents, setDocuments] = useState<DocumentFile[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_documents`);
-    return saved ? JSON.parse(saved) : INITIAL_DOCUMENTS;
+  const {
+    documents,
+    addDocument,
+    deleteDocument,
+  } = useDocumentsData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+    fallbackDocuments: INITIAL_DOCUMENTS,
   });
 
   const {
@@ -810,19 +817,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
 
-
-  const addDocument = (doc: Omit<DocumentFile, 'id' | 'uploaded_at'>) => {
-    const newDoc: DocumentFile = {
-      ...doc,
-      id: newId(),
-      uploaded_at: new Date().toISOString()
-    };
-    setDocuments(prev => [...prev, newDoc]);
-  };
-
-  const deleteDocument = (id: string) => {
-    setDocuments(prev => prev.filter(item => item.id !== id));
-  };
 
   return (
     <TripContext.Provider
