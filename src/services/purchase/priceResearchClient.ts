@@ -36,7 +36,6 @@ export interface PriceResearchResult {
 }
 
 const GENERIC_ERROR = 'Não foi possível falar com a pesquisa automática. Registre o preço manualmente.';
-const NOT_DEPLOYED_ERROR = 'Pesquisa automática indisponível no momento. Registre o preço manualmente.';
 
 // Best-effort extraction of the `{ error: string }` body the Edge Function sends on every
 // documented failure (400/401/403/500/429). A 404 from a not-yet-deployed function, or any
