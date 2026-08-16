@@ -35,7 +35,7 @@ import {
 } from '../services/initialMockData';
 
 import { runFullTripAudit } from '../services/auditEngine';
-import { formatCurrencyValue, convertCurrency } from '../services/exchangeRateService';
+import { formatCurrencyValue, convertCurrency, fetchLiveExchangeRate } from '../services/exchangeRateService';
 import { useAuth } from './AuthContext';
 import { newId } from '../services/ids';
 import { usePurchasesState } from '../features/purchases/usePurchasesState';
@@ -375,7 +375,21 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.62;
   });
 
-  const exchangeRateDate = new Date().toLocaleDateString('pt-BR');
+  const [exchangeRateDate, setExchangeRateDate] = useState<string>(() =>
+    new Date().toLocaleDateString('pt-BR'),
+  );
+
+  useEffect(() => {
+    fetchLiveExchangeRate(exchangeRate).then(info => {
+      if (info && Number.isFinite(info.rate) && info.rate > 0) {
+        setExchangeRate(info.rate);
+        const [y, m, d] = info.lastUpdated.split('-');
+        if (y && m && d) {
+          setExchangeRateDate(`${d}/${m}/${y}`);
+        }
+      }
+    });
+  }, []);
 
   // Helper formatting & calculation functions
   const formatAmount = (amountUSD: number): string => {
