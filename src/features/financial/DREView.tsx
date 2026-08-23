@@ -80,7 +80,6 @@ export const DREView: React.FC = () => {
     purchases,
     giftCards,
     currency,
-    setCurrency,
     exchangeRate,
     exchangeRateDate
   } = useTrip();
@@ -103,7 +102,7 @@ export const DREView: React.FC = () => {
   };
 
   // Estado das Abas e Modais
-  const [activeTab, setActiveTab] = useState<'categories' | 'participants' | 'timeline' | 'simulator'>('categories');
+  const [activeTab, setActiveTab] = useState<'categories' | 'participants' | 'timeline'>('categories');
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     flight: true,
     accommodation: true,
@@ -247,26 +246,6 @@ export const DREView: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Toggle de Moeda */}
-            <div className="inline-flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
-              <button
-                onClick={() => setCurrency('BRL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                  currency === 'BRL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                R$ Real
-              </button>
-              <button
-                onClick={() => setCurrency('USD')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                  currency === 'USD' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                US$ Dólar
-              </button>
-            </div>
-
             {/* Botão Ajustar Metas */}
             <button
               onClick={() => setIsBudgetModalOpen(true)}
@@ -325,10 +304,6 @@ export const DREView: React.FC = () => {
                 ? `≈ US$ ${dreResult.total_planned_usd.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
                 : `≈ R$ ${dreResult.total_planned_brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-400 pt-2 border-t border-slate-800 flex justify-between">
-            <span>Cotação Base:</span>
-            <span className="text-white font-semibold">R$ {exchangeRate.toFixed(2)}</span>
           </div>
         </div>
 
@@ -477,18 +452,6 @@ export const DREView: React.FC = () => {
         >
           <Calendar className="w-4 h-4" />
           <span>Pré-Viagem vs. Na Viagem</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('simulator')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-            activeTab === 'simulator'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <Calculator className="w-4 h-4" />
-          <span>Simulador & Cartões</span>
         </button>
       </div>
 
@@ -965,53 +928,6 @@ export const DREView: React.FC = () => {
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                   </PieChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ABA 4: Simulador de Provisionamento & Gestão de Câmbio */}
-      {activeTab === 'simulator' && (
-        <div className="space-y-6">
-          <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Calculator className="w-4 h-4 text-emerald-400" />
-              Calculadora de Estratégia Cambial e Distribuição de Fundos
-            </h3>
-            <p className="text-xs text-slate-400">
-              Planejamento de como os R$ {dreResult.total_to_provision_brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} restantes devem ser carregados:
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <span className="text-xs font-bold text-blue-400">Cartão Internacional (Nomad/Wise)</span>
-                <div className="text-xl font-bold text-white">
-                  {formatVal(dreResult.total_to_provision_usd * 0.7, dreResult.total_to_provision_brl * 0.7)}
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  70% do saldo restante. IOF de 1,1% e spread bancário reduzido.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <span className="text-xs font-bold text-emerald-400">Dólar em Espécie (Papel Moeda)</span>
-                <div className="text-xl font-bold text-white">
-                  {formatVal(dreResult.total_to_provision_usd * 0.2, dreResult.total_to_provision_brl * 0.2)}
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  20% em dinheiro vivo para gorjetas, pedágios manuais e pequenos comércios.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <span className="text-xs font-bold text-purple-400">Reserva de Emergência</span>
-                <div className="text-xl font-bold text-white">
-                  {formatVal(dreResult.total_to_provision_usd * 0.1, dreResult.total_to_provision_brl * 0.1)}
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  10% de folga em cartão de crédito internacional para contingências médicas/veículo.
-                </p>
               </div>
             </div>
           </div>

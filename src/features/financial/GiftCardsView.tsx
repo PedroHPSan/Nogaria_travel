@@ -31,8 +31,7 @@ export const GiftCardsView: React.FC = () => {
     updateLoyaltyAccount,
     deleteLoyaltyAccount,
     formatAmount,
-    currency,
-    exchangeRate
+    currency
   } = useTrip();
 
 
@@ -158,7 +157,7 @@ export const GiftCardsView: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  Custo líquido calculado descontando o valor pago e o cashback percentual recebido em {currency} (Cotação: R$ {exchangeRate.toFixed(2)}).
+                  Custo líquido calculado descontando o valor pago e o cashback percentual recebido, em {currency}.
                 </p>
               </div>
 

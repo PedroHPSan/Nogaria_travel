@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @layer base {
@@ -31,6 +32,17 @@
     --ring: 224.3 76.3% 48%;
 
     --radius: 0.75rem;
+
+    /* Brand tokens (Nogaria) — see issue #13 §4.1. Not yet consumed by components. */
+    --brand-sky: #2FBEEC;
+    --brand-sky-alt: #30B8E8;
+    --brand-mint: #52FF7F;
+    --brand-mint-alt: #58B880;
+    --brand-navy: #004078;
+    --gradient-brand: linear-gradient(135deg, #2FBEEC 0%, #52FF7F 100%);
+
+    --font-display: 'Sora', system-ui, sans-serif;
+    --font-sans: 'Inter', system-ui, sans-serif;
   }
 }
 
@@ -56,6 +68,14 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Keyboard focus ring — overrides the focus:outline-none utility used across
+   inputs/selects/buttons, which otherwise leaves keyboard navigation with no
+   visible focus indicator at all (mouse clicks are unaffected). */
+:focus-visible {
+  outline: 2px solid var(--brand-sky);
+  outline-offset: 2px;
 }
 
 /* Custom scrollbar */
