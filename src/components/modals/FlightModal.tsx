@@ -124,7 +124,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               value={airline}
               onChange={e => setAirline(e.target.value)}
               placeholder="Ex: Azul / LATAM / American"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -136,7 +136,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               value={flightNumber}
               onChange={e => setFlightNumber(e.target.value)}
               placeholder="Ex: AD 8702"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
@@ -147,7 +147,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               value={loyaltyProgram}
               onChange={e => setLoyaltyProgram(e.target.value)}
               placeholder="Ex: Azul Fidelidade / Smiles"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -161,7 +161,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               value={originAirport}
               onChange={e => setOriginAirport(e.target.value)}
               placeholder="Ex: VCP / GRU"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
@@ -173,7 +173,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               value={destAirport}
               onChange={e => setDestAirport(e.target.value)}
               placeholder="Ex: MCO / MIA / FLL"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
@@ -184,7 +184,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               value={terminal}
               onChange={e => setTerminal(e.target.value)}
               placeholder="Ex: T1 ou T3"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -195,7 +195,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               value={bookingCode}
               onChange={e => setBookingCode(e.target.value)}
               placeholder="Ex: PDRGAB26"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase font-mono font-bold text-info-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 uppercase font-mono font-bold text-info-400"
             />
           </div>
         </div>
@@ -208,7 +208,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               required
               value={departureTime.substring(0, 16)}
               onChange={e => setDepartureTime(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -219,7 +219,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               required
               value={arrivalTime.substring(0, 16)}
               onChange={e => setArrivalTime(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -257,7 +257,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               step="10"
               value={priceCash}
               onChange={e => setPriceCash(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -269,7 +269,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               step="1000"
               value={pricePoints}
               onChange={e => setPricePoints(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -281,7 +281,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
               step="1"
               value={taxesAmount}
               onChange={e => setTaxesAmount(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -292,7 +292,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
             <select
               value={classType}
               onChange={e => setClassType(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="economy">Econômica</option>
               <option value="premium_economy">Premium Economy</option>
@@ -306,7 +306,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="confirmed">Confirmado / Emitido</option>
               <option value="booked">Reservado (Pendente)</option>
@@ -323,7 +323,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Emitido via pontos Azul Fidelidade com conexão em Campinas."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

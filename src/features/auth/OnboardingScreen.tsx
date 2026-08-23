@@ -26,7 +26,7 @@ export const OnboardingScreen: React.FC = () => {
       <div className="glass-card w-full max-w-md p-8 rounded-2xl border border-ink-800 space-y-6">
         <div className="text-center space-y-2">
           <Building2 className="w-10 h-10 text-info-400 mx-auto" />
-          <h1 className="text-lg font-bold text-white">Vamos criar sua família ou organização</h1>
+          <h1 className="text-lg font-bold text-ink-100">Vamos criar sua família ou organização</h1>
           <p className="text-xs text-ink-400">
             Esse será o espaço onde suas viagens, participantes e finanças ficam organizados.
           </p>
@@ -41,7 +41,7 @@ export const OnboardingScreen: React.FC = () => {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ex: Família Palheta"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 

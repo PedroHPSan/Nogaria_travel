@@ -207,7 +207,7 @@ export const DailyBriefingView: React.FC = () => {
                 handleStopSpeech();
                 setSelectedDate(e.target.value);
               }}
-              className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-white text-xs font-bold focus:outline-none focus:border-info-500"
+              className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-ink-100 text-xs font-bold focus:outline-none focus:border-info-500"
             >
               {tripDates.map(d => (
                 <option key={d} value={d}>
@@ -220,14 +220,14 @@ export const DailyBriefingView: React.FC = () => {
       />
 
       {/* Audio Player Card (Falado por IA) */}
-      <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-ink-900 to-ink-950 shadow-xl relative overflow-hidden">
+      <div className="hero-banner p-6 rounded-2xl border border-indigo-500/30 shadow-xl relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-accent-400" />
               Assistente de Voz IA • Leitura em Português (pt-BR)
             </div>
-            <h3 className="text-lg font-bold text-white">
+            <h3 className="text-lg font-bold text-ink-100">
               Relatório Falado do Dia: {new Date(`${selectedDate}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             </h3>
             <p className="text-xs text-ink-300 max-w-xl">
@@ -286,7 +286,7 @@ export const DailyBriefingView: React.FC = () => {
         <div className="space-y-4">
           <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              <h3 className="font-bold text-sm text-ink-100 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-info-400" />
                 Cronograma do Dia ({dayItems.length} atividades)
               </h3>
@@ -312,7 +312,7 @@ export const DailyBriefingView: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-sm text-white">{item.title}</h4>
+                        <h4 className="font-bold text-sm text-ink-100">{item.title}</h4>
                         <span className="text-[10px] px-2 py-0.5 rounded bg-info-500/10 text-info-400 font-semibold border border-info-500/20">
                           {item.category.toUpperCase()}
                         </span>
@@ -335,7 +335,7 @@ export const DailyBriefingView: React.FC = () => {
 
           {/* Written Full Summary Box */}
           <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-3">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+            <h3 className="font-bold text-sm text-ink-100 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-accent-400" />
               Relatório Executivo Escrito
             </h3>

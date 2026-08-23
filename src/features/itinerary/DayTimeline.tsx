@@ -76,7 +76,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
     <div className="space-y-4">
       <div className="p-4 rounded-2xl glass-panel border border-ink-800 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-white">Cobertura do dia</span>
+          <span className="text-sm font-bold text-ink-100">Cobertura do dia</span>
           <span className="text-lg font-bold text-info-400">{coverage.percent}%</span>
         </div>
         <div className="flex flex-wrap gap-2 text-[11px]">
@@ -147,7 +147,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
                           </span>
                         )}
                       </div>
-                      <h4 className="font-bold text-base text-white mt-0.5">{item.title}</h4>
+                      <h4 className="font-bold text-base text-ink-100 mt-0.5">{item.title}</h4>
                     </div>
                   </div>
                 </div>

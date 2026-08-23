@@ -50,7 +50,7 @@ export const DocumentsView: React.FC = () => {
             placeholder="Buscar por título ou voucher..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-white text-xs focus:outline-none focus:border-info-500 w-60"
+            className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-ink-100 text-xs focus:outline-none focus:border-info-500 w-60"
           />
         </div>
 
@@ -59,7 +59,7 @@ export const DocumentsView: React.FC = () => {
           <select
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-white text-xs focus:outline-none focus:border-info-500 font-semibold"
+            className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-ink-100 text-xs focus:outline-none focus:border-info-500 font-semibold"
           >
             <option value="all">Todas as Categorias ({tripDocs.length})</option>
             <option value="flight">✈️ Voos & Passagens</option>
@@ -90,7 +90,7 @@ export const DocumentsView: React.FC = () => {
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-info-500/10 text-info-400 border border-info-500/20">
                       {doc.category.toUpperCase()}
                     </span>
-                    <h4 className="font-bold text-sm text-white mt-1 leading-tight">{doc.title}</h4>
+                    <h4 className="font-bold text-sm text-ink-100 mt-1 leading-tight">{doc.title}</h4>
                   </div>
                 </div>
 

@@ -57,7 +57,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
         </div>
       </div>
       <div className="mt-3">
-        <div className="text-2xl font-bold text-white tracking-tight">{value}</div>
+        <div className="text-2xl font-bold text-ink-100 tracking-tight">{value}</div>
         {sublabel && <div className={`text-xs ${c.text} font-medium mt-1`}>{sublabel}</div>}
       </div>
       {progress !== undefined && (

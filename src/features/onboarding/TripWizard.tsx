@@ -112,7 +112,7 @@ export const TripWizard: React.FC = () => {
     <div className="flex min-h-screen flex-col items-center justify-center bg-ink-950 p-4">
       <div className="mb-4 flex w-full max-w-2xl items-center justify-between px-2 text-xs text-ink-400">
         <div>
-          Conectado como <strong className="text-white">{profile?.email}</strong>
+          Conectado como <strong className="text-ink-100">{profile?.email}</strong>
         </div>
         <div className="flex items-center gap-3">
           {tenantMemberships.length > 1 && (
@@ -143,7 +143,7 @@ export const TripWizard: React.FC = () => {
           {passo === 2 && <Users className="text-accent-400" size={22} />}
           {passo === 3 && <Check className="text-success-400" size={22} />}
           <div>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-ink-100">
               {passo === 1 && 'Sua primeira viagem'}
               {passo === 2 && 'Quem vai com você'}
               {passo === 3 && 'Confirme e comece'}
@@ -205,7 +205,7 @@ export const TripWizard: React.FC = () => {
         {passo === 3 && (
           <div className="space-y-3 text-sm">
             <div className="glass-card rounded-xl p-4">
-              <p className="font-bold text-white">{titulo}</p>
+              <p className="font-bold text-ink-100">{titulo}</p>
               <p className="text-ink-400">{destino}</p>
               <p className="mt-1 text-xs text-ink-500">{ida} até {volta}</p>
             </div>

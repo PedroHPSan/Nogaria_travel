@@ -123,7 +123,7 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
           {members.map(m => (
             <div key={m.user_id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-ink-900/60 border border-ink-800">
               <div>
-                <div className="text-white font-semibold">{m.profiles?.full_name ?? 'Usuário'}</div>
+                <div className="text-ink-100 font-semibold">{m.profiles?.full_name ?? 'Usuário'}</div>
                 <div className="text-ink-400">{m.profiles?.email}</div>
               </div>
               <span className="px-2 py-0.5 rounded-full bg-info-500/10 text-info-400 border border-info-500/30 text-[10px] uppercase font-bold">
@@ -141,7 +141,7 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
             {invites.map(inv => (
               <div key={inv.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-ink-900/60 border border-ink-800">
                 <div>
-                  <div className="text-white font-semibold">{inv.email}</div>
+                  <div className="text-ink-100 font-semibold">{inv.email}</div>
                   <div className="text-ink-400">Papel: {inv.role}</div>
                 </div>
                 <button
@@ -167,12 +167,12 @@ export const TeamModal: React.FC<TeamModalProps> = ({ isOpen, onClose }) => {
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
                 placeholder="email@exemplo.com"
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
               />
               <select
                 value={inviteRole}
                 onChange={e => setInviteRole(e.target.value as UserRole)}
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
               >
                 {ROLE_OPTIONS.map(role => (
                   <option key={role} value={role}>{role}</option>

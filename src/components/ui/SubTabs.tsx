@@ -43,7 +43,7 @@ export function SubTabs<T extends string>({ items, activeId, onChange, className
             key={item.id}
             onClick={() => onChange(item.id)}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              isActive ? activeClass : 'text-ink-400 hover:text-white'
+              isActive ? activeClass : 'text-ink-400 hover:text-ink-100'
             }`}
           >
             <Icon className="w-3.5 h-3.5" />

@@ -107,7 +107,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               value={storeBrand}
               onChange={e => setStoreBrand(e.target.value)}
               placeholder="Ex: Disney Store, Apple, Adidas, Best Buy, Carter's"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
@@ -118,7 +118,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               value={cardCodeMasked}
               onChange={e => setCardCodeMasked(e.target.value)}
               placeholder="Ex: •••• •••• •••• 9942"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-mono"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-mono"
             />
           </div>
         </div>
@@ -137,7 +137,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
                 setNominalValue(val);
                 if (initialData === null) setCurrentBalance(val);
               }}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-white"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-ink-100"
             />
           </div>
 
@@ -150,7 +150,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               step="0.5"
               value={paidAmount}
               onChange={e => setPaidAmount(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-warning-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-warning-400"
             />
           </div>
 
@@ -162,7 +162,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               step="0.5"
               value={cashbackPct}
               onChange={e => setCashbackPct(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-accent-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-accent-400"
             />
           </div>
         </div>
@@ -194,7 +194,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               required
               value={purchasedById}
               onChange={e => setPurchasedById(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="">-- Selecione o Comprador --</option>
               {participants.map(p => (
@@ -210,7 +210,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
             <select
               value={beneficiaryId}
               onChange={e => setBeneficiaryId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="">-- Todos do Grupo / Não especificado --</option>
               {participants.map(p => (
@@ -231,7 +231,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               step="1"
               value={currentBalance}
               onChange={e => setCurrentBalance(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
@@ -241,7 +241,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               type="date"
               value={expiryDate}
               onChange={e => setExpiryDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -250,7 +250,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="active">Ativo (Com Saldo)</option>
               <option value="used">Totalmente Utilizado</option>
@@ -266,7 +266,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Comprado com 15% de desconto promocional no Inter + 5% cashback no aplicativo."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

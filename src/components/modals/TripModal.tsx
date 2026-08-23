@@ -58,7 +58,7 @@ export const TripModal: React.FC<TripModalProps> = ({
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Ex: Paris & Londres 2027 / Nova York Réveillon"
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-sm"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-sm"
           />
         </div>
 
@@ -70,7 +70,7 @@ export const TripModal: React.FC<TripModalProps> = ({
             value={destinationMain}
             onChange={e => setDestinationMain(e.target.value)}
             placeholder="Ex: França, Reino Unido e arredores"
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 
@@ -82,7 +82,7 @@ export const TripModal: React.FC<TripModalProps> = ({
               required
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -93,7 +93,7 @@ export const TripModal: React.FC<TripModalProps> = ({
               required
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -103,7 +103,7 @@ export const TripModal: React.FC<TripModalProps> = ({
           <select
             value={currencyBase}
             onChange={e => setCurrencyBase(e.target.value as any)}
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
           >
             <option value="USD">Dólar Americano (USD)</option>
             <option value="BRL">Real Brasileiro (BRL)</option>

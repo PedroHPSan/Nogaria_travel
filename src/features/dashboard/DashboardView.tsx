@@ -37,14 +37,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   return (
     <div className="space-y-6 pb-20">
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-info-900/60 via-indigo-900/40 to-ink-900 p-6 border border-info-500/20 shadow-xl">
+      <div className="hero-banner relative overflow-hidden rounded-2xl p-6 border border-info-500/20 shadow-xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-info-500/10 border border-info-500/30 text-info-400 text-xs font-semibold mb-2">
               <Sparkles className="w-3.5 h-3.5" />
               Central da Viagem
             </div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-white">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-ink-100">
               {activeTrip.title}
             </h2>
             <p className="text-sm text-ink-300 mt-1 max-w-2xl">
@@ -105,7 +105,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
       {/* Participants Quick List */}
       <div className="glass-panel p-5 rounded-2xl border border-ink-800">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold text-ink-100 flex items-center gap-2">
             <Users className="w-4 h-4 text-info-400" />
             Status dos Participantes da Viagem ({participants.length})
           </h3>
@@ -124,7 +124,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
                 {p.nickname ? p.nickname[0] : p.full_name[0]}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-xs text-white truncate">{p.full_name}</div>
+                <div className="font-semibold text-xs text-ink-100 truncate">{p.full_name}</div>
                 <div className="text-[11px] text-ink-400">{p.age} anos • {p.relationship}</div>
                 <div className="mt-1 flex items-center gap-1.5 text-[10px]">
                   <span className="px-1.5 py-0.5 rounded bg-success-500/10 text-success-400 font-medium">Orçamento: {formatAmount(p.budget_limit_usd)}</span>

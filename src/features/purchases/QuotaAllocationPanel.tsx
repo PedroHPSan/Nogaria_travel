@@ -28,7 +28,7 @@ export const QuotaAllocationPanel: React.FC<Props> = ({ decisions, participants 
   return (
     <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-4">
       <div>
-        <h3 className="text-sm font-bold text-white">Cota alfandegária por participante</h3>
+        <h3 className="text-sm font-bold text-ink-100">Cota alfandegária por participante</h3>
         <p className="text-[11px] text-ink-500">
           A cota é individual e não se soma entre viajantes. Um bem acima do limite gera excedente
           mesmo que outra pessoa tenha folga.

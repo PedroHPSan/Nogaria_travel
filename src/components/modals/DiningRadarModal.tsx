@@ -58,7 +58,7 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
                 setDestination(e.target.value);
                 loadDining(e.target.value, maxPrice);
               }}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-warning-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-warning-500 font-semibold"
             >
               <option value="Orlando / Kissimmee">Orlando / Kissimmee (Base Disney & Universal)</option>
               <option value="Miami Beach, FL">Miami Beach / South Beach</option>
@@ -143,7 +143,7 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-sm">{p.name}</h4>
+                        <h4 className="font-bold text-ink-100 text-sm">{p.name}</h4>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success-500/10 text-success-400 border border-success-500/30">
                           {p.priceEstimate}
                         </span>

@@ -124,7 +124,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ex: Disney All-Star Movies / Four Points FLL"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -135,7 +135,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               value={chain}
               onChange={e => setChain(e.target.value)}
               placeholder="Ex: Disney Parks & Resorts / Marriott"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -148,7 +148,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               value={address}
               onChange={e => setAddress(e.target.value)}
               placeholder="Ex: 1901 West Buena Vista Drive, Lake Buena Vista, FL"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -160,7 +160,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               value={city}
               onChange={e => setCity(e.target.value)}
               placeholder="Ex: Orlando / Fort Lauderdale"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -173,7 +173,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               required
               value={checkIn.substring(0, 16)}
               onChange={e => setCheckIn(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -184,7 +184,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               required
               value={checkOut.substring(0, 16)}
               onChange={e => setCheckOut(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -222,7 +222,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               step="10"
               value={priceTotal}
               onChange={e => setPriceTotal(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-success-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-success-400"
             />
           </div>
 
@@ -234,7 +234,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               step="1"
               value={resortFee}
               onChange={e => setResortFee(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -246,7 +246,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               step="1"
               value={parkingFee}
               onChange={e => setParkingFee(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -257,7 +257,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
               value={confirmationCode}
               onChange={e => setConfirmationCode(e.target.value)}
               placeholder="Ex: DSNY-994821"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase font-mono font-bold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 uppercase font-mono font-bold"
             />
           </div>
         </div>
@@ -281,7 +281,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="confirmed">Confirmada (Ativa)</option>
               <option value="planning">Em Planejamento / Cotação</option>
@@ -311,7 +311,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Quarto temático próximo à área da piscina."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

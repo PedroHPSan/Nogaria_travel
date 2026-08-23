@@ -131,7 +131,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               required
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
@@ -142,7 +142,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               required
               value={timeStart}
               onChange={e => setTimeStart(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -152,7 +152,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               type="time"
               value={timeEnd}
               onChange={e => setTimeEnd(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -166,7 +166,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Ex: Magic Kingdom (Disney World) / Jantar Hard Rock"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -178,7 +178,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               value={city}
               onChange={e => setCity(e.target.value)}
               placeholder="Ex: Orlando, Miami, Fort Lauderdale"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -189,7 +189,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
             <select
               value={category}
               onChange={e => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-medium"
             >
               {CATEGORY_OPTIONS.map(c => (
                 <option key={c.id} value={c.id}>
@@ -204,7 +204,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="planned">Planejada</option>
               <option value="confirmed">Confirmada / Ingressos Comprados</option>
@@ -248,7 +248,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               step="10"
               value={estimatedCost}
               onChange={e => setEstimatedCost(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-success-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-success-400"
             />
           </div>
 
@@ -272,7 +272,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               placeholder="Ex: 18 para cassino"
               value={minAgeYears}
               onChange={e => setMinAgeYears(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -296,7 +296,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Genie+ Lightning Lane agendado para 10h. Pausa de almoço no Fantasyland."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

@@ -68,7 +68,7 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
       <div className="glass-panel rounded-2xl border border-ink-800 overflow-hidden">
         <div className="p-4 bg-ink-900/60 border-b border-ink-800 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-ink-100 flex items-center gap-2">
               <FileSpreadsheet className="w-4 h-4 text-info-400" />
               Demonstrativo Consolidado de Despesas (DRE)
             </h3>
@@ -99,13 +99,13 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                 >
                   <div className="flex items-center gap-3.5 min-w-[220px]">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md shrink-0"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-ink-100 shadow-md shrink-0"
                       style={{ backgroundColor: CATEGORY_COLORS[c.category] || '#3b82f6' }}
                     >
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-bold text-sm text-white flex items-center gap-2">
+                      <div className="font-bold text-sm text-ink-100 flex items-center gap-2">
                         {c.label}
                         <span className="px-2 py-0.5 rounded-full bg-ink-800 text-ink-400 text-[10px] font-semibold">
                           {c.item_count} itens
@@ -173,7 +173,7 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                     >
                       <Plus className="w-4 h-4" />
                     </button>
-                    <div className="text-ink-400 group-hover:text-white transition">
+                    <div className="text-ink-400 group-hover:text-ink-100 transition">
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
                   </div>
@@ -208,7 +208,7 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                               className="p-3 rounded-xl bg-ink-900/90 border border-ink-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                             >
                               <div className="min-w-0 flex-1">
-                                <div className="font-bold text-white flex items-center gap-2">
+                                <div className="font-bold text-ink-100 flex items-center gap-2">
                                   {exp.description}
                                   <button
                                     onClick={() => handleToggleStatus(exp)}
@@ -237,7 +237,7 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
 
                               <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                                 <div className="text-right">
-                                  <div className="font-extrabold text-sm text-white">
+                                  <div className="font-extrabold text-sm text-ink-100">
                                     {formatVal(exp.amount_usd, exp.amount_brl)}
                                   </div>
                                   <div className="text-[10px] text-ink-400">

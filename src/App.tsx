@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { TripProvider, useTrip } from './context/TripContext';
 import { TripWizard } from './features/onboarding/TripWizard';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthGate } from './features/auth/AuthGate';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
@@ -154,15 +155,17 @@ const AppOuWizard = ({ children }: { children: ReactNode }) => {
 
 export function App() {
   return (
-    <AuthProvider>
-      <AuthGate>
-        <TripProvider>
-          <AppOuWizard>
-            <MainAppContent />
-          </AppOuWizard>
-        </TripProvider>
-      </AuthGate>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthGate>
+          <TripProvider>
+            <AppOuWizard>
+              <MainAppContent />
+            </AppOuWizard>
+          </TripProvider>
+        </AuthGate>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

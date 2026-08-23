@@ -96,7 +96,7 @@ export const GiftCardsView: React.FC = () => {
                 <span className="text-xs font-bold text-success-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4" /> Resumo de Economia Determinística
                 </span>
-                <div className="text-2xl md:text-3xl font-extrabold text-white mt-1">
+                <div className="text-2xl md:text-3xl font-extrabold text-ink-100 mt-1">
                   {formatAmount(totalSavings)}{' '}
                   <span className="text-sm font-bold text-success-400 font-sans">
                     ({avgSavingsPct.toFixed(1)}% economizados)
@@ -110,7 +110,7 @@ export const GiftCardsView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 rounded-xl bg-ink-900 border border-ink-800">
                   <div className="text-ink-400 text-[10px]">Valor Nominal Total</div>
-                  <div className="text-base font-bold text-white">{formatAmount(totalNominal)}</div>
+                  <div className="text-base font-bold text-ink-100">{formatAmount(totalNominal)}</div>
                 </div>
                 <div className="p-3 rounded-xl bg-ink-900 border border-ink-800">
                   <div className="text-ink-400 text-[10px]">Custo Real Pago</div>
@@ -122,7 +122,7 @@ export const GiftCardsView: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Carteira de Gift Cards</h3>
+            <h3 className="text-sm font-bold text-ink-100">Carteira de Gift Cards</h3>
             <button
               onClick={handleOpenAddGc}
               className="px-4 py-2 rounded-xl bg-success-600 hover:bg-success-500 text-white font-bold text-xs shadow-lg shadow-success-600/30 transition flex items-center gap-1.5"
@@ -144,7 +144,7 @@ export const GiftCardsView: React.FC = () => {
                         <CreditCard className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-base text-white">{g.store_brand}</h4>
+                        <h4 className="font-bold text-base text-ink-100">{g.store_brand}</h4>
                         <p className="text-xs font-mono text-ink-400">{g.card_code_masked}</p>
                       </div>
                     </div>
@@ -152,7 +152,7 @@ export const GiftCardsView: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleOpenEditGc(g)}
-                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -170,7 +170,7 @@ export const GiftCardsView: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="p-2.5 rounded-lg bg-ink-900/60 border border-ink-800">
                       <div className="text-ink-400 text-[10px]">Valor Nominal</div>
-                      <div className="font-bold text-white text-sm">{formatAmount(g.nominal_value)}</div>
+                      <div className="font-bold text-ink-100 text-sm">{formatAmount(g.nominal_value)}</div>
                     </div>
                     <div className="p-2.5 rounded-lg bg-ink-900/60 border border-ink-800">
                       <div className="text-ink-400 text-[10px]">Custo Real Líquido</div>
@@ -185,7 +185,7 @@ export const GiftCardsView: React.FC = () => {
 
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-ink-800">
                     <span className="text-ink-400">Comprador: <strong className="text-ink-200">{buyer?.full_name || 'Desconhecido'}</strong></span>
-                    <span className="text-ink-400">Saldo: <strong className="text-white font-bold">{formatAmount(g.current_balance)}</strong></span>
+                    <span className="text-ink-400">Saldo: <strong className="text-ink-100 font-bold">{formatAmount(g.current_balance)}</strong></span>
                   </div>
 
                 </div>
@@ -199,7 +199,7 @@ export const GiftCardsView: React.FC = () => {
       {activeSubTab === 'loyalty' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Programas de Milhas, Pontos & Fidelidade</h3>
+            <h3 className="text-sm font-bold text-ink-100">Programas de Milhas, Pontos & Fidelidade</h3>
             <button
               onClick={handleOpenAddLoy}
               className="px-4 py-2 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs shadow-lg shadow-accent-600/30 transition flex items-center gap-1.5"
@@ -221,15 +221,15 @@ export const GiftCardsView: React.FC = () => {
                         <Award className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-base text-white">{l.program_name}</h4>
-                        <p className="text-xs text-ink-400">Titular: <span className="font-bold text-white">{holder?.full_name}</span></p>
+                        <h4 className="font-bold text-base text-ink-100">{l.program_name}</h4>
+                        <p className="text-xs text-ink-400">Titular: <span className="font-bold text-ink-100">{holder?.full_name}</span></p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleOpenEditLoy(l)}
-                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>

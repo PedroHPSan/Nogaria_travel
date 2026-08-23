@@ -113,7 +113,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
             <select
               value={type}
               onChange={e => setType(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             >
               <option value="rental_car">Aluguel de Carro / SUV</option>
               <option value="uber">Uber / Lyft / Táxi</option>
@@ -132,7 +132,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
               value={providerCompany}
               onChange={e => setProviderCompany(e.target.value)}
               placeholder="Ex: Hertz, Alamo, Sixt, Uber"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -143,7 +143,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
               value={categoryOrModel}
               onChange={e => setCategoryOrModel(e.target.value)}
               placeholder="Ex: SUV Midsize (Nissan Rogue ou similar)"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -155,7 +155,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
               <select
                 value={primaryDriverId}
                 onChange={e => setPrimaryDriverId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white"
+                className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-ink-100"
               >
                 <option value="">-- Selecione o Condutor --</option>
                 {participants
@@ -204,14 +204,14 @@ export const TransportModal: React.FC<TransportModalProps> = ({
               value={pickupLocation}
               onChange={e => setPickupLocation(e.target.value)}
               placeholder="Ex: Aeroporto MCO Orlando"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 mb-2"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 mb-2"
             />
             <input
               type="datetime-local"
               required
               value={pickupTime.substring(0, 16)}
               onChange={e => setPickupTime(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -223,7 +223,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
               value={dropoffLocation}
               onChange={e => setDropoffLocation(e.target.value)}
               placeholder="Ex: Aeroporto FLL Fort Lauderdale"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 mb-2"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 mb-2"
             />
             <input
               type="datetime-local"
@@ -244,7 +244,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
               step="10"
               value={priceTotal}
               onChange={e => setPriceTotal(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-success-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-success-400"
             />
           </div>
 
@@ -255,7 +255,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
               value={confirmationCode}
               onChange={e => setConfirmationCode(e.target.value)}
               placeholder="Ex: HTZ-7738210"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase font-mono font-bold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 uppercase font-mono font-bold"
             />
           </div>
 
@@ -264,7 +264,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="reserved">Reservado</option>
               <option value="active">Em Uso na Viagem</option>
@@ -294,7 +294,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Devolução no dia 19/09 às 17h30. Abastecer antes e chamar Uber XL para o grupo."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

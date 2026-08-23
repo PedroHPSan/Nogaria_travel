@@ -66,7 +66,7 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition ${
               categoryFilter === 'all'
                 ? 'bg-info-600 text-white shadow-md'
-                : 'text-ink-400 hover:text-white'
+                : 'text-ink-400 hover:text-ink-100'
             }`}
           >
             Todos os Serviços
@@ -80,7 +80,7 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
               categoryFilter === 'supermarket'
                 ? 'bg-success-600 text-white shadow-md'
-                : 'text-ink-400 hover:text-white'
+                : 'text-ink-400 hover:text-ink-100'
             }`}
           >
             🛒 Supermercados & Target
@@ -94,7 +94,7 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
               categoryFilter === 'pharmacy'
                 ? 'bg-danger-600 text-white shadow-md'
-                : 'text-ink-400 hover:text-white'
+                : 'text-ink-400 hover:text-ink-100'
             }`}
           >
             💊 Farmácias 24h & Saúde
@@ -108,7 +108,7 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
               categoryFilter === 'gas_station'
                 ? 'bg-warning-600 text-white shadow-md'
-                : 'text-ink-400 hover:text-white'
+                : 'text-ink-400 hover:text-ink-100'
             }`}
           >
             ⛽ Postos & Conveniência
@@ -154,7 +154,7 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-sm">{p.name}</h4>
+                        <h4 className="font-bold text-ink-100 text-sm">{p.name}</h4>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-ink-900 border border-ink-800 text-ink-300">
                           {p.categoryLabel}
                         </span>

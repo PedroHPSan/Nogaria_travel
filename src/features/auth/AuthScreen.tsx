@@ -67,7 +67,7 @@ export const AuthScreen: React.FC = () => {
       <div className="min-h-screen bg-ink-950 text-ink-100 flex items-center justify-center p-4">
         <div className="glass-card w-full max-w-md p-8 rounded-2xl border border-ink-800 text-center space-y-4">
           <Mail className="w-10 h-10 text-info-400 mx-auto" />
-          <h1 className="text-lg font-bold text-white">Confirme seu email</h1>
+          <h1 className="text-lg font-bold text-ink-100">Confirme seu email</h1>
           <p className="text-sm text-ink-400">
             Enviamos um link de confirmação para <strong className="text-ink-200">{email}</strong>. Clique nele para ativar sua conta.
           </p>
@@ -89,7 +89,7 @@ export const AuthScreen: React.FC = () => {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-info-600 via-indigo-600 to-accent-600 flex items-center justify-center shadow-lg shadow-info-500/20 text-white">
             <Plane className="w-5 h-5" />
           </div>
-          <h1 className="text-xl font-extrabold text-white">Plataforma de Viagens</h1>
+          <h1 className="text-xl font-extrabold text-ink-100">Plataforma de Viagens</h1>
         </div>
 
         <div className="flex rounded-xl bg-ink-900 border border-ink-800 p-1">
@@ -118,7 +118,7 @@ export const AuthScreen: React.FC = () => {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="voce@exemplo.com"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -131,7 +131,7 @@ export const AuthScreen: React.FC = () => {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 

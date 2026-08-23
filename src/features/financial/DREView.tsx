@@ -198,14 +198,14 @@ export const DREView: React.FC = () => {
   return (
     <div className="space-y-6 pb-24">
       {/* Header Executivo da DRE */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-ink-900 via-indigo-950/70 to-ink-900 p-6 border border-ink-800 shadow-2xl">
+      <div className="hero-banner relative overflow-hidden rounded-2xl p-6 border border-ink-800 shadow-2xl">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-info-500/10 border border-info-500/30 text-info-400 text-xs font-semibold mb-2">
               <FileSpreadsheet className="w-3.5 h-3.5" />
               DRE Gerencial • Cotação Hoje ({exchangeRateDate}): R$ {exchangeRate.toFixed(2)}
             </div>
-            <h2 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl lg:text-3xl font-extrabold text-ink-100 tracking-tight">
               DRE da Viagem: Planejado vs. Realizado
             </h2>
             <p className="text-xs text-ink-300 mt-1 max-w-2xl">
@@ -281,7 +281,7 @@ export const DREView: React.FC = () => {
           footer={
             <>
               <span>Despesas Lançadas:</span>
-              <span className="text-white font-semibold">{expenses.length} comprovantes</span>
+              <span className="text-ink-100 font-semibold">{expenses.length} comprovantes</span>
             </>
           }
         />
@@ -363,7 +363,7 @@ export const DREView: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             activeTab === 'categories'
               ? 'bg-info-600 text-white shadow-md'
-              : 'text-ink-400 hover:text-white hover:bg-ink-800/60'
+              : 'text-ink-400 hover:text-ink-100 hover:bg-ink-800/60'
           }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
@@ -375,7 +375,7 @@ export const DREView: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             activeTab === 'participants'
               ? 'bg-info-600 text-white shadow-md'
-              : 'text-ink-400 hover:text-white hover:bg-ink-800/60'
+              : 'text-ink-400 hover:text-ink-100 hover:bg-ink-800/60'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -387,7 +387,7 @@ export const DREView: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             activeTab === 'timeline'
               ? 'bg-info-600 text-white shadow-md'
-              : 'text-ink-400 hover:text-white hover:bg-ink-800/60'
+              : 'text-ink-400 hover:text-ink-100 hover:bg-ink-800/60'
           }`}
         >
           <Calendar className="w-4 h-4" />

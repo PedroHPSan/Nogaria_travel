@@ -133,7 +133,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               value={fullName}
               onChange={e => setFullName(e.target.value)}
               placeholder="Ex: Bárbara Palheta"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -144,7 +144,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               value={nickname}
               onChange={e => setNickname(e.target.value)}
               placeholder="Ex: Bárbara"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -157,7 +157,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               required
               value={birthDate}
               onChange={e => setBirthDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
             {idadeCalculada !== null && (
               <p className="mt-1 text-[11px] text-ink-500">
@@ -174,7 +174,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               placeholder="Ex: 100 para 4 anos"
               value={heightCm}
               onChange={e => setHeightCm(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -187,7 +187,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               value={relationship}
               onChange={e => setRelationship(e.target.value)}
               placeholder="Ex: Mãe, Pai, Filha de Bárbara, etc."
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -199,7 +199,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               step="50"
               value={budgetLimit}
               onChange={e => setBudgetLimit(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-success-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-success-400"
             />
           </div>
         </div>
@@ -213,7 +213,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             <select
               value={responsibleId}
               onChange={e => setResponsibleId(e.target.value)}
-              className="px-2.5 py-1 rounded-lg bg-ink-900 border border-ink-700 text-white text-xs"
+              className="px-2.5 py-1 rounded-lg bg-ink-900 border border-ink-700 text-ink-100 text-xs"
             >
               <option value="">-- Selecione o Responsável Legal --</option>
               {existingParticipants
@@ -235,7 +235,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               value={passportNumber}
               onChange={e => setPassportNumber(e.target.value)}
               placeholder="Ex: BR984712"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
@@ -245,7 +245,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               type="date"
               value={passportExpiry}
               onChange={e => setPassportExpiry(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -254,7 +254,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             <select
               value={visaStatus}
               onChange={e => setVisaStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="valid">Visto Válido (Aprovado)</option>
               <option value="pending">Pendente Emissão / Entrevista</option>
@@ -271,7 +271,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             value={dietary}
             onChange={e => setDietary(e.target.value)}
             placeholder="Ex: Sem lactose, Alergia a amendoim"
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 
@@ -282,7 +282,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Exige carrinho infantil e pausa de descanso. Preferência por atrações calmas."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 
