@@ -34,7 +34,7 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, partici
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-bold text-white">{MONTH_LABELS[month - 1]} {year}</h3>
-      <div className="grid grid-cols-7 gap-1.5 text-[10px] text-slate-500 font-semibold uppercase text-center">
+      <div className="grid grid-cols-7 gap-1.5 text-[10px] text-ink-500 font-semibold uppercase text-center">
         {WEEKDAY_LABELS.map(label => (
           <div key={label}>{label}</div>
         ))}
@@ -57,17 +57,17 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, partici
               onClick={() => hasParkDay && onSelectDate(date)}
               className={`aspect-square rounded-xl border p-1.5 flex flex-col items-center justify-center gap-0.5 text-center transition ${
                 !hasParkDay
-                  ? 'border-slate-800/60 text-slate-600 cursor-default'
+                  ? 'border-ink-800/60 text-ink-600 cursor-default'
                   : isSelected
-                  ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                  : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-blue-500/50'
+                  ? 'border-info-500 bg-info-500/10 text-info-300'
+                  : 'border-ink-800 bg-ink-900/60 text-ink-300 hover:border-info-500/50'
               }`}
             >
               <span className="text-xs font-bold">{dayNumber}</span>
               {hasParkDay && (
                 <>
                   <span className="text-[9px] leading-tight truncate max-w-full">{parkName}</span>
-                  <span className="text-[9px] font-bold text-emerald-400">{coverage?.percent}%</span>
+                  <span className="text-[9px] font-bold text-success-400">{coverage?.percent}%</span>
                 </>
               )}
             </button>

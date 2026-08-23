@@ -65,47 +65,47 @@ export const AssumptionsModal: React.FC<Props> = ({ isOpen, onClose, assumptions
       <div className="space-y-3">
         {FIELDS.map(f => (
           <div key={String(f.key)}>
-            <label className="block text-[11px] font-semibold text-slate-300 mb-1">{f.label}</label>
+            <label className="block text-[11px] font-semibold text-ink-300 mb-1">{f.label}</label>
             <input
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white"
+              className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
               type="number"
               step="0.01"
               value={draft[f.key]}
               onChange={e => setDraft({ ...draft, [f.key]: e.target.value === '' ? '' : Number(e.target.value) })}
             />
-            <p className="text-[10px] text-slate-500 mt-0.5">{f.hint}</p>
+            <p className="text-[10px] text-ink-500 mt-0.5">{f.hint}</p>
           </div>
         ))}
 
         <div>
-          <label className="block text-[11px] font-semibold text-slate-300 mb-1">Fonte do câmbio</label>
+          <label className="block text-[11px] font-semibold text-ink-300 mb-1">Fonte do câmbio</label>
           <input
-            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white"
+            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
             value={draft.rate_source}
             onChange={e => setDraft({ ...draft, rate_source: e.target.value })}
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold text-slate-300 mb-1">Referência legal da cota</label>
+          <label className="block text-[11px] font-semibold text-ink-300 mb-1">Referência legal da cota</label>
           <textarea
-            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white"
+            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
             rows={2}
             value={draft.legal_reference ?? ''}
             onChange={e => setDraft({ ...draft, legal_reference: e.target.value })}
           />
-          <p className="text-[10px] text-slate-500 mt-0.5">
+          <p className="text-[10px] text-ink-500 mt-0.5">
             Anote a norma e a data em que você conferiu — ela aparece nas premissas de cada decisão.
           </p>
         </div>
 
         {errors.length > 0 && (
           <ul className="space-y-1">
-            {errors.map((e, i) => <li key={i} className="text-xs text-rose-400">{e}</li>)}
+            {errors.map((e, i) => <li key={i} className="text-xs text-danger-400">{e}</li>)}
           </ul>
         )}
 
-        <button onClick={handleSubmit} className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition">
+        <button onClick={handleSubmit} className="w-full py-2.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-bold text-sm transition">
           Salvar parâmetros
         </button>
       </div>

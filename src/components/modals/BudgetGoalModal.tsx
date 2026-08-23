@@ -114,19 +114,19 @@ export const BudgetGoalModal: React.FC<BudgetGoalModalProps> = ({
       subtitle={`Defina quanto o grupo planeja gastar por categoria da DRE em ${currency} (Câmbio R$ ${exchangeRate.toFixed(2)}).`}
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-        <div className="flex items-center justify-between p-3 rounded-xl bg-blue-950/40 border border-blue-500/20">
+        <div className="flex items-center justify-between p-3 rounded-xl bg-info-950/40 border border-info-500/20">
           <div>
-            <span className="text-slate-400 font-medium">Orçamento Total Planejado:</span>
-            <div className="text-xl font-extrabold text-blue-400">
+            <span className="text-ink-400 font-medium">Orçamento Total Planejado:</span>
+            <div className="text-xl font-extrabold text-info-400">
               {currency === 'BRL' ? `R$ ${totalBudget.toLocaleString('pt-BR')}` : `US$ ${totalBudget.toLocaleString('en-US')}`}
             </div>
           </div>
           <button
             type="button"
             onClick={handleResetDefaults}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 rounded-lg bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold text-xs flex items-center gap-1.5 transition"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
+            <RefreshCw className="w-3.5 h-3.5 text-info-400" />
             Sugerir Valores Padrão
           </button>
         </div>
@@ -138,15 +138,15 @@ export const BudgetGoalModal: React.FC<BudgetGoalModalProps> = ({
             const convertedOther = currency === 'BRL' ? currentVal / exchangeRate : currentVal * exchangeRate;
 
             return (
-              <div key={cat} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+              <div key={cat} className="p-3 rounded-xl bg-ink-950 border border-ink-800 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-200">{meta.label}</label>
-                  <span className="text-[10px] text-slate-400">
+                  <label className="font-bold text-ink-200">{meta.label}</label>
+                  <span className="text-[10px] text-ink-400">
                     ≈ {currency === 'BRL' ? `US$ ${convertedOther.toFixed(0)}` : `R$ ${convertedOther.toFixed(0)}`}
                   </span>
                 </div>
                 <div className="relative">
-                  <span className="absolute left-3 top-2 font-bold text-slate-400">
+                  <span className="absolute left-3 top-2 font-bold text-ink-400">
                     {currency === 'BRL' ? 'R$' : 'US$'}
                   </span>
                   <input
@@ -156,26 +156,26 @@ export const BudgetGoalModal: React.FC<BudgetGoalModalProps> = ({
                     value={currentVal || ''}
                     onChange={e => handleChange(cat, Number(e.target.value) || 0)}
                     placeholder="0"
-                    className="w-full pl-10 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-bold focus:outline-none focus:border-blue-500"
+                    className="w-full pl-10 pr-3 py-1.5 rounded-lg bg-ink-900 border border-ink-700 text-white font-bold focus:outline-none focus:border-info-500"
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 line-clamp-1">{meta.description}</p>
+                <p className="text-[10px] text-ink-400 line-clamp-1">{meta.description}</p>
               </div>
             );
           })}
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-blue-600/30"
+            className="px-5 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-info-600/30"
           >
             <Save className="w-4 h-4" />
             Salvar Metas da DRE

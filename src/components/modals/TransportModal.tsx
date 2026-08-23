@@ -109,11 +109,11 @@ export const TransportModal: React.FC<TransportModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Tipo de Transporte *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Tipo de Transporte *</label>
             <select
               value={type}
               onChange={e => setType(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
             >
               <option value="rental_car">Aluguel de Carro / SUV</option>
               <option value="uber">Uber / Lyft / Táxi</option>
@@ -125,37 +125,37 @@ export const TransportModal: React.FC<TransportModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Empresa / Locadora *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Empresa / Locadora *</label>
             <input
               type="text"
               required
               value={providerCompany}
               onChange={e => setProviderCompany(e.target.value)}
               placeholder="Ex: Hertz, Alamo, Sixt, Uber"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Categoria / Modelo</label>
+            <label className="block text-ink-300 font-semibold mb-1">Categoria / Modelo</label>
             <input
               type="text"
               value={categoryOrModel}
               onChange={e => setCategoryOrModel(e.target.value)}
               placeholder="Ex: SUV Midsize (Nissan Rogue ou similar)"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         {type === 'rental_car' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-ink-950/60 border border-ink-800">
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Condutor Principal *</label>
+              <label className="block text-ink-300 font-semibold mb-1">Condutor Principal *</label>
               <select
                 value={primaryDriverId}
                 onChange={e => setPrimaryDriverId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white"
               >
                 <option value="">-- Selecione o Condutor --</option>
                 {participants
@@ -169,7 +169,7 @@ export const TransportModal: React.FC<TransportModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Condutores Adicionais</label>
+              <label className="block text-ink-300 font-semibold mb-1">Condutores Adicionais</label>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {participants
                   .filter(p => !p.is_minor && p.id !== primaryDriverId)
@@ -182,8 +182,8 @@ export const TransportModal: React.FC<TransportModalProps> = ({
                         onClick={() => toggleAdditionalDriver(p.id)}
                         className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition ${
                           isSelected
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                            : 'bg-slate-900 text-slate-400 border-slate-800'
+                            ? 'bg-warning-500/20 text-warning-300 border-warning-500/40'
+                            : 'bg-ink-900 text-ink-400 border-ink-800'
                         }`}
                       >
                         {p.nickname || p.full_name}
@@ -197,74 +197,74 @@ export const TransportModal: React.FC<TransportModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Local & Horário de Retirada *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Local & Horário de Retirada *</label>
             <input
               type="text"
               required
               value={pickupLocation}
               onChange={e => setPickupLocation(e.target.value)}
               placeholder="Ex: Aeroporto MCO Orlando"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 mb-2"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 mb-2"
             />
             <input
               type="datetime-local"
               required
               value={pickupTime.substring(0, 16)}
               onChange={e => setPickupTime(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Local & Horário de Devolução *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Local & Horário de Devolução *</label>
             <input
               type="text"
               required
               value={dropoffLocation}
               onChange={e => setDropoffLocation(e.target.value)}
               placeholder="Ex: Aeroporto FLL Fort Lauderdale"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 mb-2"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 mb-2"
             />
             <input
               type="datetime-local"
               required
               value={dropoffTime.substring(0, 16)}
               onChange={e => setDropoffTime(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-200 focus:outline-none focus:border-amber-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-warning-500/40 text-warning-200 focus:outline-none focus:border-warning-500 font-semibold"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Valor Total (US$)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Valor Total (US$)</label>
             <input
               type="number"
               min="0"
               step="10"
               value={priceTotal}
               onChange={e => setPriceTotal(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold text-emerald-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-success-400"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Código Reserva</label>
+            <label className="block text-ink-300 font-semibold mb-1">Código Reserva</label>
             <input
               type="text"
               value={confirmationCode}
               onChange={e => setConfirmationCode(e.target.value)}
               placeholder="Ex: HTZ-7738210"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 uppercase font-mono font-bold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase font-mono font-bold"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Status Reserva</label>
+            <label className="block text-ink-300 font-semibold mb-1">Status Reserva</label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="reserved">Reservado</option>
               <option value="active">Em Uso na Viagem</option>
@@ -274,41 +274,41 @@ export const TransportModal: React.FC<TransportModalProps> = ({
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-ink-950/60 border border-ink-800 flex items-center gap-2">
           <input
             type="checkbox"
             id="chk-followup"
             checked={requiresFollowup}
             onChange={e => setRequiresFollowup(e.target.checked)}
-            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
+            className="w-4 h-4 rounded text-info-600 focus:ring-info-500 bg-ink-900 border-ink-700"
           />
-          <label htmlFor="chk-followup" className="text-slate-200 font-medium cursor-pointer">
+          <label htmlFor="chk-followup" className="text-ink-200 font-medium cursor-pointer">
             Requer transporte complementar após a devolução (Ex: Uber para hotel/voo)
           </label>
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Observações & Alertas de Horário</label>
+          <label className="block text-ink-300 font-semibold mb-1">Observações & Alertas de Horário</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Devolução no dia 19/09 às 17h30. Abastecer antes e chamar Uber XL para o grupo."
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           />
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-lg shadow-amber-600/30"
+            className="px-5 py-2 rounded-xl bg-warning-600 hover:bg-warning-500 text-white font-bold shadow-lg shadow-warning-600/30"
           >
             Salvar Transporte
           </button>

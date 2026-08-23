@@ -100,32 +100,32 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Loja / Marca *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Loja / Marca *</label>
             <input
               type="text"
               required
               value={storeBrand}
               onChange={e => setStoreBrand(e.target.value)}
               placeholder="Ex: Disney Store, Apple, Adidas, Best Buy, Carter's"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Código Mascarado / Final</label>
+            <label className="block text-ink-300 font-semibold mb-1">Código Mascarado / Final</label>
             <input
               type="text"
               value={cardCodeMasked}
               onChange={e => setCardCodeMasked(e.target.value)}
               placeholder="Ex: •••• •••• •••• 9942"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-mono"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Valor Nominal (US$) *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Valor Nominal (US$) *</label>
             <input
               type="number"
               required
@@ -137,12 +137,12 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
                 setNominalValue(val);
                 if (initialData === null) setCurrentBalance(val);
               }}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-bold text-white"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-white"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Valor Efetivamente Pago (US$) *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Valor Efetivamente Pago (US$) *</label>
             <input
               type="number"
               required
@@ -150,51 +150,51 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               step="0.5"
               value={paidAmount}
               onChange={e => setPaidAmount(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-bold text-amber-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-warning-400"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Cashback (% s/ valor pago)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Cashback (% s/ valor pago)</label>
             <input
               type="number"
               min="0"
               step="0.5"
               value={cashbackPct}
               onChange={e => setCashbackPct(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-bold text-purple-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-accent-400"
             />
           </div>
         </div>
 
         {/* Live Calculation Box */}
-        <div className="p-3.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div className="p-3.5 rounded-xl bg-ink-950/80 border border-success-500/30 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div>
-            <div className="text-[10px] text-slate-400 uppercase font-semibold">Cashback Estimado</div>
-            <div className="text-sm font-bold text-purple-400">US$ {mathPreview.cashbackValue.toFixed(2)}</div>
+            <div className="text-[10px] text-ink-400 uppercase font-semibold">Cashback Estimado</div>
+            <div className="text-sm font-bold text-accent-400">US$ {mathPreview.cashbackValue.toFixed(2)}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase font-semibold">Custo Real Líquido</div>
-            <div className="text-sm font-bold text-blue-400">US$ {mathPreview.netCost.toFixed(2)}</div>
+            <div className="text-[10px] text-ink-400 uppercase font-semibold">Custo Real Líquido</div>
+            <div className="text-sm font-bold text-info-400">US$ {mathPreview.netCost.toFixed(2)}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase font-semibold">Economia Efetiva</div>
-            <div className="text-sm font-bold text-emerald-400">US$ {mathPreview.effectiveSavingsUSD.toFixed(2)}</div>
+            <div className="text-[10px] text-ink-400 uppercase font-semibold">Economia Efetiva</div>
+            <div className="text-sm font-bold text-success-400">US$ {mathPreview.effectiveSavingsUSD.toFixed(2)}</div>
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 uppercase font-semibold">% Economia Real</div>
-            <div className="text-sm font-bold text-emerald-400">{mathPreview.effectiveSavingsPct.toFixed(1)}%</div>
+            <div className="text-[10px] text-ink-400 uppercase font-semibold">% Economia Real</div>
+            <div className="text-sm font-bold text-success-400">{mathPreview.effectiveSavingsPct.toFixed(1)}%</div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Comprador / Pagador *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Comprador / Pagador *</label>
             <select
               required
               value={purchasedById}
               onChange={e => setPurchasedById(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="">-- Selecione o Comprador --</option>
               {participants.map(p => (
@@ -206,11 +206,11 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Beneficiário Final (Opcional)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Beneficiário Final (Opcional)</label>
             <select
               value={beneficiaryId}
               onChange={e => setBeneficiaryId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="">-- Todos do Grupo / Não especificado --</option>
               {participants.map(p => (
@@ -224,33 +224,33 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Saldo Atual (US$)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Saldo Atual (US$)</label>
             <input
               type="number"
               min="0"
               step="1"
               value={currentBalance}
               onChange={e => setCurrentBalance(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Validade (Opcional)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Validade (Opcional)</label>
             <input
               type="date"
               value={expiryDate}
               onChange={e => setExpiryDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Status</label>
+            <label className="block text-ink-300 font-semibold mb-1">Status</label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="active">Ativo (Com Saldo)</option>
               <option value="used">Totalmente Utilizado</option>
@@ -260,27 +260,27 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Observações do Gift Card</label>
+          <label className="block text-ink-300 font-semibold mb-1">Observações do Gift Card</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Comprado com 15% de desconto promocional no Inter + 5% cashback no aplicativo."
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           />
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/30"
+            className="px-5 py-2 rounded-xl bg-success-600 hover:bg-success-500 text-white font-bold shadow-lg shadow-success-600/30"
           >
             Salvar Gift Card
           </button>

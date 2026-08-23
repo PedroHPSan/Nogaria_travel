@@ -144,17 +144,17 @@ export const PriceResearchModal: React.FC<Props> = ({
     >
       <div className="space-y-4">
         {/* Search Refinement Box */}
-        <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 shadow-inner">
+        <div className="p-3.5 rounded-2xl bg-ink-950 border border-ink-800 space-y-3 shadow-inner">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={productName}
                 onChange={e => setProductName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && executeSearch()}
                 placeholder="Nome detalhado (ex: iPhone 16 Pro Max 256GB)"
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500 font-medium"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white text-xs focus:outline-none focus:border-accent-500 font-medium"
               />
             </div>
 
@@ -164,20 +164,20 @@ export const PriceResearchModal: React.FC<Props> = ({
               onChange={e => setBrand(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && executeSearch()}
               placeholder="Marca (opcional)"
-              className="sm:w-32 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500"
+              className="sm:w-32 px-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white text-xs focus:outline-none focus:border-accent-500"
             />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <MapPin className="w-4 h-4 text-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <select
                 value={selectedDestination}
                 onChange={e => {
                   setSelectedDestination(e.target.value);
                   executeSearch({ dest: e.target.value });
                 }}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white text-xs focus:outline-none focus:border-accent-500 appearance-none cursor-pointer"
               >
                 {DESTINATION_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>
@@ -191,7 +191,7 @@ export const PriceResearchModal: React.FC<Props> = ({
               type="button"
               onClick={() => executeSearch()}
               disabled={loading || !productName.trim()}
-              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-purple-600/30 shrink-0"
+              className="px-4 py-2 rounded-xl bg-accent-600 hover:bg-accent-500 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg shadow-accent-600/30 shrink-0"
             >
               {loading ? (
                 <>
@@ -209,8 +209,8 @@ export const PriceResearchModal: React.FC<Props> = ({
 
           {/* Quick Modifier Chips */}
           <div className="flex items-center gap-1.5 flex-wrap pt-1">
-            <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
-              <Tag className="w-3 h-3 text-purple-400" /> Sugestões de refinamento:
+            <span className="text-[10px] text-ink-400 font-semibold flex items-center gap-1">
+              <Tag className="w-3 h-3 text-accent-400" /> Sugestões de refinamento:
             </span>
 
             {isApple && (
@@ -218,28 +218,28 @@ export const PriceResearchModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => handleAddModifier('128GB')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + 128GB
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddModifier('256GB')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + 256GB
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddModifier('512GB')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + 512GB
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddModifier('Desbloqueado (Unlocked)')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + Desbloqueado
                 </button>
@@ -251,14 +251,14 @@ export const PriceResearchModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => handleAddModifier('Outlet Oficial')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + Outlet Oficial
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddModifier('Sawgrass Mills')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + Sawgrass Mills
                 </button>
@@ -270,14 +270,14 @@ export const PriceResearchModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => handleAddModifier('Sephora')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + Sephora
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddModifier('100ml')}
-                  className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+                  className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
                 >
                   + 100ml
                 </button>
@@ -287,14 +287,14 @@ export const PriceResearchModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => handleAddModifier('Best Buy')}
-              className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+              className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
             >
               + Best Buy
             </button>
             <button
               type="button"
               onClick={() => handleAddModifier('Target')}
-              className="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] transition"
+              className="px-2 py-0.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-700 text-ink-300 text-[10px] transition"
             >
               + Target
             </button>
@@ -303,21 +303,21 @@ export const PriceResearchModal: React.FC<Props> = ({
 
         {/* Status / Loading / Error */}
         {loading && (
-          <div className="flex flex-col items-center gap-2 py-8 justify-center text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+          <div className="flex flex-col items-center gap-2 py-8 justify-center text-ink-400">
+            <Loader2 className="w-5 h-5 animate-spin text-accent-400" />
             <span className="text-xs font-medium">Buscando cotações nos EUA e Brasil com IA…</span>
           </div>
         )}
 
         {error && (
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-400 flex items-start gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-3 rounded-xl bg-warning-500/10 border border-warning-500/30 text-xs text-warning-400 flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-warning-400 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         {!loading && !error && candidates.length === 0 && (
-          <p className="text-xs text-slate-500 py-6 text-center">
+          <p className="text-xs text-ink-500 py-6 text-center">
             Nenhuma cotação encontrada para esta descrição. Ajuste os termos acima e tente novamente.
           </p>
         )}
@@ -325,9 +325,9 @@ export const PriceResearchModal: React.FC<Props> = ({
         {/* Results */}
         {!loading && candidates.length > 0 && (
           <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pb-1">
+            <div className="flex items-center justify-between text-[11px] text-ink-400 pb-1">
               <span>{candidates.length} opções encontradas:</span>
-              <span className="text-purple-400 flex items-center gap-1 font-medium">
+              <span className="text-accent-400 flex items-center gap-1 font-medium">
                 <Sparkles className="w-3 h-3" /> Sugestões baseadas no roteiro
               </span>
             </div>
@@ -335,7 +335,7 @@ export const PriceResearchModal: React.FC<Props> = ({
             {candidates.map((c, i) => (
               <div
                 key={i}
-                className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition space-y-2"
+                className="p-3 rounded-xl bg-ink-950 border border-ink-800 hover:border-ink-700 transition space-y-2"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -344,28 +344,28 @@ export const PriceResearchModal: React.FC<Props> = ({
                       <span
                         className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider ${
                           c.market === 'US'
-                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
-                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-info-500/10 text-info-400 border border-info-500/30'
+                            : 'bg-success-500/10 text-success-400 border border-success-500/30'
                         }`}
                       >
                         {c.market === 'US' ? 'EUA (s/ tax)' : 'Brasil (c/ imposto)'}
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-400 pt-0.5">
+                    <div className="text-[11px] text-ink-400 pt-0.5">
                       {c.price_kind} • observado em {c.observed_at} • confiança {c.confidence}
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="text-base font-bold text-emerald-400">
+                    <div className="text-base font-bold text-success-400">
                       {c.currency === 'USD' ? 'US$' : 'R$'} {c.price.toFixed(2)}
                     </div>
                   </div>
                 </div>
 
                 {c.source_note && (
-                  <div className="p-2 rounded-lg bg-slate-900/70 border border-slate-800/80 text-[11px] text-slate-300 flex items-start gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
+                  <div className="p-2 rounded-lg bg-ink-900/70 border border-ink-800/80 text-[11px] text-ink-300 flex items-start gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-accent-400 shrink-0 mt-0.5" />
                     <span>{c.source_note}</span>
                   </div>
                 )}
@@ -375,7 +375,7 @@ export const PriceResearchModal: React.FC<Props> = ({
                     href={c.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="block text-[10px] text-blue-400 truncate hover:underline"
+                    className="block text-[10px] text-info-400 truncate hover:underline"
                   >
                     🔗 {c.url}
                   </a>
@@ -387,8 +387,8 @@ export const PriceResearchModal: React.FC<Props> = ({
                   disabled={accepted.has(i)}
                   className={`w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
                     accepted.has(i)
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 cursor-default'
-                      : 'bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/20'
+                      ? 'bg-success-500/10 text-success-400 border border-success-500/30 cursor-default'
+                      : 'bg-accent-600 hover:bg-accent-500 text-white shadow-md shadow-accent-600/20'
                   }`}
                 >
                   {accepted.has(i) ? '✓ Cotação Aceita e Vinculada' : 'Aceitar como Cotação Oficial'}

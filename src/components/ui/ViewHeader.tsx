@@ -16,7 +16,7 @@ export const ViewHeader: React.FC<ViewHeaderProps> = ({ title, subtitle, actions
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h2 className="text-xl font-bold text-white flex items-center gap-2">{title}</h2>
-        <p className="text-xs text-slate-400">{subtitle}</p>
+        <p className="text-xs text-ink-400">{subtitle}</p>
       </div>
 
       {actions && (

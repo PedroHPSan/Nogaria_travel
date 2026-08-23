@@ -55,7 +55,7 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
     onClose();
   };
 
-  const field = 'w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white';
+  const field = 'w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white';
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title={`Cotação — ${item.product_name}`}>
@@ -66,7 +66,7 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
               key={m}
               onClick={() => setMarket(m)}
               className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${
-                market === m ? 'bg-purple-600 text-white' : 'bg-slate-900 text-slate-400 border border-slate-800'
+                market === m ? 'bg-accent-600 text-white' : 'bg-ink-900 text-ink-400 border border-ink-800'
               }`}
             >
               {m === 'US' ? 'Preço EUA (sem imposto)' : 'Preço Brasil (com imposto)'}
@@ -92,12 +92,12 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
         <input className={field} placeholder="Link (opcional)" value={url} onChange={e => setUrl(e.target.value)} />
         <input className={field} type="date" value={observedAt} onChange={e => setObservedAt(e.target.value)} />
 
-        {error && <p className="text-xs text-rose-400">{error}</p>}
+        {error && <p className="text-xs text-danger-400">{error}</p>}
 
-        <button onClick={handleSubmit} className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition">
+        <button onClick={handleSubmit} className="w-full py-2.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-bold text-sm transition">
           Salvar cotação
         </button>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-ink-500">
           A cotação anterior deste mercado fica arquivada, não é apagada.
         </p>
       </div>

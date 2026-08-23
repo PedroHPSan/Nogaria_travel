@@ -103,20 +103,20 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Descrição da Despesa *</label>
+          <label className="block text-ink-300 font-semibold mb-1">Descrição da Despesa *</label>
           <input
             type="text"
             required
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder="Ex: Jantar em grupo no Olive Garden / Abastecimento SUV FLL"
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
           />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Valor *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Valor *</label>
             <input
               type="number"
               required
@@ -124,16 +124,16 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               step="1"
               value={amount}
               onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-bold text-emerald-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-success-400"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Moeda</label>
+            <label className="block text-ink-300 font-semibold mb-1">Moeda</label>
             <select
               value={currency}
               onChange={e => setCurrency(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-bold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold"
             >
               <option value="USD">Dólar (US$)</option>
               <option value="BRL">Real (R$)</option>
@@ -141,23 +141,23 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Cotação Câmbio</label>
+            <label className="block text-ink-300 font-semibold mb-1">Cotação Câmbio</label>
             <input
               type="number"
               min="1"
               step="0.05"
               value={exchangeRate}
               onChange={e => setExchangeRate(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Categoria</label>
+            <label className="block text-ink-300 font-semibold mb-1">Categoria</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               {CATEGORIES.map(c => (
                 <option key={c.id} value={c.id}>
@@ -169,7 +169,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         </div>
 
         {/* Currency preview */}
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between text-slate-300 font-medium">
+        <div className="p-3 rounded-xl bg-ink-950/60 border border-ink-800 flex items-center justify-between text-ink-300 font-medium">
           <span>Equivalente Convertido:</span>
           <span className="font-bold text-white">
             US$ {amountUsd.toFixed(2)} / R$ {amountBrl.toFixed(2)}
@@ -178,12 +178,12 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Quem Pagou a Despesa? *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Quem Pagou a Despesa? *</label>
             <select
               required
               value={paidById}
               onChange={e => setPaidById(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
             >
               <option value="">-- Selecione quem Pagou --</option>
               {participants.map(p => (
@@ -195,18 +195,18 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data da Despesa</label>
+            <label className="block text-ink-300 font-semibold mb-1">Data da Despesa</label>
             <input
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">
+          <label className="block text-ink-300 font-semibold mb-1">
             Divisão do Rateio (Participantes Beneficiados)
           </label>
           <div className="flex flex-wrap gap-2 mt-1">
@@ -219,8 +219,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   onClick={() => toggleBeneficiary(p.id)}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
                     isSelected
-                      ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 opacity-60'
+                      ? 'bg-success-600/20 text-success-400 border-success-500/40'
+                      : 'bg-ink-950 text-ink-400 border-ink-800 opacity-60'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${p.avatar_color}`} />
@@ -232,11 +232,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Status da Despesa</label>
+          <label className="block text-ink-300 font-semibold mb-1">Status da Despesa</label>
           <select
             value={status}
             onChange={e => setStatus(e.target.value as any)}
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           >
             <option value="paid">Paga / Efetuada</option>
             <option value="pending">Pendente de Pagamento</option>
@@ -244,17 +244,17 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </select>
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/30"
+            className="px-5 py-2 rounded-xl bg-success-600 hover:bg-success-500 text-white font-bold shadow-lg shadow-success-600/30"
           >
             Salvar Despesa
           </button>

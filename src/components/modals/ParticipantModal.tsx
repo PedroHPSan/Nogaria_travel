@@ -13,11 +13,11 @@ interface ParticipantModalProps {
 }
 
 const COLOR_OPTIONS = [
-  'bg-emerald-500',
-  'bg-purple-500',
-  'bg-blue-500',
-  'bg-amber-500',
-  'bg-rose-500',
+  'bg-success-500',
+  'bg-accent-500',
+  'bg-info-500',
+  'bg-warning-500',
+  'bg-danger-500',
   'bg-indigo-500',
   'bg-teal-500',
   'bg-pink-500'
@@ -43,7 +43,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
   const [dietary, setDietary] = useState('');
   const [notes, setNotes] = useState('');
   const [budgetLimit, setBudgetLimit] = useState<number>(2000);
-  const [avatarColor, setAvatarColor] = useState('bg-blue-500');
+  const [avatarColor, setAvatarColor] = useState('bg-info-500');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setDietary(initialData.dietary_restrictions ? initialData.dietary_restrictions.join(', ') : '');
       setNotes(initialData.notes || '');
       setBudgetLimit(initialData.budget_limit_usd || 2000);
-      setAvatarColor(initialData.avatar_color || 'bg-blue-500');
+      setAvatarColor(initialData.avatar_color || 'bg-info-500');
     } else {
       setFullName('');
       setNickname('');
@@ -74,7 +74,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setDietary('');
       setNotes('');
       setBudgetLimit(2000);
-      setAvatarColor('bg-blue-500');
+      setAvatarColor('bg-info-500');
     }
     setError('');
   }, [initialData, isOpen]);
@@ -126,41 +126,41 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Nome Completo *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Nome Completo *</label>
             <input
               type="text"
               required
               value={fullName}
               onChange={e => setFullName(e.target.value)}
               placeholder="Ex: Bárbara Palheta"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Apelido / Nome Curto</label>
+            <label className="block text-ink-300 font-semibold mb-1">Apelido / Nome Curto</label>
             <input
               type="text"
               value={nickname}
               onChange={e => setNickname(e.target.value)}
               placeholder="Ex: Bárbara"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data Nascimento *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Data Nascimento *</label>
             <input
               type="date"
               required
               value={birthDate}
               onChange={e => setBirthDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
             {idadeCalculada !== null && (
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-ink-500">
                 {idadeCalculada} anos
                 {idadeCalculada < 18 && ' — menor de idade, informe o responsável'}
               </p>
@@ -168,52 +168,52 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Altura (cm)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Altura (cm)</label>
             <input
               type="number"
               placeholder="Ex: 100 para 4 anos"
               value={heightCm}
               onChange={e => setHeightCm(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Relação no Grupo</label>
+            <label className="block text-ink-300 font-semibold mb-1">Relação no Grupo</label>
             <input
               type="text"
               value={relationship}
               onChange={e => setRelationship(e.target.value)}
               placeholder="Ex: Mãe, Pai, Filha de Bárbara, etc."
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Orçamento Limite (US$)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Orçamento Limite (US$)</label>
             <input
               type="number"
               min="0"
               step="50"
               value={budgetLimit}
               onChange={e => setBudgetLimit(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold text-emerald-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-success-400"
             />
           </div>
         </div>
 
         {isMinor && (
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
-            <span className="text-slate-200 font-medium">
+          <div className="p-3 rounded-xl bg-ink-950/60 border border-ink-800 flex items-center justify-between">
+            <span className="text-ink-200 font-medium">
               Menor de Idade (Requer controle legal e de atrações)
             </span>
 
             <select
               value={responsibleId}
               onChange={e => setResponsibleId(e.target.value)}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+              className="px-2.5 py-1 rounded-lg bg-ink-900 border border-ink-700 text-white text-xs"
             >
               <option value="">-- Selecione o Responsável Legal --</option>
               {existingParticipants
@@ -229,32 +229,32 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Número do Passaporte</label>
+            <label className="block text-ink-300 font-semibold mb-1">Número do Passaporte</label>
             <input
               type="text"
               value={passportNumber}
               onChange={e => setPassportNumber(e.target.value)}
               placeholder="Ex: BR984712"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Validade do Passaporte</label>
+            <label className="block text-ink-300 font-semibold mb-1">Validade do Passaporte</label>
             <input
               type="date"
               value={passportExpiry}
               onChange={e => setPassportExpiry(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Status do Visto EUA</label>
+            <label className="block text-ink-300 font-semibold mb-1">Status do Visto EUA</label>
             <select
               value={visaStatus}
               onChange={e => setVisaStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="valid">Visto Válido (Aprovado)</option>
               <option value="pending">Pendente Emissão / Entrevista</option>
@@ -265,29 +265,29 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Restrições Alimentares (separadas por vírgula)</label>
+          <label className="block text-ink-300 font-semibold mb-1">Restrições Alimentares (separadas por vírgula)</label>
           <input
             type="text"
             value={dietary}
             onChange={e => setDietary(e.target.value)}
             placeholder="Ex: Sem lactose, Alergia a amendoim"
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           />
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Observações & Regras do Participante</label>
+          <label className="block text-ink-300 font-semibold mb-1">Observações & Regras do Participante</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Exige carrinho infantil e pausa de descanso. Preferência por atrações calmas."
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           />
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Cor da Badge de Avatar</label>
+          <label className="block text-ink-300 font-semibold mb-1">Cor da Badge de Avatar</label>
           <div className="flex items-center gap-2 mt-1">
             {COLOR_OPTIONS.map(c => (
               <button
@@ -302,19 +302,19 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
           </div>
         </div>
 
-        {error && <p className="text-xs text-rose-400">{error}</p>}
+        {error && <p className="text-xs text-danger-400">{error}</p>}
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-600/30"
+            className="px-5 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold shadow-lg shadow-info-600/30"
           >
             Salvar Participante
           </button>

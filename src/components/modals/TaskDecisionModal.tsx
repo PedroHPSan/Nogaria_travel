@@ -132,24 +132,24 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
         {mode === 'task' ? (
           <>
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Título da Pendência *</label>
+              <label className="block text-ink-300 font-semibold mb-1">Título da Pendência *</label>
               <input
                 type="text"
                 required
                 value={taskTitle}
                 onChange={e => setTaskTitle(e.target.value)}
                 placeholder="Ex: Confirmar Uber pós devolução do carro em 19/09 às 17h30"
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Responsável</label>
+                <label className="block text-ink-300 font-semibold mb-1">Responsável</label>
                 <select
                   value={taskAssignedId}
                   onChange={e => setTaskAssignedId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
                 >
                   <option value="">-- Qualquer Responsável --</option>
                   {participants.map(p => (
@@ -161,23 +161,23 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Data Limite / Prazo</label>
+                <label className="block text-ink-300 font-semibold mb-1">Data Limite / Prazo</label>
                 <input
                   type="date"
                   value={taskDueDate}
                   onChange={e => setTaskDueDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Prioridade</label>
+                <label className="block text-ink-300 font-semibold mb-1">Prioridade</label>
                 <select
                   value={taskPriority}
                   onChange={e => setTaskPriority(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
                 >
                   <option value="high">🔥 Alta Prioridade</option>
                   <option value="medium">⚡ Média Prioridade</option>
@@ -186,11 +186,11 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Categoria da Pendência</label>
+                <label className="block text-ink-300 font-semibold mb-1">Categoria da Pendência</label>
                 <select
                   value={taskCategory}
                   onChange={e => setTaskCategory(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
                 >
                   <option value="logistics">🚗 Logística / Transportes</option>
                   <option value="finance">💳 Financeiro / Gift Cards</option>
@@ -203,61 +203,61 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Descrição Detalhada</label>
+              <label className="block text-ink-300 font-semibold mb-1">Descrição Detalhada</label>
               <textarea
                 rows={3}
                 value={taskDesc}
                 onChange={e => setTaskDesc(e.target.value)}
                 placeholder="Ex: Agendar transporte com capacidade para 4 passageiros e malas."
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
               />
             </div>
           </>
         ) : (
           <>
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Tema da Decisão *</label>
+              <label className="block text-ink-300 font-semibold mb-1">Tema da Decisão *</label>
               <input
                 type="text"
                 required
                 value={decTopic}
                 onChange={e => setDecTopic(e.target.value)}
                 placeholder="Ex: Substituição do Hotel da última noite (Celebration Suites -> Four Points FLL)"
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Alternativas Consideradas (separadas por vírgula)</label>
+              <label className="block text-ink-300 font-semibold mb-1">Alternativas Consideradas (separadas por vírgula)</label>
               <input
                 type="text"
                 value={decAlternatives}
                 onChange={e => setDecAlternatives(e.target.value)}
                 placeholder="Ex: Celebration Suites Kissimmee, Four Points FLL, Hotel Próximo MCO"
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Decisão Escolhida *</label>
+              <label className="block text-ink-300 font-semibold mb-1">Decisão Escolhida *</label>
               <input
                 type="text"
                 required
                 value={decChosen}
                 onChange={e => setDecChosen(e.target.value)}
                 placeholder="Ex: Four Points by Sheraton Fort Lauderdale Airport"
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-bold text-emerald-400"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-success-400"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Responsável pela Decisão *</label>
+                <label className="block text-ink-300 font-semibold mb-1">Responsável pela Decisão *</label>
                 <select
                   required
                   value={decDecidedById}
                   onChange={e => setDecDecidedById(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
                 >
                   <option value="">-- Selecione o Responsável --</option>
                   {participants.map(p => (
@@ -269,43 +269,43 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Impacto Financeiro Líquido (US$)</label>
+                <label className="block text-ink-300 font-semibold mb-1">Impacto Financeiro Líquido (US$)</label>
                 <input
                   type="number"
                   step="5"
                   value={decFinancialImpact}
                   onChange={e => setDecFinancialImpact(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="Ex: 70.00 ou -50.00"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Motivo & Raciocínio da Escolha *</label>
+              <label className="block text-ink-300 font-semibold mb-1">Motivo & Raciocínio da Escolha *</label>
               <textarea
                 rows={3}
                 required
                 value={decReason}
                 onChange={e => setDecReason(e.target.value)}
                 placeholder="Ex: Elimina o risco de trânsito longo no dia do voo noturno após a entrega do carro alugado."
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
               />
             </div>
           </>
         )}
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-600/30"
+            className="px-5 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold shadow-lg shadow-info-600/30"
           >
             {mode === 'task' ? 'Salvar Pendência' : 'Salvar Decisão'}
           </button>

@@ -56,7 +56,7 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
     >
       <div className="space-y-4 text-xs">
         {/* Category Filters */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950 border border-slate-800 flex-wrap">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-ink-950 border border-ink-800 flex-wrap">
           <button
             type="button"
             onClick={() => {
@@ -65,8 +65,8 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition ${
               categoryFilter === 'all'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-info-600 text-white shadow-md'
+                : 'text-ink-400 hover:text-white'
             }`}
           >
             Todos os Serviços
@@ -79,8 +79,8 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
               categoryFilter === 'supermarket'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-success-600 text-white shadow-md'
+                : 'text-ink-400 hover:text-white'
             }`}
           >
             🛒 Supermercados & Target
@@ -93,8 +93,8 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
               categoryFilter === 'pharmacy'
-                ? 'bg-rose-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-danger-600 text-white shadow-md'
+                : 'text-ink-400 hover:text-white'
             }`}
           >
             💊 Farmácias 24h & Saúde
@@ -107,8 +107,8 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
             }}
             className={`px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
               categoryFilter === 'gas_station'
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-warning-600 text-white shadow-md'
+                : 'text-ink-400 hover:text-white'
             }`}
           >
             ⛽ Postos & Conveniência
@@ -116,76 +116,76 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
         </div>
 
         {/* Essential Family Notice */}
-        <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-start gap-2.5 text-blue-200 text-xs">
-          <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+        <div className="p-3 rounded-xl bg-info-500/10 border border-info-500/30 flex items-start gap-2.5 text-info-200 text-xs">
+          <ShieldCheck className="w-4 h-4 text-info-400 shrink-0 mt-0.5" />
           <div>
             <strong>Dica de Segurança Familiar:</strong> Em caso de febre ou indisposição da Gabriela (4a) ou Débora (12a), a <strong>Walgreens 24h</strong> possui farmacêutico de plantão para medicamentos infantis (ibuprofeno, antialérgicos, etc.).
           </div>
         </div>
 
         {errorMessage && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+          <div className="p-3 rounded-xl bg-danger-500/10 border border-danger-500/30 text-danger-300 text-xs">
             {errorMessage}
           </div>
         )}
 
         {/* Results List */}
         <div className="space-y-3 pt-1">
-          <div className="flex items-center justify-between text-slate-400 text-[11px]">
+          <div className="flex items-center justify-between text-ink-400 text-[11px]">
             <span>
               {places.length} locais de apoio encontrados na região de <strong>{destination}</strong>
             </span>
             {fromCache && (
-              <span className="text-emerald-400 font-mono text-[10px]">
+              <span className="text-success-400 font-mono text-[10px]">
                 ⚡ Dados em cache (Custo zero)
               </span>
             )}
           </div>
 
           {isLoading ? (
-            <div className="p-8 text-center text-slate-400">Carregando serviços próximos...</div>
+            <div className="p-8 text-center text-ink-400">Carregando serviços próximos...</div>
           ) : (
             <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
               {places.map(p => (
                 <div
                   key={p.placeId}
-                  className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/40 transition space-y-2"
+                  className="p-3.5 rounded-xl bg-ink-950 border border-ink-800 hover:border-info-500/40 transition space-y-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 border border-slate-800 text-slate-300">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-ink-900 border border-ink-800 text-ink-300">
                           {p.categoryLabel}
                         </span>
                       </div>
-                      <p className="text-slate-400 text-xs mt-0.5 flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+                      <p className="text-ink-400 text-xs mt-0.5 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-ink-500 shrink-0" />
                         {p.address}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       {p.is24Hours && (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-md bg-success-500/10 text-success-400 border border-success-500/20 text-[10px] font-bold flex items-center gap-1">
                           <Clock className="w-3 h-3" /> Aberto 24 Horas
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300">
-                    <span className="text-blue-400 font-bold">Utilidade:</span> {p.urgencyTip}
+                  <div className="p-2 rounded-lg bg-ink-900/80 border border-ink-800 text-[11px] text-ink-300">
+                    <span className="text-info-400 font-bold">Utilidade:</span> {p.urgencyTip}
                   </div>
 
-                  <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400 border-t border-slate-900">
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-ink-400 border-t border-ink-900">
                     <div className="flex items-center gap-3">
                       {p.rating && (
-                        <span className="flex items-center gap-1 font-bold text-amber-400">
-                          <Star className="w-3 h-3 fill-amber-400" />
+                        <span className="flex items-center gap-1 font-bold text-warning-400">
+                          <Star className="w-3 h-3 fill-warning-400" />
                           {p.rating}
                           {p.userRatingsTotal && (
-                            <span className="text-slate-500 font-normal">
+                            <span className="text-ink-500 font-normal">
                               ({p.userRatingsTotal.toLocaleString()})
                             </span>
                           )}
@@ -198,7 +198,7 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
                         href={p.mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold"
+                        className="text-info-400 hover:text-info-300 flex items-center gap-1 font-semibold"
                       >
                         Abrir Rota no Maps <ExternalLink className="w-3 h-3" />
                       </a>
@@ -210,11 +210,11 @@ export const HotelServicesModal: React.FC<HotelServicesModalProps> = ({
           )}
         </div>
 
-        <div className="pt-2 border-t border-slate-800 flex justify-end">
+        <div className="pt-2 border-t border-ink-800 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Fechar
           </button>

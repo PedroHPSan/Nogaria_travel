@@ -116,13 +116,13 @@ export const AiCopilotView: React.FC = () => {
         title="Copiloto IA Transversal & Gestão de Provedores"
         subtitle="Interface de IA contextualizada com acesso aos módulos da viagem e gerenciamento seguro de tokens e modelos (Gemini, OpenAI, Claude, DeepSeek)."
         actions={
-          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-            <Cpu className="w-4 h-4 text-purple-400" />
-            <span className="font-semibold text-slate-300">Provedor Ativo:</span>
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-ink-900 border border-ink-800 text-xs">
+            <Cpu className="w-4 h-4 text-accent-400" />
+            <span className="font-semibold text-ink-300">Provedor Ativo:</span>
             <select
               value={activeProviderId}
               onChange={e => setActiveProviderId(e.target.value)}
-              className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-white font-bold text-xs"
+              className="px-2.5 py-1 rounded-lg bg-ink-950 border border-ink-700 text-white font-bold text-xs"
             >
               {aiProviders.map(p => (
                 <option key={p.id} value={p.id}>
@@ -136,18 +136,18 @@ export const AiCopilotView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat Main Window */}
-        <div className="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col h-[520px]">
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+        <div className="lg:col-span-2 glass-panel p-5 rounded-2xl border border-ink-800 flex flex-col h-[520px]">
+          <div className="flex items-center justify-between pb-3 mb-3 border-b border-ink-800">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-accent-600 flex items-center justify-center text-white font-bold shadow-md">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
                 <h3 className="font-bold text-sm text-white">Assistente de Viagem IA</h3>
-                <p className="text-[10px] text-emerald-400 font-semibold">Provedor: {activeProvider?.provider} • {activeProvider?.model_name}</p>
+                <p className="text-[10px] text-success-400 font-semibold">Provedor: {activeProvider?.provider} • {activeProvider?.model_name}</p>
               </div>
             </div>
-            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-info-500/10 text-info-400 border border-info-500/20">
               Contexto Completo Ativo
             </span>
           </div>
@@ -156,25 +156,25 @@ export const AiCopilotView: React.FC = () => {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar text-[11px]">
             <button
               onClick={() => handlePresetPrompt('Existe algum dia sem hotel?')}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
+              className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
               ❓ Há dias sem hotel?
             </button>
             <button
               onClick={() => handlePresetPrompt('Qual é o custo real dos gift cards?')}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
+              className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
               💳 Custo real gift cards
             </button>
             <button
               onClick={() => handlePresetPrompt('Que atividades têm restrição de altura ou idade?')}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
+              className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
               👧 Restrições de altura/idade
             </button>
             <button
               onClick={() => handlePresetPrompt('Existe conflito entre a devolução do carro e o voo?')}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
+              className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
               🚗 Devolução do carro
             </button>
@@ -195,8 +195,8 @@ export const AiCopilotView: React.FC = () => {
                 <div
                   className={`max-w-[85%] p-3 rounded-2xl whitespace-pre-line leading-relaxed ${
                     m.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-tr-none'
-                      : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
+                      ? 'bg-info-600 text-white rounded-tr-none'
+                      : 'bg-ink-900 border border-ink-800 text-ink-200 rounded-tl-none'
                   }`}
                 >
                   {m.content}
@@ -205,8 +205,8 @@ export const AiCopilotView: React.FC = () => {
               </div>
             ))}
             {isProcessing && (
-              <div className="text-xs text-slate-400 animate-pulse flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <div className="text-xs text-ink-400 animate-pulse flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-accent-400" />
                 Processando consulta no modelo {activeProvider?.model_name}...
               </div>
             )}
@@ -218,19 +218,19 @@ export const AiCopilotView: React.FC = () => {
               e.preventDefault();
               handleSend();
             }}
-            className="pt-3 border-t border-slate-800 flex items-center gap-2"
+            className="pt-3 border-t border-ink-800 flex items-center gap-2"
           >
             <input
               type="text"
               value={promptInput}
               onChange={e => setPromptInput(e.target.value)}
               placeholder="Faça uma pergunta sobre o planejamento da viagem..."
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-ink-950 border border-ink-800 text-xs text-white focus:outline-none focus:border-info-500"
             />
             <button
               type="submit"
               disabled={isProcessing || !promptInput.trim()}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-accent-600 hover:from-indigo-500 hover:to-accent-500 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -239,25 +239,25 @@ export const AiCopilotView: React.FC = () => {
 
         {/* Sidebar: AI Provider Controls & Token Consumption Logs */}
         <div className="space-y-4">
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-4">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-purple-400" />
+              <Sliders className="w-4 h-4 text-accent-400" />
               Configurações do Provedor
             </h3>
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Modelo de IA</label>
+                <label className="block text-ink-300 font-semibold mb-1">Modelo de IA</label>
                 <input
                   type="text"
                   value={activeProvider?.model_name || ''}
                   onChange={e => updateAiProvider(activeProvider.id, { model_name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Temperatura (Criatividade)</label>
+                <label className="block text-ink-300 font-semibold mb-1">Temperatura (Criatividade)</label>
                 <input
                   type="range"
                   min="0"
@@ -267,7 +267,7 @@ export const AiCopilotView: React.FC = () => {
                   onChange={e => updateAiProvider(activeProvider.id, { temperature: Number(e.target.value) })}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400">
+                <div className="flex justify-between text-[10px] text-ink-400">
                   <span>Determinístico (0.0)</span>
                   <span>{activeProvider?.temperature}</span>
                   <span>Criativo (1.0)</span>
@@ -275,31 +275,31 @@ export const AiCopilotView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Limite Diário de Tokens</label>
+                <label className="block text-ink-300 font-semibold mb-1">Limite Diário de Tokens</label>
                 <input
                   type="number"
                   value={activeProvider?.daily_token_limit || 100000}
                   onChange={e => updateAiProvider(activeProvider.id, { daily_token_limit: Number(e.target.value) })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-semibold"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white font-semibold"
                 />
               </div>
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
+          <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-3">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <History className="w-4 h-4 text-blue-400" />
+              <History className="w-4 h-4 text-info-400" />
               Histórico de Consumo de IA ({aiLogs.length})
             </h3>
 
             <div className="space-y-2 max-h-48 overflow-y-auto text-[11px]">
               {aiLogs.map(log => (
-                <div key={log.id} className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-slate-300 font-semibold">
+                <div key={log.id} className="p-2.5 rounded-lg bg-ink-900/60 border border-ink-800 space-y-1">
+                  <div className="flex items-center justify-between text-ink-300 font-semibold">
                     <span>{log.function_name}</span>
-                    <span className="text-emerald-400 font-mono">US$ {log.estimated_cost_usd}</span>
+                    <span className="text-success-400 font-mono">US$ {log.estimated_cost_usd}</span>
                   </div>
-                  <div className="text-[10px] text-slate-400">
+                  <div className="text-[10px] text-ink-400">
                     {log.provider} ({log.model}) • {log.tokens_input + log.tokens_output} tokens
                   </div>
                 </div>

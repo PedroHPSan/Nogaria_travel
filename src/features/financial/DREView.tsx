@@ -198,17 +198,17 @@ export const DREView: React.FC = () => {
   return (
     <div className="space-y-6 pb-24">
       {/* Header Executivo da DRE */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/70 to-slate-900 p-6 border border-slate-800 shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-ink-900 via-indigo-950/70 to-ink-900 p-6 border border-ink-800 shadow-2xl">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-info-500/10 border border-info-500/30 text-info-400 text-xs font-semibold mb-2">
               <FileSpreadsheet className="w-3.5 h-3.5" />
               DRE Gerencial • Cotação Hoje ({exchangeRateDate}): R$ {exchangeRate.toFixed(2)}
             </div>
             <h2 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
               DRE da Viagem: Planejado vs. Realizado
             </h2>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl">
+            <p className="text-xs text-ink-300 mt-1 max-w-2xl">
               Controle de desembolsos, acompanhamento orçamentário por categoria, cálculo de provisionamento futuro e balancete de acerto entre os participantes.
             </p>
           </div>
@@ -217,25 +217,25 @@ export const DREView: React.FC = () => {
             {/* Botão Ajustar Metas */}
             <button
               onClick={() => setIsBudgetModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 flex items-center gap-1.5 transition"
+              className="px-3.5 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-200 font-semibold text-xs border border-ink-700 flex items-center gap-1.5 transition"
             >
-              <Calculator className="w-4 h-4 text-purple-400" />
+              <Calculator className="w-4 h-4 text-accent-400" />
               Metas / Orçado
             </button>
 
             {/* Botão Copiar WhatsApp */}
             <button
               onClick={handleCopySummary}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 flex items-center gap-1.5 transition"
+              className="px-3.5 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-200 font-semibold text-xs border border-ink-700 flex items-center gap-1.5 transition"
             >
               {copySuccess ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-400">Copiado!</span>
+                  <Check className="w-4 h-4 text-success-400" />
+                  <span className="text-success-400">Copiado!</span>
                 </>
               ) : (
                 <>
-                  <Share2 className="w-4 h-4 text-blue-400" />
+                  <Share2 className="w-4 h-4 text-info-400" />
                   Compartilhar
                 </>
               )}
@@ -244,7 +244,7 @@ export const DREView: React.FC = () => {
             {/* Botão Nova Despesa */}
             <button
               onClick={() => handleOpenAddExpense()}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition"
+              className="px-4 py-2 rounded-xl bg-success-600 hover:bg-success-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-success-600/30 transition"
             >
               <Plus className="w-4 h-4" />
               Lançar Despesa
@@ -295,7 +295,7 @@ export const DREView: React.FC = () => {
           footer={
             <>
               <span>Pendente lançado:</span>
-              <span className="text-amber-300 font-semibold">
+              <span className="text-warning-300 font-semibold">
                 {formatVal(dreResult.total_pending_usd, dreResult.total_pending_brl)}
               </span>
             </>
@@ -311,7 +311,7 @@ export const DREView: React.FC = () => {
           footer={
             <>
               <span>Variação Global:</span>
-              <span className={dreResult.total_variance_usd >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+              <span className={dreResult.total_variance_usd >= 0 ? 'text-success-400 font-bold' : 'text-danger-400 font-bold'}>
                 {dreResult.total_variance_usd >= 0 ? '+ Folga Orçamentária' : '- Estouro'}
               </span>
             </>
@@ -320,17 +320,17 @@ export const DREView: React.FC = () => {
       </div>
 
       {/* Barra de Progresso Global da DRE */}
-      <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-2">
+      <div className="glass-panel p-4 rounded-2xl border border-ink-800 space-y-2">
         <div className="flex items-center justify-between text-xs font-semibold">
-          <span className="text-slate-300 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
+          <span className="text-ink-300 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-success-400" />
             Execução Orçamentária Global: {dreResult.global_execution_rate_pct}% Realizado
           </span>
-          <span className="text-slate-400">
+          <span className="text-ink-400">
             {formatVal(dreResult.total_actual_usd, dreResult.total_actual_brl)} de {formatVal(dreResult.total_planned_usd, dreResult.total_planned_brl)}
           </span>
         </div>
-        <div className="w-full bg-slate-900 h-3 rounded-full overflow-hidden flex">
+        <div className="w-full bg-ink-900 h-3 rounded-full overflow-hidden flex">
           {dreResult.categories.map(c => {
             const val = currency === 'BRL' ? c.actual_brl : c.actual_usd;
             const total = currency === 'BRL' ? dreResult.total_planned_brl : dreResult.total_planned_usd;
@@ -346,7 +346,7 @@ export const DREView: React.FC = () => {
             );
           })}
         </div>
-        <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-slate-400">
+        <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-ink-400">
           {dreResult.categories.map(c => (
             <div key={c.category} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[c.category] }} />
@@ -357,13 +357,13 @@ export const DREView: React.FC = () => {
       </div>
 
       {/* Navegação entre Visões da DRE */}
-      <div className="flex items-center gap-1 p-1 bg-slate-900/90 rounded-2xl border border-slate-800 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-1 p-1 bg-ink-900/90 rounded-2xl border border-ink-800 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('categories')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             activeTab === 'categories'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-info-600 text-white shadow-md'
+              : 'text-ink-400 hover:text-white hover:bg-ink-800/60'
           }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
@@ -374,8 +374,8 @@ export const DREView: React.FC = () => {
           onClick={() => setActiveTab('participants')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             activeTab === 'participants'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-info-600 text-white shadow-md'
+              : 'text-ink-400 hover:text-white hover:bg-ink-800/60'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -386,8 +386,8 @@ export const DREView: React.FC = () => {
           onClick={() => setActiveTab('timeline')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             activeTab === 'timeline'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-info-600 text-white shadow-md'
+              : 'text-ink-400 hover:text-white hover:bg-ink-800/60'
           }`}
         >
           <Calendar className="w-4 h-4" />

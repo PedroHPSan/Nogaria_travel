@@ -52,7 +52,7 @@ export const INITIAL_PARTICIPANTS: Participant[] = [
     dietary_restrictions: [],
     notes: 'Direção estratégica, orçamento, Apple Mission. CPF: 80136770282. E-mail: contadorabarbaranogueira@gmail.com.',
     budget_limit_usd: 3500,
-    avatar_color: 'bg-emerald-500'
+    avatar_color: 'bg-success-500'
   },
   {
     id: '22222222-2222-4222-8222-222222222222',
@@ -69,7 +69,7 @@ export const INITIAL_PARTICIPANTS: Participant[] = [
     dietary_restrictions: [],
     notes: 'Orçamento próprio de US$ 2.000 (eletrônicos e compras familiares). CPF: 00560188277.',
     budget_limit_usd: 2000,
-    avatar_color: 'bg-blue-500'
+    avatar_color: 'bg-info-500'
   },
   {
     id: '33333333-3333-4333-8333-333333333333',
@@ -87,7 +87,7 @@ export const INITIAL_PARTICIPANTS: Participant[] = [
     dietary_restrictions: ['Sem lactose'],
     notes: '12 anos. Foco em atrações intensas (The Mummy, VelociCoaster), moda e cartas Pokémon. CPF: 04607563200.',
     budget_limit_usd: 600,
-    avatar_color: 'bg-purple-500'
+    avatar_color: 'bg-accent-500'
   },
   {
     id: '44444444-4444-4444-8444-444444444444',
@@ -106,7 +106,7 @@ export const INITIAL_PARTICIPANTS: Participant[] = [
     dietary_restrictions: [],
     notes: '4 anos. Exige controle de altura mínima em atrações (>102cm/112cm), pausas de descanso e carrinho infantil. CPF: 10209095288.',
     budget_limit_usd: 400,
-    avatar_color: 'bg-amber-500'
+    avatar_color: 'bg-warning-500'
   }
 ];
 
