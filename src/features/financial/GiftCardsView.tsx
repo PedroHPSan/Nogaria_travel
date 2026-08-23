@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { GiftCardModal } from '../../components/modals/GiftCardModal';
 import { LoyaltyModal } from '../../components/modals/LoyaltyModal';
+import { calculateGiftCardPortfolioSavings } from '../../services/giftCardCalculator';
 import type { GiftCard, LoyaltyAccount } from '../../types/database.types';
 import {
   CreditCard,
@@ -42,10 +43,8 @@ export const GiftCardsView: React.FC = () => {
   const tripLoyalty = loyaltyAccounts.filter(l => l.trip_id === activeTrip.id);
 
   // Gift card summary calculations
-  const totalNominal = tripGiftCards.reduce((sum, g) => sum + g.nominal_value, 0);
-  const totalNetCost = tripGiftCards.reduce((sum, g) => sum + g.net_cost, 0);
-  const totalSavings = totalNominal - totalNetCost;
-  const avgSavingsPct = totalNominal > 0 ? (totalSavings / totalNominal) * 100 : 0;
+  const { totalNominal, totalNetCost, totalSavings, avgSavingsPct } =
+    calculateGiftCardPortfolioSavings(tripGiftCards);
 
 
   // Gift Card Triggers

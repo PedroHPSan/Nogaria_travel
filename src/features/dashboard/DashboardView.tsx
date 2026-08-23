@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTrip } from '../../context/TripContext';
+import { calculateGiftCardPortfolioSavings } from '../../services/giftCardCalculator';
+import { computePreparationScore } from '../../services/auditEngine';
 import {
   TrendingDown,
   Car,
@@ -24,14 +26,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
     currency
   } = useTrip();
 
-  const totalNominalGC = giftCards.reduce((sum, g) => sum + g.nominal_value, 0);
-  const totalNetCostGC = giftCards.reduce((sum, g) => sum + g.net_cost, 0);
-  const totalSavingsGC = totalNominalGC - totalNetCostGC;
-  const avgSavingsPct = totalNominalGC > 0 ? (totalSavingsGC / totalNominalGC) * 100 : 0;
+  const { totalNominal: totalNominalGC, totalNetCost: totalNetCostGC, totalSavings: totalSavingsGC, avgSavingsPct } =
+    calculateGiftCardPortfolioSavings(giftCards);
 
-  const unresolvedCritical = auditFindings.filter(f => f.severity === 'critical' && !f.resolved).length;
-  const unresolvedWarning = auditFindings.filter(f => f.severity === 'warning' && !f.resolved).length;
-  const prepScore = Math.max(0, 100 - (unresolvedCritical * 20 + unresolvedWarning * 10));
+  const { score: prepScore, unresolvedCritical, unresolvedWarning } = computePreparationScore(auditFindings);
 
   const car = transports.find(t => t.type === 'rental_car');
 

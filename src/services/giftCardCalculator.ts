@@ -43,6 +43,21 @@ export function calculateGiftCardFinancials(
   };
 }
 
+/**
+ * Aggregate savings across a portfolio of gift cards (already-persisted
+ * records, each carrying its own denormalized nominal_value/net_cost).
+ */
+export function calculateGiftCardPortfolioSavings(
+  giftCards: Array<{ nominal_value: number; net_cost: number }>
+): { totalNominal: number; totalNetCost: number; totalSavings: number; avgSavingsPct: number } {
+  const totalNominal = giftCards.reduce((sum, g) => sum + g.nominal_value, 0);
+  const totalNetCost = giftCards.reduce((sum, g) => sum + g.net_cost, 0);
+  const totalSavings = totalNominal - totalNetCost;
+  const avgSavingsPct = totalNominal > 0 ? (totalSavings / totalNominal) * 100 : 0;
+
+  return { totalNominal, totalNetCost, totalSavings, avgSavingsPct };
+}
+
 export function calculateGiftCardNetCost(
   nominalValue: number,
   paidAmount: number,
