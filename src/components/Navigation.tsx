@@ -14,7 +14,6 @@ import {
   MoreHorizontal,
   X
 } from 'lucide-react';
-import { useTrip } from '../context/TripContext';
 
 export type NavTab =
   | 'dashboard'
@@ -36,6 +35,8 @@ interface NavigationProps {
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
   auditCount: number;
+  participantCount: number;
+  pendingTaskCount: number;
 }
 
 interface TabDef {
@@ -57,19 +58,18 @@ const GROUP_LABELS: Record<NavGroup, string> = {
 export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   setActiveTab,
-  auditCount
+  auditCount,
+  participantCount,
+  pendingTaskCount
 }) => {
-  const { participants, tasks } = useTrip();
   const [openSheet, setOpenSheet] = useState<NavGroup | null>(null);
-
-  const pendingTaskCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
 
   const tabs: TabDef[] = [
     { id: 'dashboard', group: 'hoje', label: 'Visão Geral', short: 'Hoje', icon: LayoutDashboard },
     { id: 'briefing', group: 'hoje', label: 'Briefing do Dia', short: 'Briefing', icon: Volume2 },
     { id: 'itinerary', group: 'planejamento', label: 'Roteiro & Atrações', short: 'Roteiro', icon: CalendarDays },
     { id: 'logistics', group: 'planejamento', label: 'Logística', short: 'Logística', icon: Plane },
-    { id: 'participants', group: 'planejamento', label: `Grupo (${participants.length})`, short: 'Grupo', icon: Users },
+    { id: 'participants', group: 'planejamento', label: `Grupo (${participantCount})`, short: 'Grupo', icon: Users },
     { id: 'dre', group: 'dinheiro', label: 'DRE & Orçamento', short: 'DRE', icon: FileSpreadsheet },
     { id: 'financial', group: 'dinheiro', label: 'Gift Cards & Milhas', short: 'Gift Cards', icon: CreditCard },
     { id: 'purchases', group: 'dinheiro', label: 'Compras & Malas', short: 'Compras', icon: ShoppingBag },
