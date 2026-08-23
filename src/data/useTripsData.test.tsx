@@ -108,7 +108,7 @@ describe('useTripsData', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     let devolvido = '';
-    act(() => { devolvido = result.current.createTrip(novaViagem); });
+    await act(async () => { devolvido = await result.current.createTrip(novaViagem); });
 
     expect(devolvido).toBeTruthy();
     expect(result.current.trips[0].id).toBe(devolvido);
@@ -119,7 +119,7 @@ describe('useTripsData', () => {
     const { result } = renderHook(() => useTripsData(deps(client)));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    await act(async () => { result.current.createTrip(novaViagem); });
+    await act(async () => { await result.current.createTrip(novaViagem).catch(() => {}); });
 
     await waitFor(() => expect(result.current.trips).toHaveLength(0));
   });
@@ -130,7 +130,7 @@ describe('useTripsData', () => {
     const { result } = renderHook(() => useTripsData(deps(client, recordFailure)));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    await act(async () => { result.current.createTrip(novaViagem); });
+    await act(async () => { await result.current.createTrip(novaViagem).catch(() => {}); });
 
     await waitFor(() => expect(recordFailure).toHaveBeenCalledTimes(1));
     expect(recordFailure.mock.calls[0][0]).toMatchObject({

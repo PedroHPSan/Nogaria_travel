@@ -27,6 +27,7 @@ export const TripWizard: React.FC = () => {
 
   const [passo, setPasso] = useState<1 | 2 | 3>(1);
   const [erro, setErro] = useState('');
+  const [criando, setCriando] = useState(false);
 
   const [titulo, setTitulo] = useState('');
   const [destino, setDestino] = useState('');
@@ -64,18 +65,30 @@ export const TripWizard: React.FC = () => {
     setPasso(p => (p === 1 ? 2 : 3));
   };
 
-  const concluir = () => {
+  const concluir = async () => {
     if (!activeTenantId) return setErro('Nenhuma organização ativa.');
 
-    const tripId = createTrip({
-      tenant_id: activeTenantId,
-      title: titulo.trim(),
-      destination_main: destino.trim(),
-      start_date: ida,
-      end_date: volta,
-      currency_base: 'USD',
-      status: 'planning',
-    });
+    setErro('');
+    setCriando(true);
+
+    let tripId: string;
+    try {
+      // Espera o INSERT da viagem confirmar no banco antes de criar os
+      // participantes: o RLS de `participants` só aceita a linha se a viagem
+      // já existir em `public.trips`, então criar em paralelo derruba o insert.
+      tripId = await createTrip({
+        tenant_id: activeTenantId,
+        title: titulo.trim(),
+        destination_main: destino.trim(),
+        start_date: ida,
+        end_date: volta,
+        currency_base: 'USD',
+        status: 'planning',
+      });
+    } catch {
+      setCriando(false);
+      return setErro('Não foi possível criar a viagem. Tente novamente.');
+    }
 
     pessoas.forEach((p, i) => {
       addParticipant({
@@ -90,6 +103,7 @@ export const TripWizard: React.FC = () => {
     });
 
     setActiveTripId(tripId);
+    setCriando(false);
   };
 
   const campo = 'w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none';
@@ -223,9 +237,10 @@ export const TripWizard: React.FC = () => {
           </button>
           <button
             onClick={passo === 3 ? concluir : avancar}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+            disabled={criando}
+            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-60"
           >
-            {passo === 3 ? 'Criar viagem' : 'Continuar'}
+            {passo === 3 ? (criando ? 'Criando...' : 'Criar viagem') : 'Continuar'}
           </button>
         </div>
       </div>

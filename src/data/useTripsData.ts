@@ -59,29 +59,40 @@ export function useTripsData({ client, tenantId, nowIso, recordFailure }: TripsD
   }, [client, tenantId]);
 
   const createTrip = useCallback(
-    (data: Omit<Trip, 'id' | 'created_at' | 'updated_at'>): string => {
+    (data: Omit<Trip, 'id' | 'created_at' | 'updated_at'>): Promise<string> => {
       const agora = nowIso();
       const trip: Trip = { ...data, id: newId(), created_at: agora, updated_at: agora };
 
-      const escrever = () => {
-        setTrips(prev => [...prev, trip]);
-        client
-          .from('trips')
-          .insert(tripToInsert(trip))
-          .then(({ error }) => {
-            if (!error) return;
-            setTrips(prev => prev.filter(t => t.id !== trip.id));
-            recordFailure({
-              entity: 'Viagem',
-              operation: 'criar',
-              label: trip.title,
-              retry: escrever,
+      // Retorna uma Promise que só resolve depois do INSERT confirmar no banco.
+      // Isso é essencial porque quem chama createTrip (o TripWizard) cria os
+      // participantes logo em seguida, e o RLS de `participants` depende de
+      // `is_trip_member(trip_id)` — que só enxerga a viagem depois que a linha
+      // realmente existe em `public.trips`. Devolver o id antes disso criava uma
+      // corrida: o insert de participante chegava ao Postgres antes do da viagem
+      // e caía em "new row violates row-level security policy".
+      const escrever = (): Promise<string> =>
+        new Promise((resolve, reject) => {
+          setTrips(prev => [...prev, trip]);
+          client
+            .from('trips')
+            .insert(tripToInsert(trip))
+            .then(({ error }) => {
+              if (!error) {
+                resolve(trip.id);
+                return;
+              }
+              setTrips(prev => prev.filter(t => t.id !== trip.id));
+              recordFailure({
+                entity: 'Viagem',
+                operation: 'criar',
+                label: trip.title,
+                retry: escrever,
+              });
+              reject(error);
             });
-          });
-      };
+        });
 
-      escrever();
-      return trip.id;
+      return escrever();
     },
     [client, nowIso, recordFailure],
   );

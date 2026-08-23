@@ -100,7 +100,7 @@ interface TripContextType {
   convertAmount: (amountUSD: number) => number;
 
   setActiveTripId: (id: string) => void;
-  createTrip: (tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>) => string;
+  createTrip: (tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>) => Promise<string>;
 
   participants: Participant[];
   addParticipant: (data: Omit<Participant, 'id' | 'age' | 'is_minor'>) => void;
