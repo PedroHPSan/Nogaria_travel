@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ItineraryModal } from '../../components/modals/ItineraryModal';
 import { DiningRadarModal } from '../../components/modals/DiningRadarModal';
 import { AttractionGuideModal } from '../../components/modals/AttractionGuideModal';
+import { DayTimeline } from './DayTimeline';
+import { MonthCalendar } from './MonthCalendar';
 import type { ItineraryItem } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
 import {
@@ -14,9 +16,13 @@ import {
   Utensils,
   Sparkles,
   Share2,
-  Check
+  Check,
+  List,
+  Clock,
+  Calendar
 } from 'lucide-react';
 
+type ViewMode = 'list' | 'timeline' | 'calendar';
 
 export const ItineraryView: React.FC = () => {
   const { itinerary, activeTrip, participants, addItineraryItem, updateItineraryItem, deleteItineraryItem } = useTrip();
@@ -31,6 +37,9 @@ export const ItineraryView: React.FC = () => {
   const [copiedDate, setCopiedDate] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [parkSelectedDate, setParkSelectedDate] = useState<string>('');
 
   const tripItinerary = useMemo(
     () => itinerary.filter(i => i.trip_id === activeTrip.id),
@@ -98,6 +107,27 @@ export const ItineraryView: React.FC = () => {
 
   const gabi = participants.find(p => p.nickname === 'Gabi' || p.age <= 4);
 
+  // Timeline / Calendar modes only consider park items (Cronologia)
+  const parkItems = useMemo(
+    () => tripItinerary.filter(i => i.category === 'park'),
+    [tripItinerary],
+  );
+  const parkDates = useMemo(
+    () => Array.from(new Set(parkItems.map(i => i.date))).sort(),
+    [parkItems],
+  );
+
+  useEffect(() => {
+    if (parkSelectedDate || parkDates.length === 0) return;
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const closest = parkDates.find(d => d >= todayIso) ?? parkDates[0];
+    setParkSelectedDate(closest);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parkDates.join(','), parkSelectedDate]);
+
+  const parkDayItems = parkItems.filter(i => i.date === parkSelectedDate);
+  const parkName = parkDayItems[0]?.park;
+
   return (
     <div className="space-y-6 pb-20">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -106,7 +136,9 @@ export const ItineraryView: React.FC = () => {
             Roteiro Diário & Atrações ({tripItinerary.length})
           </h2>
           <p className="text-xs text-slate-400">
-            Cronograma inteligente com validações de altura mínima para Gabi (4 anos • {gabi?.height_cm || 100}cm) e Débora (12 anos).
+            {viewMode === 'timeline' && parkSelectedDate
+              ? `${new Date(parkSelectedDate + 'T00:00:00').toLocaleDateString('pt-BR')}${parkName ? ` • ${parkName}` : ''} — Cronologia dos Parques`
+              : `Cronograma inteligente com validações de altura mínima para Gabi (4 anos • ${gabi?.height_cm || 100}cm) e Débora (12 anos).`}
           </p>
         </div>
 
@@ -130,63 +162,96 @@ export const ItineraryView: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="p-3 rounded-2xl glass-panel border border-slate-800 flex flex-wrap items-center gap-3 text-xs">
-        <div className="flex items-center gap-1.5">
-          <CalendarDays className="w-4 h-4 text-purple-400" />
-          <span className="font-semibold text-slate-300">Filtrar Data:</span>
-          <select
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
-          >
-            <option value="all">Todas as Datas ({tripItinerary.length})</option>
-            {availableDates.map(d => (
-              <option key={d} value={d}>
-                {new Date(d + 'T00:00:00').toLocaleDateString('pt-BR')}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <span className="font-semibold text-slate-300">Categoria:</span>
-          <select
-            value={selectedCategory}
-            onChange={e => setSelectedCategory(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
-          >
-            <option value="all">Todas Categorias</option>
-            <option value="park">🎡 Parques</option>
-            <option value="restaurant">🍽️ Restaurantes</option>
-            <option value="shopping">🛍️ Compras</option>
-            <option value="transit">🚗 Deslocamentos</option>
-            <option value="tour">🗽 Passeios</option>
-          </select>
-        </div>
-
+      {/* View Mode Toggle */}
+      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start w-fit">
         <button
-          type="button"
-          onClick={handleCopyDayForWhatsApp}
-          className="ml-auto px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+          onClick={() => setViewMode('list')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+            viewMode === 'list' ? 'bg-blue-600/20 text-blue-400' : 'text-slate-400 hover:text-white'
+          }`}
         >
-          {copiedDate ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
-              Copiado com Sucesso!
-            </>
-          ) : (
-            <>
-              <Share2 className="w-3.5 h-3.5 text-emerald-400" />
-              Copiar para WhatsApp
-            </>
-          )}
+          <List className="w-3.5 h-3.5" />
+          Lista
+        </button>
+        <button
+          onClick={() => setViewMode('timeline')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+            viewMode === 'timeline' ? 'bg-blue-600/20 text-blue-400' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          Cronologia
+        </button>
+        <button
+          onClick={() => setViewMode('calendar')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+            viewMode === 'calendar' ? 'bg-blue-600/20 text-blue-400' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          Calendário
         </button>
       </div>
 
-      {/* Timeline Items */}
-      <div className="space-y-3">
-        {filteredItinerary.length === 0 ? (
+      {viewMode === 'list' && (
+        <>
+          {/* Filter Bar */}
+          <div className="p-3 rounded-2xl glass-panel border border-slate-800 flex flex-wrap items-center gap-3 text-xs">
+            <div className="flex items-center gap-1.5">
+              <CalendarDays className="w-4 h-4 text-purple-400" />
+              <span className="font-semibold text-slate-300">Filtrar Data:</span>
+              <select
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              >
+                <option value="all">Todas as Datas ({tripItinerary.length})</option>
+                {availableDates.map(d => (
+                  <option key={d} value={d}>
+                    {new Date(d + 'T00:00:00').toLocaleDateString('pt-BR')}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-slate-300">Categoria:</span>
+              <select
+                value={selectedCategory}
+                onChange={e => setSelectedCategory(e.target.value)}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              >
+                <option value="all">Todas Categorias</option>
+                <option value="park">🎡 Parques</option>
+                <option value="restaurant">🍽️ Restaurantes</option>
+                <option value="shopping">🛍️ Compras</option>
+                <option value="transit">🚗 Deslocamentos</option>
+                <option value="tour">🗽 Passeios</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCopyDayForWhatsApp}
+              className="ml-auto px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+            >
+              {copiedDate ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  Copiado com Sucesso!
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+                  Copiar para WhatsApp
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Timeline Items */}
+          <div className="space-y-3">
+            {filteredItinerary.length === 0 ? (
           <div className="p-8 rounded-2xl glass-card text-center border border-slate-800 text-slate-400 text-xs">
             Nenhuma atividade cadastrada para os filtros selecionados. Clique em "+ Nova Atividade" para adicionar.
           </div>
@@ -296,7 +361,31 @@ export const ItineraryView: React.FC = () => {
             );
           })
         )}
-      </div>
+          </div>
+        </>
+      )}
+
+      {viewMode === 'timeline' && (
+        parkSelectedDate ? (
+          <DayTimeline items={parkDayItems} participants={participants} />
+        ) : (
+          <div className="p-8 rounded-2xl glass-card text-center border border-slate-800 text-slate-400 text-xs">
+            Nenhum dia de parque cadastrado nesta viagem.
+          </div>
+        )
+      )}
+
+      {viewMode === 'calendar' && (
+        <MonthCalendar
+          parkItems={parkItems}
+          participants={participants}
+          selectedDate={parkSelectedDate}
+          onSelectDate={date => {
+            setParkSelectedDate(date);
+            setViewMode('timeline');
+          }}
+        />
+      )}
 
       <ItineraryModal
         isOpen={isModalOpen}

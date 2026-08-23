@@ -10,7 +10,6 @@ import {
   FileText,
   ShieldCheck,
   Volume2,
-  Clock,
   FileSpreadsheet,
   MoreHorizontal,
   X
@@ -24,7 +23,6 @@ export type NavTab =
   | 'participants'
   | 'logistics'
   | 'itinerary'
-  | 'timeline'
   | 'purchases'
   | 'financial'
   | 'tasks_decisions'
@@ -70,7 +68,6 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'dashboard', group: 'hoje', label: 'Visão Geral', short: 'Hoje', icon: LayoutDashboard },
     { id: 'briefing', group: 'hoje', label: 'Briefing do Dia', short: 'Briefing', icon: Volume2 },
     { id: 'itinerary', group: 'planejamento', label: 'Roteiro & Atrações', short: 'Roteiro', icon: CalendarDays },
-    { id: 'timeline', group: 'planejamento', label: 'Cronologia', short: 'Cronologia', icon: Clock },
     { id: 'logistics', group: 'planejamento', label: 'Logística', short: 'Logística', icon: Plane },
     { id: 'participants', group: 'planejamento', label: `Grupo (${participants.length})`, short: 'Grupo', icon: Users },
     { id: 'dre', group: 'dinheiro', label: 'DRE & Orçamento', short: 'DRE', icon: FileSpreadsheet },

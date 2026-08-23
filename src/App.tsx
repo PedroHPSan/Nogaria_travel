@@ -11,7 +11,6 @@ import { DashboardView } from './features/dashboard/DashboardView';
 import { ParticipantsView } from './features/participants/ParticipantsView';
 import { LogisticsView } from './features/logistics/LogisticsView';
 import { ItineraryView } from './features/itinerary/ItineraryView';
-import { TimelineView } from './features/timeline/TimelineView';
 import { GiftCardsView } from './features/financial/GiftCardsView';
 import { PurchasesView } from './features/purchases/PurchasesView';
 import { TasksDecisionsView } from './features/tasks_decisions/TasksDecisionsView';
@@ -67,10 +66,6 @@ function MainAppContent() {
 
         {activeTab === 'itinerary' && (
           <ItineraryView />
-        )}
-
-        {activeTab === 'timeline' && (
-          <TimelineView />
         )}
 
         {activeTab === 'purchases' && (
