@@ -41,16 +41,23 @@ export function useExpensesData({
       .eq('trip_id', tripId)
       .then(({ data, error }) => {
         if (cancelado) return;
-        if (!error && data && data.length > 0) {
-          setExpenses((data as ExpenseRow[]).map(expenseFromRow));
+        if (!error && data) {
+          if (data.length > 0) {
+            setExpenses((data as ExpenseRow[]).map(expenseFromRow));
+          } else {
+            const fallbackFiltered = fallbackExpenses.filter(e => e.trip_id === tripId);
+            setExpenses(fallbackFiltered);
+          }
         } else if (fallbackExpenses.length > 0) {
-          setExpenses(fallbackExpenses);
+          setExpenses(fallbackExpenses.filter(e => e.trip_id === tripId));
+        } else {
+          setExpenses([]);
         }
         setLoading(false);
       })
       .catch(() => {
         if (!cancelado) {
-          setExpenses(fallbackExpenses);
+          setExpenses(fallbackExpenses.filter(e => e.trip_id === tripId));
           setLoading(false);
         }
       });

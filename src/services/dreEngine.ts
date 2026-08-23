@@ -10,6 +10,27 @@ import type {
   Currency
 } from '../types/database.types';
 
+export type DreItemSource = 'flight' | 'accommodation' | 'transport' | 'purchase' | 'itinerary' | 'manual_expense';
+
+export interface DreLineItem {
+  id: string;
+  trip_id: string;
+  source: DreItemSource;
+  source_entity_id?: string;
+  description: string;
+  category: Expense['category'];
+  amount: number;
+  currency: Currency;
+  amount_usd: number;
+  amount_brl: number;
+  exchange_rate: number;
+  paid_by_id?: string;
+  beneficiary_ids: string[];
+  date: string;
+  status: 'paid' | 'pending';
+  is_synthetic?: boolean;
+}
+
 export interface CategoryBudgetGoal {
   category: Expense['category'];
   planned_amount_usd: number;
@@ -36,7 +57,7 @@ export interface DreCategorySummary {
   variance_brl: number;
   variance_pct: number;
   execution_rate_pct: number;
-  expenses: Expense[];
+  items: DreLineItem[];
   item_count: number;
   is_over_budget: boolean;
 }
@@ -57,7 +78,7 @@ export interface ParticipantDreSummary {
   status: 'creditor' | 'debtor' | 'balanced';
   individual_purchases_usd: number;
   shared_expenses_usd: number;
-  expenses_involved: Expense[];
+  items_involved: DreLineItem[];
 }
 
 export interface DebtSettlement {
@@ -175,6 +196,7 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
     accommodations = [],
     transports = [],
     purchases = [],
+    itinerary = [],
     giftCards = [],
     exchangeRate,
     currency,
@@ -182,8 +204,168 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
   } = params;
 
   const rate = exchangeRate > 0 ? exchangeRate : 5.62;
+  const toUsd = (val: number, curr: Currency) => (curr === 'USD' ? val : val / rate);
+  const toBrl = (val: number, curr: Currency) => (curr === 'BRL' ? val : val * rate);
 
-  // 1. Agrupar despesas por categoria
+  // 1. Sintetizar itens de todas as fontes em DreLineItem
+  const unifiedItems: DreLineItem[] = [];
+  const tripId = participants.length > 0 ? participants[0].trip_id : 'unknown';
+
+  // 1.1 Voos
+  flights.forEach(f => {
+    if (f.price_cash) {
+      const amount = f.price_cash;
+      const isPaid = f.status === 'booked' || f.status === 'confirmed';
+      unifiedItems.push({
+        id: `synth-flight-${f.id}`,
+        trip_id: tripId,
+        source: 'flight',
+        source_entity_id: f.id,
+        description: `Voo: ${f.airline} (${f.flight_number || 'ND'})`,
+        category: 'flight',
+        amount,
+        currency: f.currency,
+        amount_usd: toUsd(amount, f.currency),
+        amount_brl: toBrl(amount, f.currency),
+        exchange_rate: rate,
+        paid_by_id: undefined, // Voos não têm pagador explícito mapeado neste momento, assumimos rateio puro sem desembolso pessoal a menos que registrado em expense
+        beneficiary_ids: f.passenger_ids || [],
+        date: f.departure_time,
+        status: isPaid ? 'paid' : 'pending',
+        is_synthetic: true
+      });
+    }
+  });
+
+  // 1.2 Hospedagens
+  accommodations.forEach(a => {
+    if (a.price_total) {
+      const isPaid = a.status === 'confirmed';
+      unifiedItems.push({
+        id: `synth-acc-${a.id}`,
+        trip_id: tripId,
+        source: 'accommodation',
+        source_entity_id: a.id,
+        description: `Hospedagem: ${a.name}`,
+        category: 'accommodation',
+        amount: a.price_total,
+        currency: a.currency,
+        amount_usd: toUsd(a.price_total, a.currency),
+        amount_brl: toBrl(a.price_total, a.currency),
+        exchange_rate: rate,
+        paid_by_id: undefined,
+        beneficiary_ids: a.guest_ids || [],
+        date: a.check_in,
+        status: isPaid ? 'paid' : 'pending',
+        is_synthetic: true
+      });
+    }
+  });
+
+  // 1.3 Transportes
+  transports.forEach(t => {
+    if (t.price_total) {
+      const isPaid = t.status === 'reserved' || t.status === 'active' || t.status === 'completed';
+      unifiedItems.push({
+        id: `synth-trans-${t.id}`,
+        trip_id: tripId,
+        source: 'transport',
+        source_entity_id: t.id,
+        description: `Transporte: ${t.company} - ${t.vehicle_type}`,
+        category: 'transport',
+        amount: t.price_total,
+        currency: t.currency,
+        amount_usd: toUsd(t.price_total, t.currency),
+        amount_brl: toBrl(t.price_total, t.currency),
+        exchange_rate: rate,
+        paid_by_id: undefined,
+        beneficiary_ids: [], // Rateio geral
+        date: t.pickup_time,
+        status: isPaid ? 'paid' : 'pending',
+        is_synthetic: true
+      });
+    }
+  });
+
+  // 1.4 Compras
+  purchases.forEach(p => {
+    const amount = p.actual_paid_usd !== undefined ? p.actual_paid_usd : (p.target_price_usd * (p.quantity || 1));
+    const isPaid = p.status === 'bought' || p.status === 'delivered_hotel';
+    unifiedItems.push({
+      id: `synth-purch-${p.id}`,
+      trip_id: tripId,
+      source: 'purchase',
+      source_entity_id: p.id,
+      description: `Compra: ${p.item_name} ${p.store ? \`(\${p.store})\` : ''}`,
+      category: 'shopping',
+      amount,
+      currency: 'USD',
+      amount_usd: amount,
+      amount_brl: amount * rate,
+      exchange_rate: rate,
+      paid_by_id: undefined,
+      beneficiary_ids: p.target_participant_id ? [p.target_participant_id] : [],
+      date: p.created_at || new Date().toISOString(),
+      status: isPaid ? 'paid' : 'pending',
+      is_synthetic: true
+    });
+  });
+
+  // 1.5 Roteiro / Ingressos
+  itinerary.forEach(i => {
+    if (i.estimated_cost && i.estimated_cost > 0) {
+      const isPaid = i.status === 'confirmed' || i.status === 'completed';
+      const cat: Expense['category'] = i.type === 'park' || i.type === 'show' ? 'tickets' : (i.type === 'dining' ? 'food' : 'other');
+      unifiedItems.push({
+        id: `synth-itin-${i.id}`,
+        trip_id: tripId,
+        source: 'itinerary',
+        source_entity_id: i.id,
+        description: `Roteiro: ${i.title}`,
+        category: cat,
+        amount: i.estimated_cost,
+        currency: 'USD',
+        amount_usd: i.estimated_cost,
+        amount_brl: i.estimated_cost * rate,
+        exchange_rate: rate,
+        paid_by_id: undefined,
+        beneficiary_ids: i.participant_ids || [],
+        date: i.start_time,
+        status: isPaid ? 'paid' : 'pending',
+        is_synthetic: true
+      });
+    }
+  });
+
+  // 1.6 Despesas Manuais
+  expenses.forEach(e => {
+    unifiedItems.push({
+      id: e.id,
+      trip_id: e.trip_id,
+      source: 'manual_expense',
+      source_entity_id: e.id,
+      description: e.description,
+      category: e.category,
+      amount: e.amount,
+      currency: e.currency,
+      amount_usd: e.amount_usd || toUsd(e.amount, e.currency),
+      amount_brl: e.amount_brl || toBrl(e.amount, e.currency),
+      exchange_rate: e.exchange_rate || rate,
+      paid_by_id: e.paid_by_id,
+      beneficiary_ids: e.beneficiary_ids || [],
+      date: e.date,
+      status: e.status === 'reimbursed' ? 'paid' : (e.status === 'paid' ? 'paid' : 'pending'),
+      is_synthetic: false
+    });
+  });
+
+  // Calcular economia de Gift Cards
+  const gcNominalUsd = giftCards.reduce((acc, g) => acc + (g.currency === 'USD' ? g.nominal_value : g.nominal_value / rate), 0);
+  const gcNetCostUsd = giftCards.reduce((acc, g) => acc + (g.currency === 'USD' ? g.net_cost : g.net_cost / rate), 0);
+  const giftCardSavingsUsd = Math.max(0, gcNominalUsd - gcNetCostUsd);
+  const giftCardSavingsBrl = giftCardSavingsUsd * rate;
+
+  // 2. Agrupar despesas por categoria
   const categoriesList: Expense['category'][] = [
     'flight',
     'accommodation',
@@ -195,55 +377,29 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
     'other'
   ];
 
-  // Helper de conversão
-  const toUsd = (val: number, curr: Currency) => (curr === 'USD' ? val : val / rate);
-  const toBrl = (val: number, curr: Currency) => (curr === 'BRL' ? val : val * rate);
-
-  // Calcular economia de Gift Cards
-  const gcNominalUsd = giftCards.reduce((acc, g) => acc + (g.currency === 'USD' ? g.nominal_value : g.nominal_value / rate), 0);
-  const gcNetCostUsd = giftCards.reduce((acc, g) => acc + (g.currency === 'USD' ? g.net_cost : g.net_cost / rate), 0);
-  const giftCardSavingsUsd = Math.max(0, gcNominalUsd - gcNetCostUsd);
-  const giftCardSavingsBrl = giftCardSavingsUsd * rate;
-
   const categorySummaries: DreCategorySummary[] = categoriesList.map(cat => {
     const meta = DEFAULT_CATEGORY_META[cat];
-    const catExpenses = expenses.filter(e => e.category === cat);
+    const catItems = unifiedItems.filter(e => e.category === cat);
 
     // Gastos realizados (pagos)
-    const paidExpenses = catExpenses.filter(e => e.status === 'paid' || e.status === 'reimbursed');
-    const actualUsd = paidExpenses.reduce((sum, e) => sum + (e.amount_usd || toUsd(e.amount, e.currency)), 0);
-    const actualBrl = paidExpenses.reduce((sum, e) => sum + (e.amount_brl || toBrl(e.amount, e.currency)), 0);
+    const paidItems = catItems.filter(e => e.status === 'paid');
+    const actualUsd = paidItems.reduce((sum, e) => sum + e.amount_usd, 0);
+    const actualBrl = paidItems.reduce((sum, e) => sum + e.amount_brl, 0);
 
     // Gastos pendentes (lançados mas não pagos)
-    const pendingExpenses = catExpenses.filter(e => e.status === 'pending');
-    const pendingUsd = pendingExpenses.reduce((sum, e) => sum + (e.amount_usd || toUsd(e.amount, e.currency)), 0);
-    const pendingBrl = pendingExpenses.reduce((sum, e) => sum + (e.amount_brl || toBrl(e.amount, e.currency)), 0);
+    const pendingItems = catItems.filter(e => e.status === 'pending');
+    const pendingUsd = pendingItems.reduce((sum, e) => sum + e.amount_usd, 0);
+    const pendingBrl = pendingItems.reduce((sum, e) => sum + e.amount_brl, 0);
 
-    // Planejado automático baseado em entidades do sistema
-    let autoPlannedUsd = 0;
-
-    if (cat === 'flight') {
-      const flightsTotalUsd = flights.reduce((sum, f) => sum + (f.price_cash ? (f.currency === 'USD' ? f.price_cash : f.price_cash / rate) : 0), 0);
-      autoPlannedUsd = Math.max(flightsTotalUsd, actualUsd + pendingUsd);
-    } else if (cat === 'accommodation') {
-      const hotelsTotalUsd = accommodations.reduce((sum, a) => sum + (a.currency === 'USD' ? a.price_total : a.price_total / rate), 0);
-      autoPlannedUsd = Math.max(hotelsTotalUsd, actualUsd + pendingUsd);
-    } else if (cat === 'transport') {
-      const transportTotalUsd = transports.reduce((sum, t) => sum + (t.currency === 'USD' ? t.price_total : t.price_total / rate), 0);
-      autoPlannedUsd = Math.max(transportTotalUsd, actualUsd + pendingUsd);
-    } else if (cat === 'shopping') {
-      const purchasesTotalUsd = purchases.reduce((sum, p) => sum + p.target_price_usd * (p.quantity || 1), 0);
-      autoPlannedUsd = Math.max(purchasesTotalUsd, actualUsd + pendingUsd);
-    } else if (cat === 'food') {
-      // Média estimada para alimentação do grupo se não houver meta
-      autoPlannedUsd = Math.max(1500, actualUsd + pendingUsd);
-    } else {
-      autoPlannedUsd = actualUsd + pendingUsd;
+    // Planejado automático = Max(somatório dos itens, valor default)
+    let autoPlannedUsd = actualUsd + pendingUsd;
+    if (cat === 'food' && autoPlannedUsd < 1500 && actualUsd + pendingUsd === 0) {
+      autoPlannedUsd = 1500;
     }
 
     // Se houver customGoal definido pelo usuário para esta categoria, ele prevalece
     const customGoal = customGoals[cat];
-    const finalPlannedUsd = customGoal !== undefined && customGoal > 0 ? customGoal : Math.max(autoPlannedUsd, actualUsd + pendingUsd);
+    const finalPlannedUsd = customGoal !== undefined && customGoal > 0 ? customGoal : autoPlannedUsd;
     const finalPlannedBrl = finalPlannedUsd * rate;
 
     // Quanto ainda precisa ser provisionado (orçado - realizado)
@@ -275,8 +431,8 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
       variance_brl: Number(varianceBrl.toFixed(2)),
       variance_pct: Number(variancePct.toFixed(1)),
       execution_rate_pct: Number(executionRatePct.toFixed(1)),
-      expenses: catExpenses,
-      item_count: catExpenses.length,
+      items: catItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+      item_count: catItems.length,
       is_over_budget: isOverBudget
     };
   });
@@ -295,35 +451,33 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
   const globalExecutionRatePct = totalPlannedUsd > 0 ? (totalActualUsd / totalPlannedUsd) * 100 : 0;
   const isGlobalOverBudget = totalActualUsd > totalPlannedUsd;
 
-  // 2. DRE por Participante & Rateio
+  // 3. DRE por Participante & Rateio
   const participantSummaries: ParticipantDreSummary[] = participants.map(p => {
-    // Despesas pagas por este participante
-    const paidByThisPerson = expenses.filter(e => e.paid_by_id === p.id && e.status === 'paid');
-    const totalPaidUsd = paidByThisPerson.reduce((sum, e) => sum + (e.amount_usd || toUsd(e.amount, e.currency)), 0);
+    // Despesas pagas por este participante (apenas itens com paid_by_id)
+    const paidByThisPerson = unifiedItems.filter(e => e.paid_by_id === p.id && e.status === 'paid');
+    const totalPaidUsd = paidByThisPerson.reduce((sum, e) => sum + e.amount_usd, 0);
     const totalPaidBrl = totalPaidUsd * rate;
 
     // Despesas onde este participante é beneficiário
-    const expensesAsBeneficiary = expenses.filter(e => {
+    const itemsAsBeneficiary = unifiedItems.filter(e => {
       if (!e.beneficiary_ids || e.beneficiary_ids.length === 0) return true; // rateio geral
       return e.beneficiary_ids.includes(p.id);
     });
 
     let totalConsumedUsd = 0;
-    expenses.forEach(e => {
+    let individualPurchasesUsd = 0;
+
+    unifiedItems.forEach(e => {
       const isBeneficiary = !e.beneficiary_ids || e.beneficiary_ids.length === 0 || e.beneficiary_ids.includes(p.id);
       if (isBeneficiary) {
         const beneficiariesCount = e.beneficiary_ids && e.beneficiary_ids.length > 0 ? e.beneficiary_ids.length : participants.length || 1;
-        const itemUsd = e.amount_usd || toUsd(e.amount, e.currency);
-        totalConsumedUsd += itemUsd / beneficiariesCount;
+        totalConsumedUsd += e.amount_usd / beneficiariesCount;
+        
+        if (e.source === 'purchase' && e.beneficiary_ids.length === 1 && e.beneficiary_ids[0] === p.id) {
+            individualPurchasesUsd += e.amount_usd;
+        }
       }
     });
-
-    // Adicionar compras individuais destinadas a esta pessoa
-    const individualPurchases = purchases.filter(purch => purch.target_participant_id === p.id);
-    const individualPurchasesUsd = individualPurchases.reduce((sum, purch) => {
-      const val = purch.actual_paid_usd !== undefined ? purch.actual_paid_usd : (purch.target_price_usd * (purch.quantity || 1));
-      return sum + val;
-    }, 0);
 
     const totalConsumedBrl = totalConsumedUsd * rate;
     const netBalanceUsd = totalPaidUsd - totalConsumedUsd;
@@ -349,11 +503,11 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
       status,
       individual_purchases_usd: Number(individualPurchasesUsd.toFixed(2)),
       shared_expenses_usd: Number((totalConsumedUsd - individualPurchasesUsd).toFixed(2)),
-      expenses_involved: expensesAsBeneficiary
+      items_involved: itemsAsBeneficiary
     };
   });
 
-  // 3. Algoritmo de Acerto de Contas (Debt Settlement)
+  // 4. Algoritmo de Acerto de Contas (Debt Settlement)
   const settlements: DebtSettlement[] = [];
   const creditors = participantSummaries
     .filter(p => p.net_balance_usd > 0.5)
@@ -388,8 +542,7 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
     if (deb.remaining <= 0.05) dIdx++;
   }
 
-  // 4. Fluxo Pré-Viagem vs Durante a Viagem
-  // Pré-viagem: flights, accommodation, tickets, services
+  // 5. Fluxo Pré-Viagem vs Durante a Viagem
   const preTripCategories = ['flight', 'accommodation', 'tickets', 'services'];
   const preTripSummary = categorySummaries.filter(c => preTripCategories.includes(c.category));
   const inTripSummary = categorySummaries.filter(c => !preTripCategories.includes(c.category));

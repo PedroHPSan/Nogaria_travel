@@ -46,6 +46,7 @@ export const DREView: React.FC = () => {
     accommodations,
     transports,
     purchases,
+    itinerary,
     giftCards,
     currency,
     exchangeRate,
@@ -90,12 +91,13 @@ export const DREView: React.FC = () => {
       accommodations,
       transports,
       purchases,
+      itinerary,
       giftCards,
       exchangeRate,
       currency,
       customGoals
     });
-  }, [expenses, participants, flights, accommodations, transports, purchases, giftCards, exchangeRate, currency, customGoals]);
+  }, [expenses, participants, flights, accommodations, transports, purchases, itinerary, giftCards, exchangeRate, currency, customGoals]);
 
   const toggleCategoryExpand = (cat: string) => {
     setExpandedCategories(prev => ({
