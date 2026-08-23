@@ -125,71 +125,71 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data da Atividade *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Data da Atividade *</label>
             <input
               type="date"
               required
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Horário Início *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Horário Início *</label>
             <input
               type="time"
               required
               value={timeStart}
               onChange={e => setTimeStart(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Horário Fim (Opcional)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Horário Fim (Opcional)</label>
             <input
               type="time"
               value={timeEnd}
               onChange={e => setTimeEnd(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-2">
-            <label className="block text-slate-300 font-semibold mb-1">Título da Atividade *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Título da Atividade *</label>
             <input
               type="text"
               required
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Ex: Magic Kingdom (Disney World) / Jantar Hard Rock"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Cidade *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Cidade *</label>
             <input
               type="text"
               required
               value={city}
               onChange={e => setCity(e.target.value)}
               placeholder="Ex: Orlando, Miami, Fort Lauderdale"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Categoria da Atividade</label>
+            <label className="block text-ink-300 font-semibold mb-1">Categoria da Atividade</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-medium"
             >
               {CATEGORY_OPTIONS.map(c => (
                 <option key={c.id} value={c.id}>
@@ -200,11 +200,11 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Status no Roteiro</label>
+            <label className="block text-ink-300 font-semibold mb-1">Status no Roteiro</label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="planned">Planejada</option>
               <option value="confirmed">Confirmada / Ingressos Comprados</option>
@@ -216,7 +216,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Participantes Presentes</label>
+          <label className="block text-ink-300 font-semibold mb-1">Participantes Presentes</label>
           <div className="flex flex-wrap gap-2 mt-1">
             {participants.map(p => {
               const isSelected = selectedParticipants.includes(p.id);
@@ -227,8 +227,8 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
                   onClick={() => toggleParticipant(p.id)}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
                     isSelected
-                      ? 'bg-purple-600/20 text-purple-400 border-purple-500/40'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 opacity-60'
+                      ? 'bg-accent-600/20 text-accent-400 border-accent-500/40'
+                      : 'bg-ink-950 text-ink-400 border-ink-800 opacity-60'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${p.avatar_color}`} />
@@ -241,76 +241,76 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Custo Estimado (US$)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Custo Estimado (US$)</label>
             <input
               type="number"
               min="0"
               step="10"
               value={estimatedCost}
               onChange={e => setEstimatedCost(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold text-emerald-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-success-400"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Altura Mínima (cm)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Altura Mínima (cm)</label>
             <input
               type="number"
               min="0"
               placeholder="Ex: 102cm / 130cm"
               value={minHeightCm}
               onChange={e => setMinHeightCm(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 focus:outline-none focus:border-amber-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-warning-500/40 text-warning-300 focus:outline-none focus:border-warning-500 font-semibold"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Idade Mínima (Anos)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Idade Mínima (Anos)</label>
             <input
               type="number"
               min="0"
               placeholder="Ex: 18 para cassino"
               value={minAgeYears}
               onChange={e => setMinAgeYears(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer text-slate-200 font-medium">
+        <div className="p-3 rounded-xl bg-ink-950/60 border border-ink-800 flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer text-ink-200 font-medium">
             <input
               type="checkbox"
               checked={childFriendly}
               onChange={e => setChildFriendly(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
+              className="w-4 h-4 rounded text-info-600 focus:ring-info-500 bg-ink-900 border-ink-700"
             />
             Adequado para Crianças (Gabi 4a & Débora 12a)
           </label>
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Estratégia & Observações do Roteiro</label>
+          <label className="block text-ink-300 font-semibold mb-1">Estratégia & Observações do Roteiro</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Genie+ Lightning Lane agendado para 10h. Pausa de almoço no Fantasyland."
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           />
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-600/30"
+            className="px-5 py-2 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-bold shadow-lg shadow-accent-600/30"
           >
             Salvar Atividade
           </button>

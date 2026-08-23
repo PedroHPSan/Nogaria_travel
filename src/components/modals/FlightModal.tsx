@@ -117,115 +117,115 @@ export const FlightModal: React.FC<FlightModalProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Companhia Aérea *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Companhia Aérea *</label>
             <input
               type="text"
               required
               value={airline}
               onChange={e => setAirline(e.target.value)}
               placeholder="Ex: Azul / LATAM / American"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Número do Voo *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Número do Voo *</label>
             <input
               type="text"
               required
               value={flightNumber}
               onChange={e => setFlightNumber(e.target.value)}
               placeholder="Ex: AD 8702"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Programa de Fidelidade</label>
+            <label className="block text-ink-300 font-semibold mb-1">Programa de Fidelidade</label>
             <input
               type="text"
               value={loyaltyProgram}
               onChange={e => setLoyaltyProgram(e.target.value)}
               placeholder="Ex: Azul Fidelidade / Smiles"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Origem *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Origem *</label>
             <input
               type="text"
               required
               value={originAirport}
               onChange={e => setOriginAirport(e.target.value)}
               placeholder="Ex: VCP / GRU"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Destino *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Destino *</label>
             <input
               type="text"
               required
               value={destAirport}
               onChange={e => setDestAirport(e.target.value)}
               placeholder="Ex: MCO / MIA / FLL"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 uppercase"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Terminal</label>
+            <label className="block text-ink-300 font-semibold mb-1">Terminal</label>
             <input
               type="text"
               value={terminal}
               onChange={e => setTerminal(e.target.value)}
               placeholder="Ex: T1 ou T3"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Localizador (PNR)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Localizador (PNR)</label>
             <input
               type="text"
               value={bookingCode}
               onChange={e => setBookingCode(e.target.value)}
               placeholder="Ex: PDRGAB26"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 uppercase font-mono font-bold text-blue-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 uppercase font-mono font-bold text-info-400"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data / Hora Partida *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Data / Hora Partida *</label>
             <input
               type="datetime-local"
               required
               value={departureTime.substring(0, 16)}
               onChange={e => setDepartureTime(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data / Hora Chegada *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Data / Hora Chegada *</label>
             <input
               type="datetime-local"
               required
               value={arrivalTime.substring(0, 16)}
               onChange={e => setArrivalTime(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Passageiros Selecionados</label>
+          <label className="block text-ink-300 font-semibold mb-1">Passageiros Selecionados</label>
           <div className="flex flex-wrap gap-2 mt-1">
             {participants.map(p => {
               const isSelected = selectedPassengers.includes(p.id);
@@ -236,8 +236,8 @@ export const FlightModal: React.FC<FlightModalProps> = ({
                   onClick={() => togglePassenger(p.id)}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
                     isSelected
-                      ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 opacity-60'
+                      ? 'bg-info-600/20 text-info-400 border-info-500/40'
+                      : 'bg-ink-950 text-ink-400 border-ink-800 opacity-60'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${p.avatar_color}`} />
@@ -250,49 +250,49 @@ export const FlightModal: React.FC<FlightModalProps> = ({
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Valor Cash (US$)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Valor Cash (US$)</label>
             <input
               type="number"
               min="0"
               step="10"
               value={priceCash}
               onChange={e => setPriceCash(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Pontos / Milhas</label>
+            <label className="block text-ink-300 font-semibold mb-1">Pontos / Milhas</label>
             <input
               type="number"
               min="0"
               step="1000"
               value={pricePoints}
               onChange={e => setPricePoints(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Taxas (US$)</label>
+            <label className="block text-ink-300 font-semibold mb-1">Taxas (US$)</label>
             <input
               type="number"
               min="0"
               step="1"
               value={taxesAmount}
               onChange={e => setTaxesAmount(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Classe da Cabine</label>
+            <label className="block text-ink-300 font-semibold mb-1">Classe da Cabine</label>
             <select
               value={classType}
               onChange={e => setClassType(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="economy">Econômica</option>
               <option value="premium_economy">Premium Economy</option>
@@ -302,11 +302,11 @@ export const FlightModal: React.FC<FlightModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Status do Voo</label>
+            <label className="block text-ink-300 font-semibold mb-1">Status do Voo</label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             >
               <option value="confirmed">Confirmado / Emitido</option>
               <option value="booked">Reservado (Pendente)</option>
@@ -317,27 +317,27 @@ export const FlightModal: React.FC<FlightModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Observações do Voo</label>
+          <label className="block text-ink-300 font-semibold mb-1">Observações do Voo</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Emitido via pontos Azul Fidelidade com conexão em Campinas."
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           />
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-600/30"
+            className="px-5 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold shadow-lg shadow-info-600/30"
           >
             Salvar Voo
           </button>

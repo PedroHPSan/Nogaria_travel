@@ -58,7 +58,7 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
                 setDestination(e.target.value);
                 loadDining(e.target.value, maxPrice);
               }}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-warning-500 font-semibold"
             >
               <option value="Orlando / Kissimmee">Orlando / Kissimmee (Base Disney & Universal)</option>
               <option value="Miami Beach, FL">Miami Beach / South Beach</option>
@@ -66,7 +66,7 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
             </select>
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1 bg-ink-950 p-1 rounded-xl border border-ink-800">
             <button
               type="button"
               onClick={() => {
@@ -75,8 +75,8 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
               }}
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 ${
                 maxPrice === 1
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-success-600 text-white shadow-md'
+                  : 'text-ink-400 hover:text-ink-200'
               }`}
             >
               <DollarSign className="w-3.5 h-3.5" />
@@ -91,8 +91,8 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
               }}
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 ${
                 maxPrice === 2
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-info-600 text-white shadow-md'
+                  : 'text-ink-400 hover:text-ink-200'
               }`}
             >
               <DollarSign className="w-3.5 h-3.5" />
@@ -102,35 +102,35 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
         </div>
 
         {/* Family & Budget Strategy Banner */}
-        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-amber-200 text-xs">
-          <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <div className="p-3 rounded-xl bg-warning-500/10 border border-warning-500/30 flex items-start gap-2.5 text-warning-200 text-xs">
+          <Sparkles className="w-4 h-4 text-warning-400 shrink-0 mt-0.5" />
           <div>
             <strong>Estratégia de Máxima Economia:</strong> Priorize comprar frango assado e snacks no Target/Walmart para dias de parque, e utilize combos gigantes (Panda Express / Chipotle / Cicis Buffet) para dividir refeições fartas entre adultos e crianças.
           </div>
         </div>
 
         {errorMessage && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+          <div className="p-3 rounded-xl bg-danger-500/10 border border-danger-500/30 text-danger-300 text-xs">
             {errorMessage}
           </div>
         )}
 
         {/* Results List */}
         <div className="space-y-3 pt-1">
-          <div className="flex items-center justify-between text-slate-400 text-[11px]">
+          <div className="flex items-center justify-between text-ink-400 text-[11px]">
             <span>
               Opções selecionadas em <strong>{destination}</strong>
             </span>
             {fromCache && (
-              <span className="text-emerald-400 font-mono text-[10px]">
+              <span className="text-success-400 font-mono text-[10px]">
                 ⚡ Dados em cache (Custo zero de API)
               </span>
             )}
           </div>
 
           {isLoading ? (
-            <div className="p-8 text-center text-slate-400">
-              <Utensils className="w-6 h-6 animate-pulse mx-auto mb-2 text-amber-400" />
+            <div className="p-8 text-center text-ink-400">
+              <Utensils className="w-6 h-6 animate-pulse mx-auto mb-2 text-warning-400" />
               Buscando melhores restaurantes econômicos...
             </div>
           ) : (
@@ -138,24 +138,24 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
               {places.map(p => (
                 <div
                   key={p.placeId}
-                  className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/40 transition space-y-2"
+                  className="p-3.5 rounded-xl bg-ink-950 border border-ink-800 hover:border-warning-500/40 transition space-y-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success-500/10 text-success-400 border border-success-500/30">
                           {p.priceEstimate}
                         </span>
                       </div>
-                      <p className="text-slate-400 text-xs mt-0.5">{p.cuisine}</p>
+                      <p className="text-ink-400 text-xs mt-0.5">{p.cuisine}</p>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       {p.kidFriendly && (
                         <span
                           title="Ideal para crianças (Gabriela 4 anos)"
-                          className="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20 text-[10px] flex items-center gap-1 font-semibold"
+                          className="px-2 py-0.5 rounded-md bg-accent-500/10 text-accent-300 border border-accent-500/20 text-[10px] flex items-center gap-1 font-semibold"
                         >
                           <Baby className="w-3 h-3" /> Kids
                         </span>
@@ -163,7 +163,7 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
                       {p.lactoseFreeFriendly && (
                         <span
                           title="Opções sem lactose para Débora"
-                          className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20 text-[10px] flex items-center gap-1 font-semibold"
+                          className="px-2 py-0.5 rounded-md bg-info-500/10 text-info-300 border border-info-500/20 text-[10px] flex items-center gap-1 font-semibold"
                         >
                           <Heart className="w-3 h-3" /> Sem Lactose
                         </span>
@@ -172,24 +172,24 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
                   </div>
 
                   {/* Budget Saving Tip */}
-                  <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] text-amber-300 flex items-start gap-1.5">
+                  <div className="p-2 rounded-lg bg-ink-900/80 border border-ink-800 text-[11px] text-warning-300 flex items-start gap-1.5">
                     <span className="font-bold shrink-0">💡 Dica de Economia:</span>
                     <span>{p.budgetSavingTip}</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400 border-t border-slate-900">
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-ink-400 border-t border-ink-900">
                     <div className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+                      <MapPin className="w-3 h-3 text-ink-500 shrink-0" />
                       <span className="truncate max-w-xs">{p.address}</span>
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
                       {p.rating && (
-                        <span className="flex items-center gap-1 font-bold text-amber-400">
-                          <Star className="w-3 h-3 fill-amber-400" />
+                        <span className="flex items-center gap-1 font-bold text-warning-400">
+                          <Star className="w-3 h-3 fill-warning-400" />
                           {p.rating}
                           {p.userRatingsTotal && (
-                            <span className="text-slate-500 font-normal">
+                            <span className="text-ink-500 font-normal">
                               ({p.userRatingsTotal.toLocaleString()})
                             </span>
                           )}
@@ -201,7 +201,7 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
                           href={p.mapsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold"
+                          className="text-warning-400 hover:text-warning-300 flex items-center gap-1 font-semibold"
                         >
                           Maps <ExternalLink className="w-3 h-3" />
                         </a>
@@ -214,11 +214,11 @@ export const DiningRadarModal: React.FC<DiningRadarModalProps> = ({
           )}
         </div>
 
-        <div className="pt-2 border-t border-slate-800 flex justify-end">
+        <div className="pt-2 border-t border-ink-800 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Fechar
           </button>

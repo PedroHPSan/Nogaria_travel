@@ -49,7 +49,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-ink-950 text-ink-100 flex flex-col font-sans antialiased selection:bg-info-600 selection:text-white">
       <Header
         onOpenAudit={() => setActiveTab('audit')}
         onOpenAi={() => setActiveTab('ai')}
@@ -128,8 +128,8 @@ const AppOuWizard = ({ children }: { children: ReactNode }) => {
     return (
       <>
         {banner}
-        <div className="flex min-h-screen items-center justify-center bg-slate-950">
-          <p className="text-sm text-slate-400">Carregando suas viagens…</p>
+        <div className="flex min-h-screen items-center justify-center bg-ink-950">
+          <p className="text-sm text-ink-400">Carregando suas viagens…</p>
         </div>
       </>
     );

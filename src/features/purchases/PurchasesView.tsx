@@ -136,28 +136,28 @@ export const PurchasesView: React.FC = () => {
                 <h3 className="text-sm font-bold text-white">Lista de Desejos & Produtos Planejados</h3>
                 <FreeTierBadge />
               </div>
-              <span className="text-xs text-purple-400 font-semibold">Total Estimado: {formatAmount(totalTargetUsd)}</span>
+              <span className="text-xs text-accent-400 font-semibold">Total Estimado: {formatAmount(totalTargetUsd)}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsStoreRadarOpen(true)}
-                className="px-3.5 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/60 border border-purple-800/50 text-purple-200 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+                className="px-3.5 py-2 rounded-xl bg-accent-950/60 hover:bg-accent-900/60 border border-accent-800/50 text-accent-200 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
               >
-                <Search className="w-3.5 h-3.5 text-purple-400" />
+                <Search className="w-3.5 h-3.5 text-accent-400" />
                 Radar de Lojas
               </button>
               <button
                 onClick={() => setIsAssumptionsOpen(true)}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-200 font-bold text-xs transition flex items-center gap-1.5"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 Parâmetros
               </button>
               <button
                 onClick={handleOpenAddPurchase}
-                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs shadow-lg shadow-accent-600/30 transition flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 Nova Compra
@@ -196,7 +196,7 @@ export const PurchasesView: React.FC = () => {
             <h3 className="text-sm font-bold text-white">Controle de Franquia de Bagagens</h3>
             <button
               onClick={handleOpenAddLuggage}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold text-xs shadow-lg shadow-info-600/30 transition flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
               Nova Mala
@@ -209,22 +209,22 @@ export const PurchasesView: React.FC = () => {
               const weightPct = Math.min(100, Math.round(((l.current_weight_kg || 0) / l.max_weight_kg) * 100));
 
               return (
-                <div key={l.id} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4 relative">
+                <div key={l.id} className="glass-card p-5 rounded-2xl border border-ink-800 space-y-4 relative">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-xl bg-info-500/10 text-info-400 flex items-center justify-center font-bold">
                         <LuggageIcon className="w-5 h-5" />
                       </div>
                       <div>
                         <h4 className="font-bold text-base text-white">{l.bag_identifier}</h4>
-                        <p className="text-xs text-slate-400">Proprietário: <span className="font-bold text-white">{participant?.full_name}</span></p>
+                        <p className="text-xs text-ink-400">Proprietário: <span className="font-bold text-white">{participant?.full_name}</span></p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleOpenEditLuggage(l)}
-                        className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
+                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -232,7 +232,7 @@ export const PurchasesView: React.FC = () => {
                         onClick={() => {
                           if (confirm(`Deseja excluir esta mala?`)) deleteLuggage(l.id);
                         }}
-                        className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition"
+                        className="p-1.5 rounded-lg bg-danger-500/10 text-danger-400 hover:bg-danger-500/20 transition"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -241,25 +241,25 @@ export const PurchasesView: React.FC = () => {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Peso Atual / Franquia:</span>
+                      <span className="text-ink-400">Peso Atual / Franquia:</span>
                       <span className="font-bold text-white">{l.current_weight_kg || 0} kg / {l.max_weight_kg} kg</span>
                     </div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-ink-800 h-2 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${weightPct > 90 ? 'bg-rose-500' : weightPct > 70 ? 'bg-amber-500' : 'bg-blue-500'}`}
+                        className={`h-full rounded-full ${weightPct > 90 ? 'bg-danger-500' : weightPct > 70 ? 'bg-warning-500' : 'bg-info-500'}`}
                         style={{ width: `${weightPct}%` }}
                       />
                     </div>
                   </div>
 
                   {l.shopping_space_reserved_pct !== undefined && (
-                    <div className="text-xs text-purple-400 font-medium">
+                    <div className="text-xs text-accent-400 font-medium">
                       📦 Space reserved for return shopping: <strong>{l.shopping_space_reserved_pct}%</strong>
                     </div>
                   )}
 
                   {l.description && (
-                    <div className="text-xs text-slate-400 pt-2 border-t border-slate-800">
+                    <div className="text-xs text-ink-400 pt-2 border-t border-ink-800">
                       {l.description}
                     </div>
                   )}

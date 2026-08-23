@@ -199,15 +199,15 @@ export const DailyBriefingView: React.FC = () => {
         subtitle="Relatório diário em áudio e texto consolidando atrações, logística, restrições de altura para crianças e dicas financeiras."
         actions={
           <>
-            <Calendar className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-semibold text-slate-300">Data:</span>
+            <Calendar className="w-4 h-4 text-info-400" />
+            <span className="text-xs font-semibold text-ink-300">Data:</span>
             <select
               value={selectedDate}
               onChange={e => {
                 handleStopSpeech();
                 setSelectedDate(e.target.value);
               }}
-              className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-bold focus:outline-none focus:border-blue-500"
+              className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-white text-xs font-bold focus:outline-none focus:border-info-500"
             >
               {tripDates.map(d => (
                 <option key={d} value={d}>
@@ -220,17 +220,17 @@ export const DailyBriefingView: React.FC = () => {
       />
 
       {/* Audio Player Card (Falado por IA) */}
-      <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-950 shadow-xl relative overflow-hidden">
+      <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-ink-900 to-ink-950 shadow-xl relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <Sparkles className="w-3.5 h-3.5 text-accent-400" />
               Assistente de Voz IA • Leitura em Português (pt-BR)
             </div>
             <h3 className="text-lg font-bold text-white">
               Relatório Falado do Dia: {new Date(`${selectedDate}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
             </h3>
-            <p className="text-xs text-slate-300 max-w-xl">
+            <p className="text-xs text-ink-300 max-w-xl">
               Clique no botão de reprodução para ouvir o áudio executivo preparado para o grupo ({participants.map(p => p.nickname || p.full_name.split(' ')[0]).join(', ')}).
             </p>
           </div>
@@ -240,7 +240,7 @@ export const DailyBriefingView: React.FC = () => {
             {!isPlaying ? (
               <button
                 onClick={handlePlaySpeech}
-                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-2"
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-accent-600 hover:from-indigo-500 hover:to-accent-500 text-white font-bold text-xs shadow-lg shadow-accent-600/30 transition flex items-center gap-2"
               >
                 <Play className="w-4 h-4 fill-white" />
                 <span>Ouvir Briefing Falado</span>
@@ -248,7 +248,7 @@ export const DailyBriefingView: React.FC = () => {
             ) : (
               <button
                 onClick={handlePauseSpeech}
-                className="px-5 py-3 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 transition flex items-center gap-2"
+                className="px-5 py-3 rounded-2xl bg-warning-600 hover:bg-warning-500 text-white font-bold text-xs shadow-lg shadow-warning-600/30 transition flex items-center gap-2"
               >
                 <Pause className="w-4 h-4 fill-white" />
                 <span>Pausar</span>
@@ -258,10 +258,10 @@ export const DailyBriefingView: React.FC = () => {
             {(isPlaying || isPaused) && (
               <button
                 onClick={handleStopSpeech}
-                className="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-rose-400 font-bold text-xs transition"
+                className="p-3 rounded-2xl bg-ink-800 hover:bg-ink-700 text-danger-400 font-bold text-xs transition"
                 title="Parar Áudio"
               >
-                <Square className="w-4 h-4 fill-rose-400" />
+                <Square className="w-4 h-4 fill-danger-400" />
               </button>
             )}
           </div>
@@ -271,10 +271,10 @@ export const DailyBriefingView: React.FC = () => {
         {isPlaying && (
           <div className="mt-4 pt-3 border-t border-indigo-500/20 flex items-center gap-1.5 justify-center">
             <div className="w-1.5 h-6 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-1.5 h-8 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-1.5 h-8 bg-accent-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="w-1.5 h-4 bg-indigo-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            <div className="w-1.5 h-7 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '450ms' }} />
-            <div className="w-1.5 h-5 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '600ms' }} />
+            <div className="w-1.5 h-7 bg-success-400 rounded-full animate-bounce" style={{ animationDelay: '450ms' }} />
+            <div className="w-1.5 h-5 bg-accent-300 rounded-full animate-bounce" style={{ animationDelay: '600ms' }} />
             <span className="text-xs text-indigo-300 font-medium ml-2">Reproduzindo sintetizador de voz...</span>
           </div>
         )}
@@ -284,45 +284,45 @@ export const DailyBriefingView: React.FC = () => {
       <div className="grid grid-cols-1 gap-6">
         {/* Daily Itinerary & Highlights */}
         <div className="space-y-4">
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-400" />
+                <Clock className="w-4 h-4 text-info-400" />
                 Cronograma do Dia ({dayItems.length} atividades)
               </h3>
               <button
                 onClick={handleCopyText}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 hover:bg-ink-800 text-ink-300 text-xs font-semibold flex items-center gap-1.5 transition"
               >
-                {copiedText ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedText ? <Check className="w-3.5 h-3.5 text-success-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedText ? 'Copiado!' : 'Copiar Texto'}</span>
               </button>
             </div>
 
             {dayItems.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800">
+              <div className="p-6 text-center text-xs text-ink-400 bg-ink-900/40 rounded-xl border border-ink-800">
                 Nenhuma atividade agendada para este dia. Aproveite para passeios flexíveis, compras nos Outlets ou descanso na piscina do hotel.
               </div>
             ) : (
               <div className="space-y-3">
                 {dayItems.map(item => (
-                  <div key={item.id} className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                  <div key={item.id} className="p-3.5 rounded-xl bg-ink-900/60 border border-ink-800 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-info-500/10 text-info-400 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
                       {item.time_start || '09:00'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h4 className="font-bold text-sm text-white">{item.title}</h4>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-info-500/10 text-info-400 font-semibold border border-info-500/20">
                           {item.category.toUpperCase()}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">{item.location || item.city} • Valor Previsto: {formatAmount(item.estimated_cost || 0)}</p>
+                      <p className="text-xs text-ink-400 mt-0.5">{item.location || item.city} • Valor Previsto: {formatAmount(item.estimated_cost || 0)}</p>
 
                       {/* Warning if Gabi restricted */}
                       {item.min_height_cm && gabi && gabi.height_cm && item.min_height_cm > gabi.height_cm && (
-                        <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 flex items-center gap-1.5">
-                          <Ruler className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <div className="mt-2 p-2 rounded-lg bg-warning-500/10 border border-warning-500/30 text-[11px] text-warning-300 flex items-center gap-1.5">
+                          <Ruler className="w-3.5 h-3.5 text-warning-400 shrink-0" />
                           <span>Atração exige {item.min_height_cm}cm (Gabi tem {gabi.height_cm}cm). Usar <strong>Rider Switch</strong>.</span>
                         </div>
                       )}
@@ -334,12 +334,12 @@ export const DailyBriefingView: React.FC = () => {
           </div>
 
           {/* Written Full Summary Box */}
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
+          <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-3">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4 text-accent-400" />
               Relatório Executivo Escrito
             </h3>
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed whitespace-pre-line font-sans">
+            <div className="p-4 rounded-xl bg-ink-950 border border-ink-800 text-xs text-ink-300 leading-relaxed whitespace-pre-line font-sans">
               {briefingContent}
             </div>
           </div>

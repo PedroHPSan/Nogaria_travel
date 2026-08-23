@@ -33,69 +33,69 @@ export const DreTimeline: React.FC<DreTimelineProps> = ({
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Bloco 1: Pré-Viagem */}
-        <div className="glass-panel p-6 rounded-2xl border border-blue-500/30 space-y-4">
+        <div className="glass-panel p-6 rounded-2xl border border-info-500/30 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-info-500/10 text-info-400 flex items-center justify-center">
                 <Plane className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-bold text-sm text-white">Desembolsos Pré-Viagem (Custos Fixos)</h3>
-                <p className="text-[11px] text-slate-400">Passagens, hotéis parcelados, ingressos e documentação</p>
+                <p className="text-[11px] text-ink-400">Passagens, hotéis parcelados, ingressos e documentação</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs">
+          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-ink-950/80 border border-ink-800 text-xs">
             <div>
-              <span className="text-slate-400 block text-[11px]">Orçado Pré-Viagem:</span>
-              <span className="font-bold text-slate-200 text-base">
+              <span className="text-ink-400 block text-[11px]">Orçado Pré-Viagem:</span>
+              <span className="font-bold text-ink-200 text-base">
                 {formatVal(dreResult.pre_trip_planned_usd, dreResult.pre_trip_planned_brl)}
               </span>
             </div>
             <div>
-              <span className="text-emerald-400 block text-[11px]">Já Pago no Brasil:</span>
-              <span className="font-bold text-emerald-400 text-base">
+              <span className="text-success-400 block text-[11px]">Já Pago no Brasil:</span>
+              <span className="font-bold text-success-400 text-base">
                 {formatVal(dreResult.pre_trip_actual_usd, dreResult.pre_trip_actual_brl)}
               </span>
             </div>
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-ink-400">
             Essas despesas devem estar 100% quitadas antes do embarque para evitar comprometer o limite de crédito durante a viagem.
           </p>
         </div>
 
         {/* Bloco 2: Na Viagem */}
-        <div className="glass-panel p-6 rounded-2xl border border-emerald-500/30 space-y-4">
+        <div className="glass-panel p-6 rounded-2xl border border-success-500/30 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-success-500/10 text-success-400 flex items-center justify-center">
                 <Utensils className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-bold text-sm text-white">Desembolsos Durante a Viagem (Variáveis)</h3>
-                <p className="text-[11px] text-slate-400">Alimentação, compras, combustível, Uber e imprevistos</p>
+                <p className="text-[11px] text-ink-400">Alimentação, compras, combustível, Uber e imprevistos</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs">
+          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-ink-950/80 border border-ink-800 text-xs">
             <div>
-              <span className="text-slate-400 block text-[11px]">Meta de Consumo In Loco:</span>
-              <span className="font-bold text-slate-200 text-base">
+              <span className="text-ink-400 block text-[11px]">Meta de Consumo In Loco:</span>
+              <span className="font-bold text-ink-200 text-base">
                 {formatVal(dreResult.in_trip_planned_usd, dreResult.in_trip_planned_brl)}
               </span>
             </div>
             <div>
-              <span className="text-amber-400 block text-[11px]">A Levar em Moeda/Cartão:</span>
-              <span className="font-bold text-amber-300 text-base">
+              <span className="text-warning-400 block text-[11px]">A Levar em Moeda/Cartão:</span>
+              <span className="font-bold text-warning-300 text-base">
                 {formatVal(dreResult.in_trip_planned_usd - dreResult.in_trip_actual_usd, dreResult.in_trip_planned_brl - dreResult.in_trip_actual_brl)}
               </span>
             </div>
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-ink-400">
             Valor que precisa estar disponível na conta internacional (Nomad / Wise / Espécie) para os dias de viagem.
           </p>
         </div>
@@ -103,7 +103,7 @@ export const DreTimeline: React.FC<DreTimelineProps> = ({
 
       {/* Gráficos de Comparativo e Distribuição */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800">
+        <div className="glass-panel p-6 rounded-2xl border border-ink-800">
           <h4 className="text-sm font-bold text-white mb-4">
             Comparativo: Planejado vs. Realizado vs. A Provisionar
           </h4>
@@ -124,7 +124,7 @@ export const DreTimeline: React.FC<DreTimelineProps> = ({
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800">
+        <div className="glass-panel p-6 rounded-2xl border border-ink-800">
           <h4 className="text-sm font-bold text-white mb-4">
             Composição Percentual dos Gastos Realizados
           </h4>

@@ -65,33 +65,33 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
-        <div className="p-4 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between">
+      <div className="glass-panel rounded-2xl border border-ink-800 overflow-hidden">
+        <div className="p-4 bg-ink-900/60 border-b border-ink-800 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <FileSpreadsheet className="w-4 h-4 text-blue-400" />
+              <FileSpreadsheet className="w-4 h-4 text-info-400" />
               Demonstrativo Consolidado de Despesas (DRE)
             </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-ink-400 mt-0.5">
               Clique nas linhas para expandir e auditar cada comprovante/lançamento individual.
             </p>
           </div>
           <button
             onClick={() => handleOpenAddExpense()}
-            className="px-3 py-1.5 rounded-xl bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-xs font-bold flex items-center gap-1.5 transition"
+            className="px-3 py-1.5 rounded-xl bg-info-600/20 text-info-400 hover:bg-info-600 hover:text-white border border-info-500/30 text-xs font-bold flex items-center gap-1.5 transition"
           >
             <Plus className="w-3.5 h-3.5" />
             Nova Despesa
           </button>
         </div>
 
-        <div className="divide-y divide-slate-800/80">
+        <div className="divide-y divide-ink-800/80">
           {dreResult.categories.map(c => {
             const Icon = CATEGORY_ICONS[c.category] || Layers;
             const isExpanded = expandedCategories[c.category] ?? false;
 
             return (
-              <div key={c.category} className="group transition bg-slate-950/40 hover:bg-slate-900/30">
+              <div key={c.category} className="group transition bg-ink-950/40 hover:bg-ink-900/30">
                 {/* Linha Principal da Categoria */}
                 <div
                   onClick={() => toggleCategoryExpand(c.category)}
@@ -107,11 +107,11 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                     <div>
                       <div className="font-bold text-sm text-white flex items-center gap-2">
                         {c.label}
-                        <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-semibold">
+                        <span className="px-2 py-0.5 rounded-full bg-ink-800 text-ink-400 text-[10px] font-semibold">
                           {c.item_count} itens
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5 max-w-sm truncate">
+                      <div className="text-[11px] text-ink-400 mt-0.5 max-w-sm truncate">
                         {c.description}
                       </div>
                     </div>
@@ -121,41 +121,41 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 text-xs flex-1 max-w-2xl">
                     {/* Planejado */}
                     <div>
-                      <span className="text-[10px] text-slate-400 font-semibold block">Orçado (Meta)</span>
-                      <span className="font-bold text-slate-200">
+                      <span className="text-[10px] text-ink-400 font-semibold block">Orçado (Meta)</span>
+                      <span className="font-bold text-ink-200">
                         {formatVal(c.planned_usd, c.planned_brl)}
                       </span>
                     </div>
 
                     {/* Realizado */}
                     <div>
-                      <span className="text-[10px] text-emerald-400 font-semibold block">Realizado (Pago)</span>
-                      <span className="font-bold text-emerald-400">
+                      <span className="text-[10px] text-success-400 font-semibold block">Realizado (Pago)</span>
+                      <span className="font-bold text-success-400">
                         {formatVal(c.actual_usd, c.actual_brl)}
                       </span>
                     </div>
 
                     {/* A Provisionar */}
                     <div>
-                      <span className="text-[10px] text-amber-400 font-semibold block">A Provisionar</span>
-                      <span className="font-bold text-amber-300">
+                      <span className="text-[10px] text-warning-400 font-semibold block">A Provisionar</span>
+                      <span className="font-bold text-warning-300">
                         {formatVal(c.to_provision_usd, c.to_provision_brl)}
                       </span>
                     </div>
 
                     {/* Execução & Variação */}
                     <div>
-                      <span className="text-[10px] text-slate-400 font-semibold block">Executado</span>
+                      <span className="text-[10px] text-ink-400 font-semibold block">Executado</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className="w-14 bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div className="w-14 bg-ink-800 h-2 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              c.is_over_budget ? 'bg-rose-500' : 'bg-emerald-500'
+                              c.is_over_budget ? 'bg-danger-500' : 'bg-success-500'
                             }`}
                             style={{ width: `${Math.min(100, c.execution_rate_pct)}%` }}
                           />
                         </div>
-                        <span className="text-[10px] font-bold text-slate-300">
+                        <span className="text-[10px] font-bold text-ink-300">
                           {c.execution_rate_pct}%
                         </span>
                       </div>
@@ -168,12 +168,12 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                         e.stopPropagation();
                         handleOpenAddExpense(c.category);
                       }}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                      className="p-1.5 rounded-lg bg-ink-800 hover:bg-ink-700 text-ink-300 transition"
                       title="Adicionar despesa nesta categoria"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
-                    <div className="text-slate-400 group-hover:text-white transition">
+                    <div className="text-ink-400 group-hover:text-white transition">
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
                   </div>
@@ -181,20 +181,20 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
 
                 {/* Drilldown: Lista de Lançamentos da Categoria */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-1 bg-slate-950/80 border-t border-slate-900">
+                  <div className="px-4 pb-4 pt-1 bg-ink-950/80 border-t border-ink-900">
                     {c.expenses.length === 0 ? (
-                      <div className="text-center py-4 text-xs text-slate-500">
+                      <div className="text-center py-4 text-xs text-ink-500">
                         Nenhum comprovante lançado nesta categoria ainda.{' '}
                         <button
                           onClick={() => handleOpenAddExpense(c.category)}
-                          className="text-blue-400 hover:underline font-bold"
+                          className="text-info-400 hover:underline font-bold"
                         >
                           Lançar primeiro gasto
                         </button>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 flex justify-between">
+                        <div className="text-[10px] font-bold text-ink-400 uppercase tracking-wider px-2 flex justify-between">
                           <span>Comprovante / Descrição</span>
                           <span>Valor & Status</span>
                         </div>
@@ -205,7 +205,7 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                           return (
                             <div
                               key={exp.id}
-                              className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                              className="p-3 rounded-xl bg-ink-900/90 border border-ink-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                             >
                               <div className="min-w-0 flex-1">
                                 <div className="font-bold text-white flex items-center gap-2">
@@ -214,17 +214,17 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                                     onClick={() => handleToggleStatus(exp)}
                                     className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition ${
                                       exp.status === 'paid'
-                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                        : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                        ? 'bg-success-500/10 text-success-400 border-success-500/30'
+                                        : 'bg-warning-500/10 text-warning-400 border-warning-500/30'
                                     }`}
                                   >
                                     {exp.status === 'paid' ? 'Pago' : 'Pendente'}
                                   </button>
                                 </div>
-                                <div className="text-[11px] text-slate-400 mt-1 flex flex-wrap items-center gap-3">
+                                <div className="text-[11px] text-ink-400 mt-1 flex flex-wrap items-center gap-3">
                                   <span>Data: {new Date(exp.date).toLocaleDateString('pt-BR')}</span>
                                   <span>
-                                    Pago por: <strong className="text-slate-200">{payer?.nickname || payer?.full_name || 'Pedro'}</strong>
+                                    Pago por: <strong className="text-ink-200">{payer?.nickname || payer?.full_name || 'Pedro'}</strong>
                                   </span>
                                   {beneficiaries.length > 0 && (
                                     <span>
@@ -240,7 +240,7 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                                   <div className="font-extrabold text-sm text-white">
                                     {formatVal(exp.amount_usd, exp.amount_brl)}
                                   </div>
-                                  <div className="text-[10px] text-slate-400">
+                                  <div className="text-[10px] text-ink-400">
                                     {exp.currency} {exp.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                   </div>
                                 </div>
@@ -248,14 +248,14 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                                 <div className="flex items-center gap-1">
                                   <button
                                     onClick={() => handleOpenEditExpense(exp)}
-                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                                    className="p-1.5 rounded-lg bg-ink-800 hover:bg-ink-700 text-ink-300 transition"
                                     title="Editar despesa"
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => deleteExpense(exp.id)}
-                                    className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 transition"
+                                    className="p-1.5 rounded-lg bg-danger-950/40 hover:bg-danger-900/60 text-danger-400 transition"
                                     title="Excluir despesa"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />

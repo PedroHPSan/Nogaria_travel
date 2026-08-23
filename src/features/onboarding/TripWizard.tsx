@@ -11,7 +11,7 @@ interface RascunhoParticipante {
   budget_limit_usd: string;
 }
 
-const CORES = ['bg-emerald-500', 'bg-purple-500', 'bg-blue-500', 'bg-orange-500', 'bg-rose-500'];
+const CORES = ['bg-success-500', 'bg-accent-500', 'bg-info-500', 'bg-orange-500', 'bg-danger-500'];
 
 const participanteVazio = (): RascunhoParticipante => ({
   full_name: '',
@@ -106,11 +106,11 @@ export const TripWizard: React.FC = () => {
     setCriando(false);
   };
 
-  const campo = 'w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none';
+  const campo = 'w-full rounded-lg border border-ink-700 bg-ink-900/60 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-600 focus:border-info-500 focus:outline-none';
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 p-4">
-      <div className="mb-4 flex w-full max-w-2xl items-center justify-between px-2 text-xs text-slate-400">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-ink-950 p-4">
+      <div className="mb-4 flex w-full max-w-2xl items-center justify-between px-2 text-xs text-ink-400">
         <div>
           Conectado como <strong className="text-white">{profile?.email}</strong>
         </div>
@@ -119,7 +119,7 @@ export const TripWizard: React.FC = () => {
             <select
               value={activeTenantId ?? ''}
               onChange={e => setActiveTenantId(e.target.value)}
-              className="rounded bg-slate-900 border border-slate-700 px-2 py-1 text-slate-200"
+              className="rounded bg-ink-900 border border-ink-700 px-2 py-1 text-ink-200"
             >
               {tenantMemberships.map(m => (
                 <option key={m.tenant.id} value={m.tenant.id}>
@@ -130,7 +130,7 @@ export const TripWizard: React.FC = () => {
           )}
           <button
             onClick={() => signOut()}
-            className="text-rose-400 hover:text-rose-300 font-semibold"
+            className="text-danger-400 hover:text-danger-300 font-semibold"
           >
             Sair da Conta
           </button>
@@ -139,16 +139,16 @@ export const TripWizard: React.FC = () => {
 
       <div className="glass-panel w-full max-w-2xl rounded-2xl p-8">
         <div className="mb-6 flex items-center gap-3">
-          {passo === 1 && <Plane className="text-blue-400" size={22} />}
-          {passo === 2 && <Users className="text-purple-400" size={22} />}
-          {passo === 3 && <Check className="text-emerald-400" size={22} />}
+          {passo === 1 && <Plane className="text-info-400" size={22} />}
+          {passo === 2 && <Users className="text-accent-400" size={22} />}
+          {passo === 3 && <Check className="text-success-400" size={22} />}
           <div>
             <h1 className="text-xl font-bold text-white">
               {passo === 1 && 'Sua primeira viagem'}
               {passo === 2 && 'Quem vai com você'}
               {passo === 3 && 'Confirme e comece'}
             </h1>
-            <p className="text-xs text-slate-500">Passo {passo} de 3</p>
+            <p className="text-xs text-ink-500">Passo {passo} de 3</p>
           </div>
         </div>
 
@@ -157,11 +157,11 @@ export const TripWizard: React.FC = () => {
             <input className={campo} placeholder="Nome da viagem (ex: Miami e Orlando 2026)" value={titulo} onChange={e => setTitulo(e.target.value)} />
             <input className={campo} placeholder="Destino principal (ex: Orlando, EUA)" value={destino} onChange={e => setDestino(e.target.value)} />
             <div className="grid grid-cols-2 gap-3">
-              <label className="text-xs text-slate-400">
+              <label className="text-xs text-ink-400">
                 Ida
                 <input type="date" className={`${campo} mt-1`} value={ida} onChange={e => setIda(e.target.value)} />
               </label>
-              <label className="text-xs text-slate-400">
+              <label className="text-xs text-ink-400">
                 Volta
                 <input type="date" className={`${campo} mt-1`} value={volta} onChange={e => setVolta(e.target.value)} />
               </label>
@@ -174,9 +174,9 @@ export const TripWizard: React.FC = () => {
             {pessoas.map((p, i) => (
               <div key={i} className="glass-card rounded-xl p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400">Pessoa {i + 1}</span>
+                  <span className="text-xs font-semibold text-ink-400">Pessoa {i + 1}</span>
                   {pessoas.length > 1 && (
-                    <button onClick={() => setPessoas(prev => prev.filter((_, idx) => idx !== i))} className="text-rose-400 hover:text-rose-300">
+                    <button onClick={() => setPessoas(prev => prev.filter((_, idx) => idx !== i))} className="text-danger-400 hover:text-danger-300">
                       <Trash2 size={14} />
                     </button>
                   )}
@@ -184,11 +184,11 @@ export const TripWizard: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <input className={campo} placeholder="Nome completo" value={p.full_name} onChange={e => alterarPessoa(i, 'full_name', e.target.value)} />
                   <input className={campo} placeholder="Apelido" value={p.nickname} onChange={e => alterarPessoa(i, 'nickname', e.target.value)} />
-                  <label className="text-xs text-slate-400">
+                  <label className="text-xs text-ink-400">
                     Nascimento
                     <input type="date" className={`${campo} mt-1`} value={p.birth_date} onChange={e => alterarPessoa(i, 'birth_date', e.target.value)} />
                   </label>
-                  <label className="text-xs text-slate-400">
+                  <label className="text-xs text-ink-400">
                     Orçamento (US$)
                     <input type="number" min="0" className={`${campo} mt-1`} value={p.budget_limit_usd} onChange={e => alterarPessoa(i, 'budget_limit_usd', e.target.value)} />
                   </label>
@@ -196,7 +196,7 @@ export const TripWizard: React.FC = () => {
                 </div>
               </div>
             ))}
-            <button onClick={() => setPessoas(prev => [...prev, participanteVazio()])} className="flex items-center gap-1.5 text-sm font-semibold text-blue-400 hover:text-blue-300">
+            <button onClick={() => setPessoas(prev => [...prev, participanteVazio()])} className="flex items-center gap-1.5 text-sm font-semibold text-info-400 hover:text-info-300">
               <Plus size={14} /> Adicionar pessoa
             </button>
           </div>
@@ -206,18 +206,18 @@ export const TripWizard: React.FC = () => {
           <div className="space-y-3 text-sm">
             <div className="glass-card rounded-xl p-4">
               <p className="font-bold text-white">{titulo}</p>
-              <p className="text-slate-400">{destino}</p>
-              <p className="mt-1 text-xs text-slate-500">{ida} até {volta}</p>
+              <p className="text-ink-400">{destino}</p>
+              <p className="mt-1 text-xs text-ink-500">{ida} até {volta}</p>
             </div>
             <div className="glass-card rounded-xl p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {pessoas.length === 1 ? '1 participante' : `${pessoas.length} participantes`}
               </p>
               <ul className="space-y-1">
                 {pessoas.map((p, i) => (
-                  <li key={i} className="flex justify-between text-slate-300">
+                  <li key={i} className="flex justify-between text-ink-300">
                     <span>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</span>
-                    <span className="text-slate-500">US$ {Number(p.budget_limit_usd) || 0}</span>
+                    <span className="text-ink-500">US$ {Number(p.budget_limit_usd) || 0}</span>
                   </li>
                 ))}
               </ul>
@@ -225,20 +225,20 @@ export const TripWizard: React.FC = () => {
           </div>
         )}
 
-        {erro && <p className="mt-4 text-sm text-rose-400">{erro}</p>}
+        {erro && <p className="mt-4 text-sm text-danger-400">{erro}</p>}
 
         <div className="mt-6 flex justify-between">
           <button
             onClick={() => { setErro(''); setPasso(p => (p === 3 ? 2 : 1)); }}
             disabled={passo === 1}
-            className="rounded-lg px-4 py-2 text-sm text-slate-400 disabled:opacity-0 hover:text-slate-200"
+            className="rounded-lg px-4 py-2 text-sm text-ink-400 disabled:opacity-0 hover:text-ink-200"
           >
             Voltar
           </button>
           <button
             onClick={passo === 3 ? concluir : avancar}
             disabled={criando}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-60"
+            className="rounded-lg bg-info-600 px-5 py-2 text-sm font-semibold text-white hover:bg-info-500 disabled:opacity-60"
           >
             {passo === 3 ? (criando ? 'Criando...' : 'Criar viagem') : 'Continuar'}
           </button>

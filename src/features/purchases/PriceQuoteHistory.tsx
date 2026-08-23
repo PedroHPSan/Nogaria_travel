@@ -15,7 +15,7 @@ export const PriceQuoteHistory: React.FC<Props> = ({ quotes, itemId, market }) =
     .map(q => ({ data: q.observed_at.slice(5), preco: q.price, loja: q.store_name }));
 
   if (series.length < 2) {
-    return <p className="text-[11px] text-slate-500">Registre ao menos duas cotações para ver a tendência.</p>;
+    return <p className="text-[11px] text-ink-500">Registre ao menos duas cotações para ver a tendência.</p>;
   }
 
   return (

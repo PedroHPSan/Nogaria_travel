@@ -33,7 +33,7 @@ export const DocumentsView: React.FC = () => {
         actions={
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5 self-start sm:self-auto"
+            className="px-4 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold text-xs shadow-lg shadow-info-600/30 transition flex items-center gap-1.5 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             Anexar Documento
@@ -42,24 +42,24 @@ export const DocumentsView: React.FC = () => {
       />
 
       {/* Filter & Search Bar */}
-      <div className="p-3 rounded-2xl glass-panel border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="p-3 rounded-2xl glass-panel border border-ink-800 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-slate-400" />
+          <Search className="w-4 h-4 text-ink-400" />
           <input
             type="text"
             placeholder="Buscar por título ou voucher..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500 w-60"
+            className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-white text-xs focus:outline-none focus:border-info-500 w-60"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 font-medium">Categoria:</span>
+          <span className="text-ink-400 font-medium">Categoria:</span>
           <select
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500 font-semibold"
+            className="px-3 py-1.5 rounded-xl bg-ink-900 border border-ink-800 text-white text-xs focus:outline-none focus:border-info-500 font-semibold"
           >
             <option value="all">Todas as Categorias ({tripDocs.length})</option>
             <option value="flight">✈️ Voos & Passagens</option>
@@ -80,14 +80,14 @@ export const DocumentsView: React.FC = () => {
             : null;
 
           return (
-            <div key={doc.id} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-3 relative hover:border-blue-500/30 transition">
+            <div key={doc.id} className="glass-card p-5 rounded-2xl border border-ink-800 space-y-3 relative hover:border-info-500/30 transition">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-info-500/10 text-info-400 flex items-center justify-center font-bold">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-info-500/10 text-info-400 border border-info-500/20">
                       {doc.category.toUpperCase()}
                     </span>
                     <h4 className="font-bold text-sm text-white mt-1 leading-tight">{doc.title}</h4>
@@ -98,7 +98,7 @@ export const DocumentsView: React.FC = () => {
                   onClick={() => {
                     if (confirm(`Deseja excluir "${doc.title}"?`)) deleteDocument(doc.id);
                   }}
-                  className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition"
+                  className="p-1.5 rounded-lg bg-danger-500/10 text-danger-400 hover:bg-danger-500/20 transition"
                   title="Excluir Documento"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -106,18 +106,18 @@ export const DocumentsView: React.FC = () => {
               </div>
 
               {doc.notes && (
-                <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300">
+                <div className="p-2.5 rounded-xl bg-ink-900/60 border border-ink-800 text-xs text-ink-300">
                   {doc.notes}
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-800 text-slate-400">
+              <div className="flex items-center justify-between text-xs pt-2 border-t border-ink-800 text-ink-400">
                 <span>{doc.file_size || 'PDF'}{linkedParticipant ? ` • ${linkedParticipant.full_name}` : ''}</span>
                 <a
                   href={doc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+                  className="text-info-400 hover:text-info-300 font-semibold flex items-center gap-1"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   Abrir Voucher

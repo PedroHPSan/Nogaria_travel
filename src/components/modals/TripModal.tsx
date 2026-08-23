@@ -45,82 +45,82 @@ export const TripModal: React.FC<TripModalProps> = ({
       subtitle="Cadastre um novo projeto de viagem inteligente para grupos, famílias ou viagens corporativas."
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-        <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center gap-2 text-blue-300">
-          <Globe className="w-4 h-4 text-blue-400 shrink-0" />
+        <div className="p-3 rounded-xl bg-info-500/10 border border-info-500/30 flex items-center gap-2 text-info-300">
+          <Globe className="w-4 h-4 text-info-400 shrink-0" />
           <span>SaaS Ready: Você pode gerenciar múltiplos projetos de viagem isolados na mesma conta.</span>
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Nome do Projeto de Viagem *</label>
+          <label className="block text-ink-300 font-semibold mb-1">Nome do Projeto de Viagem *</label>
           <input
             type="text"
             required
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Ex: Paris & Londres 2027 / Nova York Réveillon"
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold text-sm"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Destinos Principais *</label>
+          <label className="block text-ink-300 font-semibold mb-1">Destinos Principais *</label>
           <input
             type="text"
             required
             value={destinationMain}
             onChange={e => setDestinationMain(e.target.value)}
             placeholder="Ex: França, Reino Unido e arredores"
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data Início *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Data Início *</label>
             <input
               type="date"
               required
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Data Término *</label>
+            <label className="block text-ink-300 font-semibold mb-1">Data Término *</label>
             <input
               type="date"
               required
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Moeda Base do Projeto</label>
+          <label className="block text-ink-300 font-semibold mb-1">Moeda Base do Projeto</label>
           <select
             value={currencyBase}
             onChange={e => setCurrencyBase(e.target.value as any)}
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500 font-semibold"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
           >
             <option value="USD">Dólar Americano (USD)</option>
             <option value="BRL">Real Brasileiro (BRL)</option>
           </select>
         </div>
 
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+        <div className="pt-3 border-t border-ink-800 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+            className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 font-semibold"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-600/30 flex items-center gap-1.5"
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-info-600 to-indigo-600 hover:from-info-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-info-600/30 flex items-center gap-1.5"
           >
             <Sparkles className="w-4 h-4" />
             Criar Viagem
