@@ -57,3 +57,7 @@ docs/Documentos oficiais viagem /PASSAGENS/PEDRO HENRIQUE PALHETA SANTOS, 05SEP 
 docs/Documentos oficiais viagem /PASSAGENS/Reserva YGI6YL realizada com sucesso.pdf
 .vercel
 .env*
+
+# Local tooling (machine-specific, regenerable)
+graphify-out/
+.claude/settings.json
