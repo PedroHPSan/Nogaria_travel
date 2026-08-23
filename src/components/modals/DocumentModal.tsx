@@ -64,13 +64,13 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
       subtitle="Armazene bilhetes em PDF, apólices de seguro e comprovantes com simulação de leitura IA (OCR)."
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-        <div className="p-3.5 rounded-xl bg-gradient-to-r from-indigo-950 to-accent-950 border border-indigo-500/30 flex items-center justify-between">
+        <div className="p-3.5 rounded-xl bg-accent-500/10 border border-indigo-500/30 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <div className="font-bold text-white">Extração Inteligente de PDF (IA OCR)</div>
+              <div className="font-bold text-ink-100">Extração Inteligente de PDF (IA OCR)</div>
               <div className="text-[10px] text-ink-400">Preencha os campos automaticamente lendo um voucher PDF</div>
             </div>
           </div>
@@ -92,7 +92,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Ex: Passagens AD 8702 / Voucher Hertz SUV / Apólice Seguro Viagem"
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
           />
         </div>
 
@@ -102,7 +102,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
             <select
               value={category}
               onChange={e => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="flight">✈️ Passagem Aérea / Bilhete</option>
               <option value="hotel">🏨 Voucher de Hospedagem</option>
@@ -120,7 +120,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
               value={fileUrl}
               onChange={e => setFileUrl(e.target.value)}
               placeholder="Ex: https://drive.google.com/voucher.pdf"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -134,7 +134,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
                 setLinkedEntityId(e.target.value);
                 setLinkedEntityType(e.target.value ? 'participant' : '');
               }}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="">-- Todo o Grupo --</option>
               {participants.map(p => (
@@ -151,7 +151,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
               type="text"
               value={fileSize}
               onChange={e => setFileSize(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -163,7 +163,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Comprovante de emissão confirmada com localizador PDRGAB26."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

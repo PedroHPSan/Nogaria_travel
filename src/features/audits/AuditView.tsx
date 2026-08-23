@@ -37,28 +37,28 @@ export const AuditView: React.FC<AuditViewProps> = () => {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="glass-card p-4 rounded-2xl border border-danger-500/30">
           <div className="text-[10px] uppercase font-bold text-danger-400">Erros Críticos</div>
-          <div className="text-2xl font-extrabold text-white mt-1">{criticals.length}</div>
+          <div className="text-2xl font-extrabold text-ink-100 mt-1">{criticals.length}</div>
         </div>
 
         <div className="glass-card p-4 rounded-2xl border border-warning-500/30">
           <div className="text-[10px] uppercase font-bold text-warning-400">Alertas Logísticos</div>
-          <div className="text-2xl font-extrabold text-white mt-1">{warnings.length}</div>
+          <div className="text-2xl font-extrabold text-ink-100 mt-1">{warnings.length}</div>
         </div>
 
         <div className="glass-card p-4 rounded-2xl border border-info-500/30">
           <div className="text-[10px] uppercase font-bold text-info-400">Recomendações</div>
-          <div className="text-2xl font-extrabold text-white mt-1">{infos.length}</div>
+          <div className="text-2xl font-extrabold text-ink-100 mt-1">{infos.length}</div>
         </div>
 
         <div className="glass-card p-4 rounded-2xl border border-success-500/30">
           <div className="text-[10px] uppercase font-bold text-success-400">Resolvidos</div>
-          <div className="text-2xl font-extrabold text-white mt-1">{resolved.length}</div>
+          <div className="text-2xl font-extrabold text-ink-100 mt-1">{resolved.length}</div>
         </div>
       </div>
 
       {/* Unresolved Audit Items */}
       <div className="space-y-3">
-        <h3 className="text-sm font-bold text-white">Apontamentos Ativos ({unresolved.length})</h3>
+        <h3 className="text-sm font-bold text-ink-100">Apontamentos Ativos ({unresolved.length})</h3>
 
         {unresolved.map(finding => {
           const isCritical = finding.severity === 'critical';
@@ -86,7 +86,7 @@ export const AuditView: React.FC<AuditViewProps> = () => {
                     }`}>
                       {finding.severity.toUpperCase()} • {finding.code}
                     </span>
-                    <h4 className="font-bold text-base text-white mt-0.5">{finding.title}</h4>
+                    <h4 className="font-bold text-base text-ink-100 mt-0.5">{finding.title}</h4>
                   </div>
                 </div>
 

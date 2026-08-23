@@ -50,7 +50,7 @@ export const ParticipantsView: React.FC = () => {
               placeholder="Buscar participante..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-xs text-white focus:outline-none focus:border-info-500 w-44"
+              className="px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-xs text-ink-100 focus:outline-none focus:border-info-500 w-44"
             />
             <button
               onClick={handleOpenAdd}
@@ -72,7 +72,7 @@ export const ParticipantsView: React.FC = () => {
                   {p.nickname ? p.nickname[0] : p.full_name[0]}
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-white">{p.full_name}</h3>
+                  <h3 className="font-bold text-base text-ink-100">{p.full_name}</h3>
                   <p className="text-xs text-ink-400">
                     {p.age} anos • {p.relationship}
                   </p>
@@ -88,7 +88,7 @@ export const ParticipantsView: React.FC = () => {
 
                 <button
                   onClick={() => handleOpenEdit(p)}
-                  className="p-1.5 rounded-lg bg-ink-800/80 text-ink-300 hover:text-white hover:bg-ink-700 transition"
+                  className="p-1.5 rounded-lg bg-ink-800/80 text-ink-300 hover:text-ink-100 hover:bg-ink-700 transition"
                   title="Editar Participante"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
@@ -120,7 +120,7 @@ export const ParticipantsView: React.FC = () => {
                 <FileText className="w-4 h-4 text-success-400 shrink-0" />
                 <div className="min-w-0">
                   <div className="text-ink-400 text-[10px]">Passaporte / Visto</div>
-                  <div className="font-semibold text-white truncate">
+                  <div className="font-semibold text-ink-100 truncate">
                     {p.passport_number || 'N/A'} ({p.visa_status === 'valid' ? 'Visto OK' : p.visa_status})
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export const ParticipantsView: React.FC = () => {
                 <DollarSign className="w-4 h-4 text-accent-400 shrink-0" />
                 <div>
                   <div className="text-ink-400 text-[10px]">Teto Orçamentário</div>
-                  <div className="font-semibold text-white">{formatAmount(p.budget_limit_usd || 0)}</div>
+                  <div className="font-semibold text-ink-100">{formatAmount(p.budget_limit_usd || 0)}</div>
                 </div>
               </div>
 
@@ -140,7 +140,7 @@ export const ParticipantsView: React.FC = () => {
                   <Ruler className="w-4 h-4 text-warning-400 shrink-0" />
                   <div>
                     <div className="text-ink-400 text-[10px]">Altura Atual</div>
-                    <div className="font-semibold text-white">{p.height_cm} cm</div>
+                    <div className="font-semibold text-ink-100">{p.height_cm} cm</div>
                   </div>
                 </div>
               )}
@@ -150,7 +150,7 @@ export const ParticipantsView: React.FC = () => {
                   <HeartPulse className="w-4 h-4 text-danger-400 shrink-0" />
                   <div className="min-w-0">
                     <div className="text-ink-400 text-[10px]">Restrições Alimentares</div>
-                    <div className="font-semibold text-white truncate">{p.dietary_restrictions.join(', ')}</div>
+                    <div className="font-semibold text-ink-100 truncate">{p.dietary_restrictions.join(', ')}</div>
                   </div>
                 </div>
               )}

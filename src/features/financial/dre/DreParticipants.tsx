@@ -11,10 +11,10 @@ export const DreParticipants: React.FC<DreParticipantsProps> = ({ dreResult, for
   return (
     <div className="space-y-6">
       {/* Matriz de Acerto de Contas (Debt Settlement) */}
-      <div className="glass-panel p-5 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-ink-900 via-indigo-950/30 to-ink-900 shadow-xl">
+      <div className="hero-banner-diag p-5 rounded-2xl border border-indigo-500/30 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-ink-100 flex items-center gap-2">
               <ArrowRightLeft className="w-4 h-4 text-indigo-400" />
               Balancete de Acerto de Contas (Liquidação Inteligente)
             </h3>
@@ -42,7 +42,7 @@ export const DreParticipants: React.FC<DreParticipantsProps> = ({ dreResult, for
                   </div>
                   <div className="text-xs">
                     <div className="text-ink-200">
-                      <strong className="text-white">{s.from_name}</strong> transfere para{' '}
+                      <strong className="text-ink-100">{s.from_name}</strong> transfere para{' '}
                       <strong className="text-success-400">{s.to_name}</strong>
                     </div>
                     <div className="text-[11px] text-ink-400 mt-0.5">
@@ -76,7 +76,7 @@ export const DreParticipants: React.FC<DreParticipantsProps> = ({ dreResult, for
                   {p.nickname ? p.nickname[0] : p.full_name[0]}
                 </div>
                 <div className="min-w-0">
-                  <h4 className="font-bold text-sm text-white truncate">{p.full_name}</h4>
+                  <h4 className="font-bold text-sm text-ink-100 truncate">{p.full_name}</h4>
                   <div className="text-[11px] text-ink-400">
                     Orçamento: {formatVal(p.budget_limit_usd, p.budget_limit_brl)}
                   </div>

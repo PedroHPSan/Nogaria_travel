@@ -40,12 +40,12 @@ export const BaseModal: React.FC<BaseModalProps> = ({
       >
         <div className="flex items-start justify-between px-6 py-4 border-b border-ink-800 bg-ink-950/50">
           <div>
-            <h3 className="text-lg font-bold text-white">{title}</h3>
+            <h3 className="text-lg font-bold text-ink-100">{title}</h3>
             {subtitle && <p className="text-xs text-ink-400 mt-0.5">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-ink-400 hover:text-white hover:bg-ink-800 transition"
+            className="p-1.5 rounded-lg text-ink-400 hover:text-ink-100 hover:bg-ink-800 transition"
           >
             <X className="w-5 h-5" />
           </button>

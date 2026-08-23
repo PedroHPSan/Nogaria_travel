@@ -133,7 +133,7 @@ export const PurchasesView: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2.5">
-                <h3 className="text-sm font-bold text-white">Lista de Desejos & Produtos Planejados</h3>
+                <h3 className="text-sm font-bold text-ink-100">Lista de Desejos & Produtos Planejados</h3>
                 <FreeTierBadge />
               </div>
               <span className="text-xs text-accent-400 font-semibold">Total Estimado: {formatAmount(totalTargetUsd)}</span>
@@ -193,7 +193,7 @@ export const PurchasesView: React.FC = () => {
       {activeSubTab === 'luggage' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Controle de Franquia de Bagagens</h3>
+            <h3 className="text-sm font-bold text-ink-100">Controle de Franquia de Bagagens</h3>
             <button
               onClick={handleOpenAddLuggage}
               className="px-4 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold text-xs shadow-lg shadow-info-600/30 transition flex items-center gap-1.5"
@@ -216,15 +216,15 @@ export const PurchasesView: React.FC = () => {
                         <LuggageIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-base text-white">{l.bag_identifier}</h4>
-                        <p className="text-xs text-ink-400">Proprietário: <span className="font-bold text-white">{participant?.full_name}</span></p>
+                        <h4 className="font-bold text-base text-ink-100">{l.bag_identifier}</h4>
+                        <p className="text-xs text-ink-400">Proprietário: <span className="font-bold text-ink-100">{participant?.full_name}</span></p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleOpenEditLuggage(l)}
-                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -242,7 +242,7 @@ export const PurchasesView: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-ink-400">Peso Atual / Franquia:</span>
-                      <span className="font-bold text-white">{l.current_weight_kg || 0} kg / {l.max_weight_kg} kg</span>
+                      <span className="font-bold text-ink-100">{l.current_weight_kg || 0} kg / {l.max_weight_kg} kg</span>
                     </div>
                     <div className="w-full bg-ink-800 h-2 rounded-full overflow-hidden">
                       <div

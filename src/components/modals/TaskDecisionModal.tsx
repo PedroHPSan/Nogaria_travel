@@ -139,7 +139,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 value={taskTitle}
                 onChange={e => setTaskTitle(e.target.value)}
                 placeholder="Ex: Confirmar Uber pós devolução do carro em 19/09 às 17h30"
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
               />
             </div>
 
@@ -149,7 +149,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 <select
                   value={taskAssignedId}
                   onChange={e => setTaskAssignedId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
                 >
                   <option value="">-- Qualquer Responsável --</option>
                   {participants.map(p => (
@@ -166,7 +166,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                   type="date"
                   value={taskDueDate}
                   onChange={e => setTaskDueDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
                 />
               </div>
             </div>
@@ -177,7 +177,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 <select
                   value={taskPriority}
                   onChange={e => setTaskPriority(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
                 >
                   <option value="high">🔥 Alta Prioridade</option>
                   <option value="medium">⚡ Média Prioridade</option>
@@ -190,7 +190,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 <select
                   value={taskCategory}
                   onChange={e => setTaskCategory(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
                 >
                   <option value="logistics">🚗 Logística / Transportes</option>
                   <option value="finance">💳 Financeiro / Gift Cards</option>
@@ -209,7 +209,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 value={taskDesc}
                 onChange={e => setTaskDesc(e.target.value)}
                 placeholder="Ex: Agendar transporte com capacidade para 4 passageiros e malas."
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
               />
             </div>
           </>
@@ -223,7 +223,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 value={decTopic}
                 onChange={e => setDecTopic(e.target.value)}
                 placeholder="Ex: Substituição do Hotel da última noite (Celebration Suites -> Four Points FLL)"
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
               />
             </div>
 
@@ -234,7 +234,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 value={decAlternatives}
                 onChange={e => setDecAlternatives(e.target.value)}
                 placeholder="Ex: Celebration Suites Kissimmee, Four Points FLL, Hotel Próximo MCO"
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
               />
             </div>
 
@@ -246,7 +246,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 value={decChosen}
                 onChange={e => setDecChosen(e.target.value)}
                 placeholder="Ex: Four Points by Sheraton Fort Lauderdale Airport"
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-success-400"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-success-400"
               />
             </div>
 
@@ -257,7 +257,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                   required
                   value={decDecidedById}
                   onChange={e => setDecDecidedById(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
                 >
                   <option value="">-- Selecione o Responsável --</option>
                   {participants.map(p => (
@@ -276,7 +276,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                   value={decFinancialImpact}
                   onChange={e => setDecFinancialImpact(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="Ex: 70.00 ou -50.00"
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
                 />
               </div>
             </div>
@@ -289,7 +289,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 value={decReason}
                 onChange={e => setDecReason(e.target.value)}
                 placeholder="Ex: Elimina o risco de trânsito longo no dia do voo noturno após a entrega do carro alugado."
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
               />
             </div>
           </>

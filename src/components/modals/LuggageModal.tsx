@@ -79,7 +79,7 @@ export const LuggageModal: React.FC<LuggageModalProps> = ({
               required
               value={participantId}
               onChange={e => setParticipantId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             >
               <option value="">-- Selecione o Participante --</option>
               {participants.map(p => (
@@ -95,7 +95,7 @@ export const LuggageModal: React.FC<LuggageModalProps> = ({
             <select
               value={type}
               onChange={e => setType(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             >
               <option value="checked">🧳 Despachada (23kg)</option>
               <option value="carry_on">💼 Mala de Mão (10kg)</option>
@@ -112,7 +112,7 @@ export const LuggageModal: React.FC<LuggageModalProps> = ({
             value={bagIdentifier}
             onChange={e => setBagIdentifier(e.target.value)}
             placeholder="Ex: Mala Samsonite Preta #1 (Bárbara)"
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
           />
         </div>
 
@@ -126,7 +126,7 @@ export const LuggageModal: React.FC<LuggageModalProps> = ({
               max="50"
               value={maxWeightKg}
               onChange={e => setMaxWeightKg(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold"
             />
           </div>
 
@@ -138,7 +138,7 @@ export const LuggageModal: React.FC<LuggageModalProps> = ({
               max="50"
               value={currentWeightKg}
               onChange={e => setCurrentWeightKg(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-warning-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-warning-400"
             />
           </div>
 
@@ -150,7 +150,7 @@ export const LuggageModal: React.FC<LuggageModalProps> = ({
               max="100"
               value={shoppingSpaceReservedPct}
               onChange={e => setShoppingSpaceReservedPct(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-accent-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-accent-400"
             />
           </div>
         </div>
@@ -162,7 +162,7 @@ export const LuggageModal: React.FC<LuggageModalProps> = ({
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder="Ex: Roupas pessoais, itens infantis e espaço reservado para enxoval/compras."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

@@ -40,7 +40,7 @@ export const DreTimeline: React.FC<DreTimelineProps> = ({
                 <Plane className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-white">Desembolsos Pré-Viagem (Custos Fixos)</h3>
+                <h3 className="font-bold text-sm text-ink-100">Desembolsos Pré-Viagem (Custos Fixos)</h3>
                 <p className="text-[11px] text-ink-400">Passagens, hotéis parcelados, ingressos e documentação</p>
               </div>
             </div>
@@ -74,7 +74,7 @@ export const DreTimeline: React.FC<DreTimelineProps> = ({
                 <Utensils className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-white">Desembolsos Durante a Viagem (Variáveis)</h3>
+                <h3 className="font-bold text-sm text-ink-100">Desembolsos Durante a Viagem (Variáveis)</h3>
                 <p className="text-[11px] text-ink-400">Alimentação, compras, combustível, Uber e imprevistos</p>
               </div>
             </div>
@@ -104,7 +104,7 @@ export const DreTimeline: React.FC<DreTimelineProps> = ({
       {/* Gráficos de Comparativo e Distribuição */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-panel p-6 rounded-2xl border border-ink-800">
-          <h4 className="text-sm font-bold text-white mb-4">
+          <h4 className="text-sm font-bold text-ink-100 mb-4">
             Comparativo: Planejado vs. Realizado vs. A Provisionar
           </h4>
           <div className="h-72 w-full">
@@ -125,7 +125,7 @@ export const DreTimeline: React.FC<DreTimelineProps> = ({
         </div>
 
         <div className="glass-panel p-6 rounded-2xl border border-ink-800">
-          <h4 className="text-sm font-bold text-white mb-4">
+          <h4 className="text-sm font-bold text-ink-100 mb-4">
             Composição Percentual dos Gastos Realizados
           </h4>
           <div className="h-72 w-full">

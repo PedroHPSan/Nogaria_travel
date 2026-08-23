@@ -67,7 +67,7 @@ export const AssumptionsModal: React.FC<Props> = ({ isOpen, onClose, assumptions
           <div key={String(f.key)}>
             <label className="block text-[11px] font-semibold text-ink-300 mb-1">{f.label}</label>
             <input
-              className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
+              className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-ink-100"
               type="number"
               step="0.01"
               value={draft[f.key]}
@@ -80,7 +80,7 @@ export const AssumptionsModal: React.FC<Props> = ({ isOpen, onClose, assumptions
         <div>
           <label className="block text-[11px] font-semibold text-ink-300 mb-1">Fonte do câmbio</label>
           <input
-            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
+            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-ink-100"
             value={draft.rate_source}
             onChange={e => setDraft({ ...draft, rate_source: e.target.value })}
           />
@@ -89,7 +89,7 @@ export const AssumptionsModal: React.FC<Props> = ({ isOpen, onClose, assumptions
         <div>
           <label className="block text-[11px] font-semibold text-ink-300 mb-1">Referência legal da cota</label>
           <textarea
-            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
+            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-ink-100"
             rows={2}
             value={draft.legal_reference ?? ''}
             onChange={e => setDraft({ ...draft, legal_reference: e.target.value })}

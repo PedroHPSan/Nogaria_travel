@@ -19,7 +19,7 @@ export const PurchaseBreakdown: React.FC<{ decision: PurchaseDecision }> = ({ de
           </span>
         </div>
       ))}
-      <div className="flex justify-between pt-1.5 font-bold text-white">
+      <div className="flex justify-between pt-1.5 font-bold text-ink-100">
         <span>Desembarcado</span>
         <span>{usd(decision.us.desembarcado_usd)} = {brl(decision.us.desembarcado_brl)}</span>
       </div>
@@ -33,7 +33,7 @@ export const PurchaseBreakdown: React.FC<{ decision: PurchaseDecision }> = ({ de
           <span className="text-ink-200 font-semibold">{brl(line.amount)}</span>
         </div>
       ))}
-      <div className="flex justify-between pt-1.5 font-bold text-white">
+      <div className="flex justify-between pt-1.5 font-bold text-ink-100">
         <span>Líquido Brasil</span>
         <span>{brl(decision.br.br_liquido_brl)}</span>
       </div>

@@ -78,14 +78,14 @@ export const StoreRadarModal: React.FC<StoreRadarModalProps> = ({
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Digite a loja ou produto (ex: Best Buy, Carter's, Nike Outlet)"
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-accent-500 font-medium"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-accent-500 font-medium"
             />
           </div>
 
           <select
             value={selectedDestination}
             onChange={e => setSelectedDestination(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-accent-500"
+            className="px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-accent-500"
           >
             <option value="Orlando, FL">Orlando / Kissimmee</option>
             <option value="Miami, FL">Miami / Aventura</option>
@@ -163,7 +163,7 @@ export const StoreRadarModal: React.FC<StoreRadarModalProps> = ({
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-sm">{p.name}</h4>
+                        <h4 className="font-bold text-ink-100 text-sm">{p.name}</h4>
                         {p.isOpenNow !== undefined && (
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${

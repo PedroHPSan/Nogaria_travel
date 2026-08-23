@@ -85,7 +85,7 @@ export const TasksDecisionsView: React.FC = () => {
       {activeSubTab === 'tasks' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Tarefas & Ações do Planejamento</h3>
+            <h3 className="text-sm font-bold text-ink-100">Tarefas & Ações do Planejamento</h3>
             <button
               onClick={handleOpenAddTask}
               className="px-4 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold text-xs shadow-lg shadow-info-600/30 transition flex items-center gap-1.5"
@@ -123,7 +123,7 @@ export const TasksDecisionsView: React.FC = () => {
                       }`}>
                         {t.priority === 'high' ? 'Urgente' : t.priority}
                       </span>
-                      <h4 className={`font-bold text-sm text-white ${isCompleted ? 'line-through text-ink-400' : ''}`}>
+                      <h4 className={`font-bold text-sm text-ink-100 ${isCompleted ? 'line-through text-ink-400' : ''}`}>
                         {t.title}
                       </h4>
                     </div>
@@ -149,7 +149,7 @@ export const TasksDecisionsView: React.FC = () => {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenEditTask(t)}
-                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
@@ -173,7 +173,7 @@ export const TasksDecisionsView: React.FC = () => {
       {activeSubTab === 'decisions' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Histórico de Decisões de Viagem</h3>
+            <h3 className="text-sm font-bold text-ink-100">Histórico de Decisões de Viagem</h3>
             <button
               onClick={handleOpenAddDecision}
               className="px-4 py-2 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs shadow-lg shadow-accent-600/30 transition flex items-center gap-1.5"
@@ -194,13 +194,13 @@ export const TasksDecisionsView: React.FC = () => {
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-accent-500/10 text-accent-400 border border-accent-500/20">
                         {new Date(d.date).toLocaleDateString('pt-BR')}
                       </span>
-                      <h4 className="font-bold text-base text-white mt-1">{d.topic}</h4>
+                      <h4 className="font-bold text-base text-ink-100 mt-1">{d.topic}</h4>
                     </div>
 
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleOpenEditDecision(d)}
-                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                        className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -217,7 +217,7 @@ export const TasksDecisionsView: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-accent-600/10 border border-accent-500/30 text-xs">
                     <div className="text-accent-300 font-bold mb-0.5">Escolha Definitiva:</div>
-                    <div className="text-white font-extrabold text-sm">{d.chosen_decision}</div>
+                    <div className="text-ink-100 font-extrabold text-sm">{d.chosen_decision}</div>
                   </div>
 
                   {d.alternatives_considered && d.alternatives_considered.length > 0 && (

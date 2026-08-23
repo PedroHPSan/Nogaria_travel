@@ -33,7 +33,7 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, partici
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-bold text-white">{MONTH_LABELS[month - 1]} {year}</h3>
+      <h3 className="text-sm font-bold text-ink-100">{MONTH_LABELS[month - 1]} {year}</h3>
       <div className="grid grid-cols-7 gap-1.5 text-[10px] text-ink-500 font-semibold uppercase text-center">
         {WEEKDAY_LABELS.map(label => (
           <div key={label}>{label}</div>

@@ -117,7 +117,7 @@ export const LogisticsView: React.FC = () => {
       {activeSubTab === 'flights' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Trechos Aéreos & Passagens Emitidas</h3>
+            <h3 className="text-sm font-bold text-ink-100">Trechos Aéreos & Passagens Emitidas</h3>
             <button
               onClick={handleOpenAddFlight}
               className="px-4 py-2 rounded-xl bg-info-600 hover:bg-info-500 text-white font-bold text-xs shadow-lg shadow-info-600/30 transition flex items-center gap-1.5"
@@ -136,7 +136,7 @@ export const LogisticsView: React.FC = () => {
                       <Plane className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-base text-white">{f.airline} • {f.flight_number}</h4>
+                      <h4 className="font-bold text-base text-ink-100">{f.airline} • {f.flight_number}</h4>
                       <p className="text-xs text-ink-400">PNR: <span className="font-mono font-bold text-info-400">{f.booking_code}</span></p>
                     </div>
                   </div>
@@ -144,7 +144,7 @@ export const LogisticsView: React.FC = () => {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleOpenEditFlight(f)}
-                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
@@ -162,7 +162,7 @@ export const LogisticsView: React.FC = () => {
                 <div className="p-3 rounded-xl bg-ink-900/60 border border-ink-800/80 flex items-center justify-between text-xs">
                   <div>
                     <div className="text-ink-400 text-[10px]">Origem</div>
-                    <div className="font-bold text-white text-sm">{f.origin_airport}</div>
+                    <div className="font-bold text-ink-100 text-sm">{f.origin_airport}</div>
                     <div className="text-ink-400 text-[11px]">{new Date(f.departure_time).toLocaleString()}</div>
                   </div>
                   <div className="text-center px-2">
@@ -172,7 +172,7 @@ export const LogisticsView: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-ink-400 text-[10px]">Destino</div>
-                    <div className="font-bold text-white text-sm">{f.destination_airport}</div>
+                    <div className="font-bold text-ink-100 text-sm">{f.destination_airport}</div>
                     <div className="text-ink-400 text-[11px]">{new Date(f.arrival_time).toLocaleString()}</div>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export const LogisticsView: React.FC = () => {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-white">Hospedagens & Resorts Registrados</h3>
+              <h3 className="text-sm font-bold text-ink-100">Hospedagens & Resorts Registrados</h3>
               <p className="text-xs text-ink-400">Consulte serviços e refeições econômicas próximas a cada hotel.</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -264,7 +264,7 @@ export const LogisticsView: React.FC = () => {
                       <Building className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-base text-white">{a.name}</h4>
+                      <h4 className="font-bold text-base text-ink-100">{a.name}</h4>
                       <p className="text-xs text-ink-400">{a.city} • {a.chain || 'Resort'}</p>
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export const LogisticsView: React.FC = () => {
 
                     <button
                       onClick={() => handleOpenEditAcc(a)}
-                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
@@ -297,11 +297,11 @@ export const LogisticsView: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-2.5 rounded-lg bg-ink-900/60 border border-ink-800/80">
                     <div className="text-ink-400 text-[10px]">Check-in</div>
-                    <div className="font-bold text-white">{new Date(a.check_in).toLocaleDateString()}</div>
+                    <div className="font-bold text-ink-100">{new Date(a.check_in).toLocaleDateString()}</div>
                   </div>
                   <div className="p-2.5 rounded-lg bg-ink-900/60 border border-ink-800/80">
                     <div className="text-ink-400 text-[10px]">Check-out</div>
-                    <div className="font-bold text-white">{new Date(a.check_out).toLocaleDateString()}</div>
+                    <div className="font-bold text-ink-100">{new Date(a.check_out).toLocaleDateString()}</div>
                   </div>
                 </div>
 
@@ -349,7 +349,7 @@ export const LogisticsView: React.FC = () => {
       {activeSubTab === 'transports' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Veículos Alugados & Transportes</h3>
+            <h3 className="text-sm font-bold text-ink-100">Veículos Alugados & Transportes</h3>
             <button
               onClick={handleOpenAddTr}
               className="px-4 py-2 rounded-xl bg-warning-600 hover:bg-warning-500 text-white font-bold text-xs shadow-lg shadow-warning-600/30 transition flex items-center gap-1.5"
@@ -368,7 +368,7 @@ export const LogisticsView: React.FC = () => {
                       <Car className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-base text-white">{t.provider_company}</h4>
+                      <h4 className="font-bold text-base text-ink-100">{t.provider_company}</h4>
                       <p className="text-xs text-ink-400">{t.category_or_model || 'Veículo'}</p>
                     </div>
                   </div>
@@ -376,7 +376,7 @@ export const LogisticsView: React.FC = () => {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleOpenEditTr(t)}
-                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>

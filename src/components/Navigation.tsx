@@ -52,7 +52,7 @@ const GROUP_LABELS: Record<NavGroup, string> = {
   hoje: 'Hoje',
   planejamento: 'Roteiro',
   dinheiro: 'Dinheiro',
-  controle: 'Mais'
+  controle: 'Gestão'
 };
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -115,7 +115,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                     className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${
                       isActive
                         ? 'bg-info-600/20 text-info-400 border border-info-500/30 font-semibold shadow-sm'
-                        : 'text-ink-400 hover:text-white hover:bg-ink-800/50'
+                        : 'text-ink-400 hover:text-ink-100 hover:bg-ink-800/50'
                     }`}
                   >
                     <Icon className={`w-4 h-4 ${isActive ? 'text-info-400' : 'text-ink-400'}`} />
@@ -134,7 +134,10 @@ export const Navigation: React.FC<NavigationProps> = ({
       </div>
 
       {/* Mobile Bottom Floating Navigation Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-ink-800 px-1 py-2 flex items-center justify-around shadow-2xl">
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-ink-800 px-1 pt-1.5 flex items-stretch justify-around shadow-2xl"
+        style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+      >
         {groupOrder.map(group => {
           const groupTabs = tabsByGroup(group);
           const isSingle = groupTabs.length === 1;
@@ -146,16 +149,20 @@ export const Navigation: React.FC<NavigationProps> = ({
             <button
               key={group}
               onClick={() => onMobileGroupTap(group)}
-              className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition relative min-w-[56px] ${
-                isActive ? 'text-info-400 font-bold' : 'text-ink-400 hover:text-ink-200'
-              }`}
+              className="flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1.5 rounded-xl transition relative"
             >
-              <Icon className="w-4 h-4" />
-              <span className="text-[11px] mt-1 tracking-tight leading-none truncate max-w-[64px]">
+              <span className={`flex items-center justify-center w-9 h-6 rounded-full transition ${
+                isActive ? 'bg-info-600/20' : ''
+              }`}>
+                <Icon className={`w-5 h-5 ${isActive ? 'text-info-400' : 'text-ink-400'}`} />
+              </span>
+              <span className={`text-[11px] leading-none truncate max-w-[68px] ${
+                isActive ? 'text-info-400 font-bold' : 'text-ink-400 font-medium'
+              }`}>
                 {GROUP_LABELS[group]}
               </span>
               {badge > 0 && (
-                <span className="absolute top-0 right-1 w-3.5 h-3.5 text-[8px] font-bold rounded-full bg-danger-500 text-white flex items-center justify-center">
+                <span className="absolute top-0.5 right-1/2 -mr-4 w-3.5 h-3.5 text-[8px] font-bold rounded-full bg-danger-500 text-white flex items-center justify-center">
                   {badge}
                 </span>
               )}
@@ -174,7 +181,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           >
             <div className="flex items-center justify-between px-1 pb-2">
               <span className="text-sm font-semibold text-ink-200">{GROUP_LABELS[openSheet]}</span>
-              <button onClick={() => setOpenSheet(null)} className="p-1 text-ink-400 hover:text-white">
+              <button onClick={() => setOpenSheet(null)} className="p-1 text-ink-400 hover:text-ink-100">
                 <X className="w-4 h-4" />
               </button>
             </div>

@@ -76,7 +76,7 @@ export const LoyaltyModal: React.FC<LoyaltyModalProps> = ({
               value={programName}
               onChange={e => setProgramName(e.target.value)}
               placeholder="Ex: Azul Fidelidade, LATAM Pass, Smiles, ALL Accor"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
@@ -86,7 +86,7 @@ export const LoyaltyModal: React.FC<LoyaltyModalProps> = ({
               required
               value={holderId}
               onChange={e => setHolderId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             >
               <option value="">-- Selecione o Titular --</option>
               {participants.map(p => (
@@ -108,7 +108,7 @@ export const LoyaltyModal: React.FC<LoyaltyModalProps> = ({
               step="1000"
               value={balancePoints}
               onChange={e => setBalancePoints(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-success-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-success-400"
             />
           </div>
 
@@ -121,7 +121,7 @@ export const LoyaltyModal: React.FC<LoyaltyModalProps> = ({
               value={cpmUsd}
               onChange={e => setCpmUsd(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="Ex: 3.50 para R$ 19,25/1k"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold text-accent-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-accent-400"
             />
           </div>
         </div>
@@ -138,7 +138,7 @@ export const LoyaltyModal: React.FC<LoyaltyModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Acúmulo via cartão de crédito + bônus de transferência."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 

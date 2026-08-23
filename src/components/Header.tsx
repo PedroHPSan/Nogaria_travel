@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plane, ShieldAlert, Sparkles, DollarSign, Plus, ChevronDown, Building2, RefreshCw, Users, LogOut } from 'lucide-react';
+import { Plane, ShieldAlert, Sparkles, DollarSign, Plus, ChevronDown, Building2, RefreshCw, Users, LogOut, Sun, Moon } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { TripModal } from './modals/TripModal';
 import { TeamModal } from './modals/TeamModal';
 
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
   } = useTrip();
 
   const { profile, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const [isTripModalOpen, setIsTripModalOpen] = useState(false);
   const [isTripMenuOpen, setIsTripMenuOpen] = useState(false);
@@ -59,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsTripMenuOpen(!isTripMenuOpen)}
-                  className="flex items-center gap-1.5 font-extrabold text-base md:text-lg text-white leading-tight hover:text-info-300 transition text-left"
+                  className="flex items-center gap-1.5 font-extrabold text-base md:text-lg text-ink-100 leading-tight hover:text-info-300 transition text-left"
                 >
                   <span>{activeTrip.title}</span>
                   <ChevronDown className="w-4 h-4 text-ink-400" />
@@ -128,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
                     step="0.01"
                     value={tempRate}
                     onChange={e => setTempRate(e.target.value)}
-                    className="w-14 px-1 py-0.5 rounded bg-ink-950 border border-success-500 text-white text-xs font-bold"
+                    className="w-14 px-1 py-0.5 rounded bg-ink-950 border border-success-500 text-ink-100 text-xs font-bold"
                   />
                   <button
                     onClick={handleSaveRate}
@@ -201,6 +203,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
               <span className="hidden sm:inline">Copiloto IA</span>
             </button>
 
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-ink-800/80 text-ink-200 hover:bg-ink-700 border border-ink-700 transition"
+              title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+            >
+              {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
+
             {/* Team Button */}
             <button
               onClick={() => setIsTeamModalOpen(true)}
@@ -223,7 +234,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
               {isAccountMenuOpen && (
                 <div className="absolute top-full right-0 mt-2 w-48 bg-ink-900 border border-ink-800 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
                   <div className="px-3 py-2 text-xs">
-                    <div className="font-semibold text-white truncate">{profile?.full_name}</div>
+                    <div className="font-semibold text-ink-100 truncate">{profile?.full_name}</div>
                     <div className="text-ink-400 truncate">{profile?.email}</div>
                   </div>
                   <button

@@ -144,7 +144,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               value={productName}
               onChange={e => setProductName(e.target.value)}
               placeholder="Ex: iPhone Pro Max 512GB / Apple Watch Ultra"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
@@ -153,7 +153,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <select
               value={category}
               onChange={e => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               {CATEGORIES.map(c => (
                 <option key={c.id} value={c.id}>
@@ -172,7 +172,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               value={brand}
               onChange={e => setBrand(e.target.value)}
               placeholder="Ex: Apple, Nike, Adidas, Pokémon, Carter's"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -194,7 +194,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 value={storeName}
                 onChange={e => setStoreName(e.target.value)}
                 placeholder="Ex: Apple Store Aventura, Target, Best Buy"
-                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+                className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
               />
             </div>
           </div>
@@ -207,7 +207,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               required
               value={targetParticipantId}
               onChange={e => setTargetParticipantId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="">-- Selecione o Responsável --</option>
               {participants.map(p => (
@@ -223,7 +223,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <select
               value={beneficiaryId}
               onChange={e => setBeneficiaryId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="">-- Próprio Comprador / Família --</option>
               {participants.map(p => (
@@ -245,7 +245,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               step="5"
               value={targetPriceUsd}
               onChange={e => setTargetPriceUsd(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-success-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-success-400"
             />
           </div>
 
@@ -257,7 +257,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               step="5"
               value={priceFoundUsd}
               onChange={e => setPriceFoundUsd(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
@@ -270,7 +270,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               value={brlEquivalent}
               onChange={e => setBrlEquivalent(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="Ex: R$ 11.499"
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
 
@@ -282,7 +282,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               max="50"
               value={quantity}
               onChange={e => setQuantity(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
         </div>
@@ -293,7 +293,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <select
               value={priority}
               onChange={e => setPriority(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="high">🔥 Alta Prioridade (Essencial)</option>
               <option value="medium">⚡ Média Prioridade</option>
@@ -306,7 +306,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <select
               value={status}
               onChange={e => setStatus(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               <option value="planned">Planejado</option>
               <option value="online_ordered">Pedido Online Feito</option>
@@ -336,7 +336,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             value={linkUrl}
             onChange={e => setLinkUrl(e.target.value)}
             placeholder="Ex: https://www.apple.com/shop/buy-iphone/iphone-16-pro"
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 
@@ -347,7 +347,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Ex: Compra condicionada a promoção ou opção de comprar aparelho usado de outro participante."
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           />
         </div>
 
@@ -356,7 +356,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             Sobrepor o veredito do motor (opcional)
           </label>
           <select
-            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
+            className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-ink-100"
             value={verdictOverride}
             onChange={e => setVerdictOverride(e.target.value as PurchaseVerdict | '')}
           >
@@ -373,7 +373,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               Motivo da decisão manual
             </label>
             <textarea
-              className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white"
+              className="w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-ink-100"
               rows={2}
               value={overrideReason}
               onChange={e => setOverrideReason(e.target.value)}

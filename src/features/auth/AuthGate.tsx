@@ -22,7 +22,7 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
     return (
       <div className="min-h-screen bg-ink-950 text-ink-100 flex items-center justify-center p-4">
         <div className="glass-card w-full max-w-md p-8 rounded-2xl border border-ink-800 space-y-4 text-center">
-          <h1 className="text-lg font-bold text-white">Não foi possível carregar seus dados</h1>
+          <h1 className="text-lg font-bold text-ink-100">Não foi possível carregar seus dados</h1>
           <div className="px-3 py-2 rounded-xl bg-danger-500/10 border border-danger-500/30 text-danger-400 text-xs text-left">
             {loadError}
           </div>

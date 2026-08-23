@@ -110,7 +110,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder="Ex: Jantar em grupo no Olive Garden / Abastecimento SUV FLL"
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
           />
         </div>
 
@@ -124,7 +124,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               step="1"
               value={amount}
               onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold text-success-400"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-success-400"
             />
           </div>
 
@@ -133,7 +133,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             <select
               value={currency}
               onChange={e => setCurrency(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-bold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold"
             >
               <option value="USD">Dólar (US$)</option>
               <option value="BRL">Real (R$)</option>
@@ -148,7 +148,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               step="0.05"
               value={exchangeRate}
               onChange={e => setExchangeRate(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             />
           </div>
 
@@ -157,7 +157,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             <select
               value={category}
               onChange={e => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             >
               {CATEGORIES.map(c => (
                 <option key={c.id} value={c.id}>
@@ -171,7 +171,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         {/* Currency preview */}
         <div className="p-3 rounded-xl bg-ink-950/60 border border-ink-800 flex items-center justify-between text-ink-300 font-medium">
           <span>Equivalente Convertido:</span>
-          <span className="font-bold text-white">
+          <span className="font-bold text-ink-100">
             US$ {amountUsd.toFixed(2)} / R$ {amountBrl.toFixed(2)}
           </span>
         </div>
@@ -183,7 +183,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               required
               value={paidById}
               onChange={e => setPaidById(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
             >
               <option value="">-- Selecione quem Pagou --</option>
               {participants.map(p => (
@@ -200,7 +200,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
           </div>
         </div>
@@ -236,7 +236,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           <select
             value={status}
             onChange={e => setStatus(e.target.value as any)}
-            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white focus:outline-none focus:border-info-500"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
           >
             <option value="paid">Paga / Efetuada</option>
             <option value="pending">Pendente de Pagamento</option>

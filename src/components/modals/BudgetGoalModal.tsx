@@ -156,7 +156,7 @@ export const BudgetGoalModal: React.FC<BudgetGoalModalProps> = ({
                     value={currentVal || ''}
                     onChange={e => handleChange(cat, Number(e.target.value) || 0)}
                     placeholder="0"
-                    className="w-full pl-10 pr-3 py-1.5 rounded-lg bg-ink-900 border border-ink-700 text-white font-bold focus:outline-none focus:border-info-500"
+                    className="w-full pl-10 pr-3 py-1.5 rounded-lg bg-ink-900 border border-ink-700 text-ink-100 font-bold focus:outline-none focus:border-info-500"
                   />
                 </div>
                 <p className="text-[10px] text-ink-400 line-clamp-1">{meta.description}</p>

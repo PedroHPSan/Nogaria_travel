@@ -122,7 +122,7 @@ export const AiCopilotView: React.FC = () => {
             <select
               value={activeProviderId}
               onChange={e => setActiveProviderId(e.target.value)}
-              className="px-2.5 py-1 rounded-lg bg-ink-950 border border-ink-700 text-white font-bold text-xs"
+              className="px-2.5 py-1 rounded-lg bg-ink-950 border border-ink-700 text-ink-100 font-bold text-xs"
             >
               {aiProviders.map(p => (
                 <option key={p.id} value={p.id}>
@@ -143,7 +143,7 @@ export const AiCopilotView: React.FC = () => {
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-white">Assistente de Viagem IA</h3>
+                <h3 className="font-bold text-sm text-ink-100">Assistente de Viagem IA</h3>
                 <p className="text-[10px] text-success-400 font-semibold">Provedor: {activeProvider?.provider} • {activeProvider?.model_name}</p>
               </div>
             </div>
@@ -225,7 +225,7 @@ export const AiCopilotView: React.FC = () => {
               value={promptInput}
               onChange={e => setPromptInput(e.target.value)}
               placeholder="Faça uma pergunta sobre o planejamento da viagem..."
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-ink-950 border border-ink-800 text-xs text-white focus:outline-none focus:border-info-500"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-ink-950 border border-ink-800 text-xs text-ink-100 focus:outline-none focus:border-info-500"
             />
             <button
               type="submit"
@@ -240,7 +240,7 @@ export const AiCopilotView: React.FC = () => {
         {/* Sidebar: AI Provider Controls & Token Consumption Logs */}
         <div className="space-y-4">
           <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-4">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+            <h3 className="font-bold text-sm text-ink-100 flex items-center gap-2">
               <Sliders className="w-4 h-4 text-accent-400" />
               Configurações do Provedor
             </h3>
@@ -252,7 +252,7 @@ export const AiCopilotView: React.FC = () => {
                   type="text"
                   value={activeProvider?.model_name || ''}
                   onChange={e => updateAiProvider(activeProvider.id, { model_name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100"
                 />
               </div>
 
@@ -280,14 +280,14 @@ export const AiCopilotView: React.FC = () => {
                   type="number"
                   value={activeProvider?.daily_token_limit || 100000}
                   onChange={e => updateAiProvider(activeProvider.id, { daily_token_limit: Number(e.target.value) })}
-                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-white font-semibold"
+                  className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 font-semibold"
                 />
               </div>
             </div>
           </div>
 
           <div className="glass-panel p-5 rounded-2xl border border-ink-800 space-y-3">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+            <h3 className="font-bold text-sm text-ink-100 flex items-center gap-2">
               <History className="w-4 h-4 text-info-400" />
               Histórico de Consumo de IA ({aiLogs.length})
             </h3>

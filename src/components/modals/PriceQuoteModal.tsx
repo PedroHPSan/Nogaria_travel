@@ -55,7 +55,7 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
     onClose();
   };
 
-  const field = 'w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-white';
+  const field = 'w-full px-3 py-2 rounded-xl bg-ink-900 border border-ink-800 text-sm text-ink-100';
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title={`Cotação — ${item.product_name}`}>

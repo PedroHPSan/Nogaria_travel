@@ -165,7 +165,7 @@ export const ItineraryView: React.FC = () => {
         <button
           onClick={() => setViewMode('list')}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-            viewMode === 'list' ? 'bg-info-600/20 text-info-400' : 'text-ink-400 hover:text-white'
+            viewMode === 'list' ? 'bg-info-600/20 text-info-400' : 'text-ink-400 hover:text-ink-100'
           }`}
         >
           <List className="w-3.5 h-3.5" />
@@ -174,7 +174,7 @@ export const ItineraryView: React.FC = () => {
         <button
           onClick={() => setViewMode('timeline')}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-            viewMode === 'timeline' ? 'bg-info-600/20 text-info-400' : 'text-ink-400 hover:text-white'
+            viewMode === 'timeline' ? 'bg-info-600/20 text-info-400' : 'text-ink-400 hover:text-ink-100'
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
@@ -183,7 +183,7 @@ export const ItineraryView: React.FC = () => {
         <button
           onClick={() => setViewMode('calendar')}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-            viewMode === 'calendar' ? 'bg-info-600/20 text-info-400' : 'text-ink-400 hover:text-white'
+            viewMode === 'calendar' ? 'bg-info-600/20 text-info-400' : 'text-ink-400 hover:text-ink-100'
           }`}
         >
           <Calendar className="w-3.5 h-3.5" />
@@ -201,7 +201,7 @@ export const ItineraryView: React.FC = () => {
               <select
                 value={selectedDate}
                 onChange={e => setSelectedDate(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-ink-900 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+                className="px-2.5 py-1.5 rounded-lg bg-ink-900 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
               >
                 <option value="all">Todas as Datas ({tripItinerary.length})</option>
                 {availableDates.map(d => (
@@ -217,7 +217,7 @@ export const ItineraryView: React.FC = () => {
               <select
                 value={selectedCategory}
                 onChange={e => setSelectedCategory(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-ink-900 border border-ink-800 text-white focus:outline-none focus:border-info-500 font-semibold"
+                className="px-2.5 py-1.5 rounded-lg bg-ink-900 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
               >
                 <option value="all">Todas Categorias</option>
                 <option value="park">🎡 Parques</option>
@@ -280,7 +280,7 @@ export const ItineraryView: React.FC = () => {
                           {new Date(item.date + 'T00:00:00').toLocaleDateString('pt-BR')} • {item.city}
                         </span>
                       </div>
-                      <h4 className="font-bold text-base text-white mt-0.5">{item.title}</h4>
+                      <h4 className="font-bold text-base text-ink-100 mt-0.5">{item.title}</h4>
                     </div>
                   </div>
 
@@ -296,7 +296,7 @@ export const ItineraryView: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleOpenEdit(item)}
-                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-white transition"
+                      className="p-1.5 rounded-lg bg-ink-800 text-ink-300 hover:text-ink-100 transition"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>

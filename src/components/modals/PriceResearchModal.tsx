@@ -154,7 +154,7 @@ export const PriceResearchModal: React.FC<Props> = ({
                 onChange={e => setProductName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && executeSearch()}
                 placeholder="Nome detalhado (ex: iPhone 16 Pro Max 256GB)"
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white text-xs focus:outline-none focus:border-accent-500 font-medium"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-ink-100 text-xs focus:outline-none focus:border-accent-500 font-medium"
               />
             </div>
 
@@ -164,7 +164,7 @@ export const PriceResearchModal: React.FC<Props> = ({
               onChange={e => setBrand(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && executeSearch()}
               placeholder="Marca (opcional)"
-              className="sm:w-32 px-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white text-xs focus:outline-none focus:border-accent-500"
+              className="sm:w-32 px-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-ink-100 text-xs focus:outline-none focus:border-accent-500"
             />
           </div>
 
@@ -177,7 +177,7 @@ export const PriceResearchModal: React.FC<Props> = ({
                   setSelectedDestination(e.target.value);
                   executeSearch({ dest: e.target.value });
                 }}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-white text-xs focus:outline-none focus:border-accent-500 appearance-none cursor-pointer"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-ink-900 border border-ink-700 text-ink-100 text-xs focus:outline-none focus:border-accent-500 appearance-none cursor-pointer"
               >
                 {DESTINATION_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>
@@ -339,7 +339,7 @@ export const PriceResearchModal: React.FC<Props> = ({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                    <div className="text-sm font-bold text-ink-100 flex items-center gap-2">
                       <span className="truncate">{c.store_name}</span>
                       <span
                         className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider ${
