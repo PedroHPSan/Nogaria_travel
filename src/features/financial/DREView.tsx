@@ -3,57 +3,24 @@ import { useTrip } from '../../context/TripContext';
 import { computeDre } from '../../services/dreEngine';
 import { ExpenseModal } from '../../components/modals/ExpenseModal';
 import { BudgetGoalModal } from '../../components/modals/BudgetGoalModal';
+import { DreCategories } from './dre/DreCategories';
+import { DreParticipants } from './dre/DreParticipants';
+import { DreTimeline } from './dre/DreTimeline';
 import type { Expense } from '../../types/database.types';
 import {
   DollarSign,
   TrendingUp,
   CheckCircle2,
   Plus,
-  Edit2,
-  Trash2,
   FileSpreadsheet,
   Users,
   Calendar,
-  Layers,
   Sparkles,
-  Plane,
-  Building2,
-  Ticket,
-  Car,
-  Utensils,
-  ShoppingBag,
-  ShieldCheck,
-  ChevronDown,
-  ChevronUp,
   Share2,
   Calculator,
-  ArrowRightLeft,
   Check,
   Clock
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
-
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  flight: Plane,
-  accommodation: Building2,
-  tickets: Ticket,
-  transport: Car,
-  food: Utensils,
-  shopping: ShoppingBag,
-  services: ShieldCheck,
-  other: Layers
-};
 
 const CATEGORY_COLORS: Record<string, string> = {
   flight: '#3b82f6', // blue
@@ -455,483 +422,33 @@ export const DREView: React.FC = () => {
         </button>
       </div>
 
-      {/* ABA 1: DRE por Macro-Categorias (Demonstração Contábil & Drilldown) */}
+
       {activeTab === 'categories' && (
-        <div className="space-y-4">
-          <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="p-4 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-blue-400" />
-                  Demonstrativo Consolidado de Despesas (DRE)
-                </h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Clique nas linhas para expandir e auditar cada comprovante/lançamento individual.
-                </p>
-              </div>
-              <button
-                onClick={() => handleOpenAddExpense()}
-                className="px-3 py-1.5 rounded-xl bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-xs font-bold flex items-center gap-1.5 transition"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Nova Despesa
-              </button>
-            </div>
-
-            <div className="divide-y divide-slate-800/80">
-              {dreResult.categories.map(c => {
-                const Icon = CATEGORY_ICONS[c.category] || Layers;
-                const isExpanded = expandedCategories[c.category] ?? false;
-
-                return (
-                  <div key={c.category} className="group transition bg-slate-950/40 hover:bg-slate-900/30">
-                    {/* Linha Principal da Categoria */}
-                    <div
-                      onClick={() => toggleCategoryExpand(c.category)}
-                      className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-[220px]">
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md shrink-0"
-                          style={{ backgroundColor: CATEGORY_COLORS[c.category] || '#3b82f6' }}
-                        >
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-sm text-white flex items-center gap-2">
-                            {c.label}
-                            <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-semibold">
-                              {c.item_count} itens
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-slate-400 mt-0.5 max-w-sm truncate">
-                            {c.description}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Números da DRE: Planejado, Realizado, Saldo, % */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 text-xs flex-1 max-w-2xl">
-                        {/* Planejado */}
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-semibold block">Orçado (Meta)</span>
-                          <span className="font-bold text-slate-200">
-                            {formatVal(c.planned_usd, c.planned_brl)}
-                          </span>
-                        </div>
-
-                        {/* Realizado */}
-                        <div>
-                          <span className="text-[10px] text-emerald-400 font-semibold block">Realizado (Pago)</span>
-                          <span className="font-bold text-emerald-400">
-                            {formatVal(c.actual_usd, c.actual_brl)}
-                          </span>
-                        </div>
-
-                        {/* A Provisionar */}
-                        <div>
-                          <span className="text-[10px] text-amber-400 font-semibold block">A Provisionar</span>
-                          <span className="font-bold text-amber-300">
-                            {formatVal(c.to_provision_usd, c.to_provision_brl)}
-                          </span>
-                        </div>
-
-                        {/* Execução & Variação */}
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-semibold block">Executado</span>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <div className="w-14 bg-slate-800 h-2 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${
-                                  c.is_over_budget ? 'bg-rose-500' : 'bg-emerald-500'
-                                }`}
-                                style={{ width: `${Math.min(100, c.execution_rate_pct)}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] font-bold text-slate-300">
-                              {c.execution_rate_pct}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-end md:self-center">
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleOpenAddExpense(c.category);
-                          }}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                          title="Adicionar despesa nesta categoria"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                        <div className="text-slate-400 group-hover:text-white transition">
-                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Drilldown: Lista de Lançamentos da Categoria */}
-                    {isExpanded && (
-                      <div className="px-4 pb-4 pt-1 bg-slate-950/80 border-t border-slate-900">
-                        {c.expenses.length === 0 ? (
-                          <div className="text-center py-4 text-xs text-slate-500">
-                            Nenhum comprovante lançado nesta categoria ainda.{' '}
-                            <button
-                              onClick={() => handleOpenAddExpense(c.category)}
-                              className="text-blue-400 hover:underline font-bold"
-                            >
-                              Lançar primeiro gasto
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 flex justify-between">
-                              <span>Comprovante / Descrição</span>
-                              <span>Valor & Status</span>
-                            </div>
-                            {c.expenses.map(exp => {
-                              const payer = participants.find(p => p.id === exp.paid_by_id);
-                              const beneficiaries = participants.filter(p => exp.beneficiary_ids?.includes(p.id));
-
-                              return (
-                                <div
-                                  key={exp.id}
-                                  className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-                                >
-                                  <div className="min-w-0 flex-1">
-                                    <div className="font-bold text-white flex items-center gap-2">
-                                      {exp.description}
-                                      <button
-                                        onClick={() => handleToggleStatus(exp)}
-                                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition ${
-                                          exp.status === 'paid'
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                                        }`}
-                                      >
-                                        {exp.status === 'paid' ? 'Pago' : 'Pendente'}
-                                      </button>
-                                    </div>
-                                    <div className="text-[11px] text-slate-400 mt-1 flex flex-wrap items-center gap-3">
-                                      <span>Data: {new Date(exp.date).toLocaleDateString('pt-BR')}</span>
-                                      <span>
-                                        Pago por: <strong className="text-slate-200">{payer?.nickname || payer?.full_name || 'Pedro'}</strong>
-                                      </span>
-                                      {beneficiaries.length > 0 && (
-                                        <span>
-                                          Para:{' '}
-                                          {beneficiaries.map(b => b.nickname || b.full_name.split(' ')[0]).join(', ')}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                                    <div className="text-right">
-                                      <div className="font-extrabold text-sm text-white">
-                                        {formatVal(exp.amount_usd, exp.amount_brl)}
-                                      </div>
-                                      <div className="text-[10px] text-slate-400">
-                                        {exp.currency} {exp.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        onClick={() => handleOpenEditExpense(exp)}
-                                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                                        title="Editar despesa"
-                                      >
-                                        <Edit2 className="w-3.5 h-3.5" />
-                                      </button>
-                                      <button
-                                        onClick={() => deleteExpense(exp.id)}
-                                        className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 transition"
-                                        title="Excluir despesa"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <DreCategories
+          dreResult={dreResult}
+          participants={participants}
+          expandedCategories={expandedCategories}
+          toggleCategoryExpand={toggleCategoryExpand}
+          formatVal={formatVal}
+          handleOpenAddExpense={handleOpenAddExpense}
+          handleOpenEditExpense={handleOpenEditExpense}
+          handleToggleStatus={handleToggleStatus}
+          deleteExpense={deleteExpense}
+        />
       )}
 
-      {/* ABA 2: DRE por Participante & Acerto de Contas */}
       {activeTab === 'participants' && (
-        <div className="space-y-6">
-          {/* Matriz de Acerto de Contas (Debt Settlement) */}
-          <div className="glass-panel p-5 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-slate-900 via-indigo-950/30 to-slate-900 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <ArrowRightLeft className="w-4 h-4 text-indigo-400" />
-                  Balancete de Acerto de Contas (Liquidação Inteligente)
-                </h3>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  Transferências financeiras recomendadas para zerar todas as dívidas e rateios entre os membros do grupo.
-                </p>
-              </div>
-            </div>
-
-            {dreResult.settlements.length === 0 ? (
-              <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Todas as contas estão perfeitamente balanceadas! Nenhum acerto pendente.</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {dreResult.settlements.map((s, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-xl bg-slate-950/80 border border-indigo-500/30 flex items-center justify-between gap-3 shadow-md"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center text-xs">
-                        {s.from_name[0]}
-                      </div>
-                      <div className="text-xs">
-                        <div className="text-slate-200">
-                          <strong className="text-white">{s.from_name}</strong> transfere para{' '}
-                          <strong className="text-emerald-400">{s.to_name}</strong>
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          Para quitar rateio de hospedagem, ingressos e passagens
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <div className="text-base font-extrabold text-emerald-400">
-                        {formatVal(s.amount_usd, s.amount_brl)}
-                      </div>
-                      <div className="text-[10px] text-slate-400">via Pix / Wise</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Cards Individuais dos Participantes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {dreResult.participants.map(p => (
-              <div
-                key={p.participant_id}
-                className="glass-card p-5 rounded-2xl border border-slate-800 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-10 h-10 rounded-full ${p.avatar_color} text-white font-bold flex items-center justify-center text-sm shadow`}>
-                      {p.nickname ? p.nickname[0] : p.full_name[0]}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-sm text-white truncate">{p.full_name}</h4>
-                      <div className="text-[11px] text-slate-400">
-                        Orçamento: {formatVal(p.budget_limit_usd, p.budget_limit_brl)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2.5 text-xs py-3 border-y border-slate-800">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Total Consumido:</span>
-                      <span className="font-bold text-slate-200">
-                        {formatVal(p.total_consumed_usd, p.total_consumed_brl)}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Total Pago (Desembolso):</span>
-                      <span className="font-bold text-emerald-400">
-                        {formatVal(p.total_paid_usd, p.total_paid_brl)}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-800/80">
-                      <span className="font-bold text-slate-300">Saldo Líquido:</span>
-                      <span
-                        className={`font-extrabold text-sm ${
-                          p.net_balance_usd > 1
-                            ? 'text-emerald-400'
-                            : p.net_balance_usd < -1
-                            ? 'text-rose-400'
-                            : 'text-slate-400'
-                        }`}
-                      >
-                        {p.net_balance_usd > 1 ? '+' : ''}
-                        {formatVal(p.net_balance_usd, p.net_balance_brl)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-2">
-                  <span
-                    className={`inline-block w-full text-center py-1.5 rounded-lg text-xs font-bold ${
-                      p.status === 'creditor'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : p.status === 'debtor'
-                        ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                        : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    {p.status === 'creditor'
-                      ? 'Credor (A Receber)'
-                      : p.status === 'debtor'
-                      ? 'Devedor (A Pagar)'
-                      : 'Contas Zeradas'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DreParticipants dreResult={dreResult} formatVal={formatVal} />
       )}
 
-      {/* ABA 3: Pré-Viagem vs. Na Viagem (Fluxo Temporal) */}
       {activeTab === 'timeline' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bloco 1: Pré-Viagem */}
-            <div className="glass-panel p-6 rounded-2xl border border-blue-500/30 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
-                    <Plane className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-white">Desembolsos Pré-Viagem (Custos Fixos)</h3>
-                    <p className="text-[11px] text-slate-400">Passagens, hotéis parcelados, ingressos e documentação</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Orçado Pré-Viagem:</span>
-                  <span className="font-bold text-slate-200 text-base">
-                    {formatVal(dreResult.pre_trip_planned_usd, dreResult.pre_trip_planned_brl)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-emerald-400 block text-[11px]">Já Pago no Brasil:</span>
-                  <span className="font-bold text-emerald-400 text-base">
-                    {formatVal(dreResult.pre_trip_actual_usd, dreResult.pre_trip_actual_brl)}
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-400">
-                Essas despesas devem estar 100% quitadas antes do embarque para evitar comprometer o limite de crédito durante a viagem.
-              </p>
-            </div>
-
-            {/* Bloco 2: Na Viagem */}
-            <div className="glass-panel p-6 rounded-2xl border border-emerald-500/30 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                    <Utensils className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-white">Desembolsos Durante a Viagem (Variáveis)</h3>
-                    <p className="text-[11px] text-slate-400">Alimentação, compras, combustível, Uber e imprevistos</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Meta de Consumo In Loco:</span>
-                  <span className="font-bold text-slate-200 text-base">
-                    {formatVal(dreResult.in_trip_planned_usd, dreResult.in_trip_planned_brl)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-amber-400 block text-[11px]">A Levar em Moeda/Cartão:</span>
-                  <span className="font-bold text-amber-300 text-base">
-                    {formatVal(dreResult.in_trip_planned_usd - dreResult.in_trip_actual_usd, dreResult.in_trip_planned_brl - dreResult.in_trip_actual_brl)}
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-400">
-                Valor que precisa estar disponível na conta internacional (Nomad / Wise / Espécie) para os dias de viagem.
-              </p>
-            </div>
-          </div>
-
-          {/* Gráficos de Comparativo e Distribuição */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-              <h4 className="text-sm font-bold text-white mb-4">
-                Comparativo: Planejado vs. Realizado vs. A Provisionar
-              </h4>
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartCategoryData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                    <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                    <YAxis stroke="#64748b" fontSize={11} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar dataKey="Planejado" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Realizado" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="A_Provisionar" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-              <h4 className="text-sm font-bold text-white mb-4">
-                Composição Percentual dos Gastos Realizados
-              </h4>
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={95}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }}
-                      formatter={(val: any) => [
-                        `${currency === 'BRL' ? 'R$' : 'US$'} ${Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-                        'Realizado'
-                      ]}
-                    />
-                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
+        <DreTimeline
+          dreResult={dreResult}
+          formatVal={formatVal}
+          chartCategoryData={chartCategoryData}
+          pieData={pieData}
+          currency={currency}
+        />
       )}
 
       {/* Modal de Lançamento / Edição de Despesa */}
