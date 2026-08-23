@@ -6,6 +6,7 @@ import { BudgetGoalModal } from '../../components/modals/BudgetGoalModal';
 import { DreCategories } from './dre/DreCategories';
 import { DreParticipants } from './dre/DreParticipants';
 import { DreTimeline } from './dre/DreTimeline';
+import { KpiCard } from '../../components/ui/KpiCard';
 import type { Expense } from '../../types/database.types';
 import {
   DollarSign,
@@ -254,96 +255,68 @@ export const DREView: React.FC = () => {
 
       {/* KPI Cards Principais da DRE */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Total Planejado */}
-        <div className="glass-card p-5 rounded-2xl border border-blue-500/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-blue-400">Provisionamento Total (Orçado)</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
-              <Calculator className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-white tracking-tight">
-              {formatVal(dreResult.total_planned_usd, dreResult.total_planned_brl)}
-            </div>
-            <div className="text-xs text-slate-400 font-medium mt-1">
-              {currency === 'BRL'
-                ? `≈ US$ ${dreResult.total_planned_usd.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-                : `≈ R$ ${dreResult.total_planned_brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            </div>
-          </div>
-        </div>
+        <KpiCard
+          accent="blue"
+          icon={Calculator}
+          label="Provisionamento Total (Orçado)"
+          value={formatVal(dreResult.total_planned_usd, dreResult.total_planned_brl)}
+          sublabel={
+            currency === 'BRL'
+              ? `≈ US$ ${dreResult.total_planned_usd.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+              : `≈ R$ ${dreResult.total_planned_brl.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+          }
+        />
 
-        {/* Card 2: Total Realizado (Já Pago) */}
-        <div className="glass-card p-5 rounded-2xl border border-emerald-500/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-400">Realizado (Já Pago)</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-white tracking-tight">
-              {formatVal(dreResult.total_actual_usd, dreResult.total_actual_brl)}
-            </div>
-            <div className="text-xs text-emerald-400 font-medium mt-1 flex items-center gap-1">
+        <KpiCard
+          accent="emerald"
+          icon={DollarSign}
+          label="Realizado (Já Pago)"
+          value={formatVal(dreResult.total_actual_usd, dreResult.total_actual_brl)}
+          sublabel={
+            <span className="flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{dreResult.global_execution_rate_pct}% do orçamento liquidado</span>
-            </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-400 pt-2 border-t border-slate-800 flex justify-between">
-            <span>Despesas Lançadas:</span>
-            <span className="text-white font-semibold">{expenses.length} comprovantes</span>
-          </div>
-        </div>
-
-        {/* Card 3: Saldo a Provisionar / Restante */}
-        <div className="glass-card p-5 rounded-2xl border border-amber-500/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-400">A Provisionar (Saldo Restante)</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-white tracking-tight">
-              {formatVal(dreResult.total_to_provision_usd, dreResult.total_to_provision_brl)}
-            </div>
-            <div className="text-xs text-amber-400/90 font-medium mt-1">
-              Necessário arrecadar / levar para a viagem
-            </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-400 pt-2 border-t border-slate-800 flex justify-between">
-            <span>Pendente lançado:</span>
-            <span className="text-amber-300 font-semibold">
-              {formatVal(dreResult.total_pending_usd, dreResult.total_pending_brl)}
+              {dreResult.global_execution_rate_pct}% do orçamento liquidado
             </span>
-          </div>
-        </div>
+          }
+          footer={
+            <>
+              <span>Despesas Lançadas:</span>
+              <span className="text-white font-semibold">{expenses.length} comprovantes</span>
+            </>
+          }
+        />
 
-        {/* Card 4: Economia / Desvio */}
-        <div className="glass-card p-5 rounded-2xl border border-purple-500/20 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-purple-400">Economia em Benefícios</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
-              <Sparkles className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-white tracking-tight">
-              {formatVal(dreResult.gift_card_savings_usd, dreResult.gift_card_savings_brl)}
-            </div>
-            <div className="text-xs text-purple-300 font-medium mt-1">
-              Descontos de Gift Cards & Cashbacks
-            </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-400 pt-2 border-t border-slate-800 flex justify-between">
-            <span>Variação Global:</span>
-            <span className={dreResult.total_variance_usd >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-              {dreResult.total_variance_usd >= 0 ? '+ Folga Orçamentária' : '- Estouro'}
-            </span>
-          </div>
-        </div>
+        <KpiCard
+          accent="amber"
+          icon={Clock}
+          label="A Provisionar (Saldo Restante)"
+          value={formatVal(dreResult.total_to_provision_usd, dreResult.total_to_provision_brl)}
+          sublabel="Necessário arrecadar / levar para a viagem"
+          footer={
+            <>
+              <span>Pendente lançado:</span>
+              <span className="text-amber-300 font-semibold">
+                {formatVal(dreResult.total_pending_usd, dreResult.total_pending_brl)}
+              </span>
+            </>
+          }
+        />
+
+        <KpiCard
+          accent="purple"
+          icon={Sparkles}
+          label="Economia em Benefícios"
+          value={formatVal(dreResult.gift_card_savings_usd, dreResult.gift_card_savings_brl)}
+          sublabel="Descontos de Gift Cards & Cashbacks"
+          footer={
+            <>
+              <span>Variação Global:</span>
+              <span className={dreResult.total_variance_usd >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                {dreResult.total_variance_usd >= 0 ? '+ Folga Orçamentária' : '- Estouro'}
+              </span>
+            </>
+          }
+        />
       </div>
 
       {/* Barra de Progresso Global da DRE */}

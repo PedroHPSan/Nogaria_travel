@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTrip } from '../../context/TripContext';
+import { ViewHeader } from '../../components/ui/ViewHeader';
 import { ShieldAlert, AlertTriangle, CheckCircle2, RotateCw } from 'lucide-react';
 
 interface AuditViewProps {
@@ -18,24 +19,19 @@ export const AuditView: React.FC<AuditViewProps> = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Módulo de Auditoria Autônoma de Viagem
-          </h2>
-          <p className="text-xs text-slate-400">
-            Varredura automática em busca de buracos em hospedagens, devoluções de carros incompatíveis, divergências de bagagem e restrições infantis.
-          </p>
-        </div>
-
-        <button
-          onClick={rerunAudit}
-          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          <RotateCw className="w-4 h-4" />
-          Reexecutar Varredura
-        </button>
-      </div>
+      <ViewHeader
+        title="Módulo de Auditoria Autônoma de Viagem"
+        subtitle="Varredura automática em busca de buracos em hospedagens, devoluções de carros incompatíveis, divergências de bagagem e restrições infantis."
+        actions={
+          <button
+            onClick={rerunAudit}
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <RotateCw className="w-4 h-4" />
+            Reexecutar Varredura
+          </button>
+        }
+      />
 
       {/* Summary Scoreboard */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">

@@ -5,6 +5,7 @@ import { DiningRadarModal } from '../../components/modals/DiningRadarModal';
 import { AttractionGuideModal } from '../../components/modals/AttractionGuideModal';
 import { DayTimeline } from './DayTimeline';
 import { MonthCalendar } from './MonthCalendar';
+import { ViewHeader } from '../../components/ui/ViewHeader';
 import type { ItineraryItem } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
 import {
@@ -130,37 +131,34 @@ export const ItineraryView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Roteiro Diário & Atrações ({tripItinerary.length})
-          </h2>
-          <p className="text-xs text-slate-400">
-            {viewMode === 'timeline' && parkSelectedDate
-              ? `${new Date(parkSelectedDate + 'T00:00:00').toLocaleDateString('pt-BR')}${parkName ? ` • ${parkName}` : ''} — Cronologia dos Parques`
-              : `Cronograma inteligente com validações de altura mínima para Gabi (4 anos • ${gabi?.height_cm || 100}cm) e Débora (12 anos).`}
-          </p>
-        </div>
+      <ViewHeader
+        title={`Roteiro Diário & Atrações (${tripItinerary.length})`}
+        subtitle={
+          viewMode === 'timeline' && parkSelectedDate
+            ? `${new Date(parkSelectedDate + 'T00:00:00').toLocaleDateString('pt-BR')}${parkName ? ` • ${parkName}` : ''} — Cronologia dos Parques`
+            : `Cronograma inteligente com validações de altura mínima para Gabi (4 anos • ${gabi?.height_cm || 100}cm) e Débora (12 anos).`
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsDiningRadarOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+            >
+              <Utensils className="w-3.5 h-3.5 text-amber-400" />
+              Comer Barato ($)
+            </button>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setIsDiningRadarOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
-          >
-            <Utensils className="w-3.5 h-3.5 text-amber-400" />
-            Comer Barato ($)
-          </button>
-
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" />
-            Nova Atividade
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Atividade
+            </button>
+          </>
+        }
+      />
 
       {/* View Mode Toggle */}
       <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start w-fit">

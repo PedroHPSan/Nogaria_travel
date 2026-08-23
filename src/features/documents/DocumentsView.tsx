@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { DocumentModal } from '../../components/modals/DocumentModal';
+import { ViewHeader } from '../../components/ui/ViewHeader';
 import {
   FileText,
   Plus,
@@ -26,24 +27,19 @@ export const DocumentsView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Documentos, Vouchers & Leitura Inteligente IA
-          </h2>
-          <p className="text-xs text-slate-400">
-            Centralize arquivos de voo, reservas de hotel e seguro com extração automática via inteligência artificial (OCR).
-          </p>
-        </div>
-
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Anexar Documento
-        </button>
-      </div>
+      <ViewHeader
+        title="Documentos, Vouchers & Leitura Inteligente IA"
+        subtitle="Centralize arquivos de voo, reservas de hotel e seguro com extração automática via inteligência artificial (OCR)."
+        actions={
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Anexar Documento
+          </button>
+        }
+      />
 
       {/* Filter & Search Bar */}
       <div className="p-3 rounded-2xl glass-panel border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">

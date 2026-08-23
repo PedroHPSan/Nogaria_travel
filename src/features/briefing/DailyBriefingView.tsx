@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
+import { ViewHeader } from '../../components/ui/ViewHeader';
 import {
   Volume2,
   Play,
@@ -188,38 +189,35 @@ export const DailyBriefingView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+      <ViewHeader
+        title={
+          <>
             <Volume2 className="w-5 h-5 text-indigo-400" />
             Briefing do Dia (Falado & Escrito)
-          </h2>
-          <p className="text-xs text-slate-400">
-            Relatório diário em áudio e texto consolidando atrações, logística, restrições de altura para crianças e dicas financeiras.
-          </p>
-        </div>
-
-        {/* Date Switcher */}
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-semibold text-slate-300">Data:</span>
-          <select
-            value={selectedDate}
-            onChange={e => {
-              handleStopSpeech();
-              setSelectedDate(e.target.value);
-            }}
-            className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-bold focus:outline-none focus:border-blue-500"
-          >
-            {tripDates.map(d => (
-              <option key={d} value={d}>
-                {new Date(`${d}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {d === '2026-09-19' ? 'Devolução SUV FLL' : 'Dia de Viagem'}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          </>
+        }
+        subtitle="Relatório diário em áudio e texto consolidando atrações, logística, restrições de altura para crianças e dicas financeiras."
+        actions={
+          <>
+            <Calendar className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-semibold text-slate-300">Data:</span>
+            <select
+              value={selectedDate}
+              onChange={e => {
+                handleStopSpeech();
+                setSelectedDate(e.target.value);
+              }}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-bold focus:outline-none focus:border-blue-500"
+            >
+              {tripDates.map(d => (
+                <option key={d} value={d}>
+                  {new Date(`${d}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {d === '2026-09-19' ? 'Devolução SUV FLL' : 'Dia de Viagem'}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+      />
 
       {/* Audio Player Card (Falado por IA) */}
       <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-950 shadow-xl relative overflow-hidden">

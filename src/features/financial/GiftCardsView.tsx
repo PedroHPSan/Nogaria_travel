@@ -3,6 +3,8 @@ import { useTrip } from '../../context/TripContext';
 import { GiftCardModal } from '../../components/modals/GiftCardModal';
 import { LoyaltyModal } from '../../components/modals/LoyaltyModal';
 import { calculateGiftCardPortfolioSavings } from '../../services/giftCardCalculator';
+import { ViewHeader } from '../../components/ui/ViewHeader';
+import { SubTabs } from '../../components/ui/SubTabs';
 import type { GiftCard, LoyaltyAccount } from '../../types/database.types';
 import {
   CreditCard,
@@ -69,43 +71,20 @@ export const GiftCardsView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Gift Cards & Milhas
-          </h2>
-          <p className="text-xs text-slate-400">
-            Calculadora determinística de custo líquido de gift cards e saldos de milhas/fidelidade. Despesas e rateios ficam na DRE.
-          </p>
-        </div>
-
-        {/* Sub-tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
-          <button
-            onClick={() => setActiveSubTab('gift_cards')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'gift_cards'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <CreditCard className="w-3.5 h-3.5" />
-            Gift Cards ({tripGiftCards.length})
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('loyalty')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'loyalty'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Award className="w-3.5 h-3.5" />
-            Milhas & Fidelidade ({tripLoyalty.length})
-          </button>
-        </div>
-      </div>
+      <ViewHeader
+        title="Gift Cards & Milhas"
+        subtitle="Calculadora determinística de custo líquido de gift cards e saldos de milhas/fidelidade. Despesas e rateios ficam na DRE."
+        actions={
+          <SubTabs
+            items={[
+              { id: 'gift_cards', label: `Gift Cards (${tripGiftCards.length})`, icon: CreditCard, accent: 'emerald' },
+              { id: 'loyalty', label: `Milhas & Fidelidade (${tripLoyalty.length})`, icon: Award, accent: 'purple' }
+            ]}
+            activeId={activeSubTab}
+            onChange={setActiveSubTab}
+          />
+        }
+      />
 
       {/* SUB-TAB: GIFT CARDS */}
       {activeSubTab === 'gift_cards' && (

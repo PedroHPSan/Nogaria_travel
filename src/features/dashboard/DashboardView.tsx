@@ -2,6 +2,7 @@ import React from 'react';
 import { useTrip } from '../../context/TripContext';
 import { calculateGiftCardPortfolioSavings } from '../../services/giftCardCalculator';
 import { computePreparationScore } from '../../services/auditEngine';
+import { KpiCard } from '../../components/ui/KpiCard';
 import {
   TrendingDown,
   Car,
@@ -63,71 +64,42 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div
+        <KpiCard
+          accent="emerald"
+          icon={TrendingDown}
+          label="Economia Efetiva (Gift Cards)"
+          value={formatAmount(totalSavingsGC)}
+          sublabel={
+            <>Desconto real líquido de <span className="font-bold">{avgSavingsPct.toFixed(1)}%</span> sobre nominal</>
+          }
+          footer={
+            <>
+              <span>Nominal: {formatAmount(totalNominalGC)}</span>
+              <span>Pago: {formatAmount(totalNetCostGC)}</span>
+            </>
+          }
           onClick={() => onNavigate('financial')}
-          className="glass-card p-5 rounded-2xl border border-emerald-500/20 relative overflow-hidden cursor-pointer hover:border-emerald-500/40 transition"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-emerald-400">Economia Efetiva (Gift Cards)</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <TrendingDown className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-white">{formatAmount(totalSavingsGC)}</div>
-            <div className="text-xs text-emerald-400/90 font-medium mt-1">
-              Desconto real líquido de <span className="font-bold">{avgSavingsPct.toFixed(1)}%</span> sobre nominal
-            </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-400 pt-2 border-t border-slate-800 flex justify-between">
-            <span>Nominal: {formatAmount(totalNominalGC)}</span>
-            <span>Pago: {formatAmount(totalNetCostGC)}</span>
-          </div>
-        </div>
+        />
 
-        <div
+        <KpiCard
+          accent="amber"
+          icon={Car}
+          label="Devolução do Veículo"
+          value={car ? new Date(car.dropoff_time).toLocaleDateString('pt-BR') + ' às 17h30' : '19/09 às 17h30'}
+          sublabel={car ? car.provider_company : 'Hertz / Alamo (FLL Airport)'}
+          footer={<><span className="text-rose-400 font-semibold">Pendência:</span>&nbsp;Uber pós devolução para hotel final</>}
           onClick={() => onNavigate('logistics')}
-          className="glass-card p-5 rounded-2xl border border-amber-500/20 cursor-pointer hover:border-amber-500/40 transition"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-amber-400">Devolução do Veículo</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Car className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-lg font-bold text-white leading-tight">
-              {car ? new Date(car.dropoff_time).toLocaleDateString('pt-BR') + ' às 17h30' : '19/09 às 17h30'}
-            </div>
-            <div className="text-xs text-amber-400/90 font-medium mt-1">
-              {car ? car.provider_company : 'Hertz / Alamo (FLL Airport)'}
-            </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-400 pt-2 border-t border-slate-800">
-            <span className="text-rose-400 font-semibold">Pendência:</span> Uber pós devolução para hotel final
-          </div>
-        </div>
+        />
 
-        <div
+        <KpiCard
+          accent="blue"
+          icon={CheckCircle2}
+          label="Índice de Preparação"
+          value={`${prepScore}%`}
+          sublabel={`${unresolvedCritical} crítico(s) • ${unresolvedWarning} alerta(s)`}
+          progress={prepScore}
           onClick={() => onNavigate('audit')}
-          className="glass-card p-5 rounded-2xl border border-blue-500/20 cursor-pointer hover:border-blue-500/40 transition"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-blue-400">Índice de Preparação</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-white">{prepScore}%</div>
-            <div className="text-xs text-slate-400 font-medium mt-1">
-              {unresolvedCritical} crítico(s) • {unresolvedWarning} alerta(s)
-            </div>
-          </div>
-          <div className="mt-3 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-blue-500 h-full rounded-full" style={{ width: `${prepScore}%` }} />
-          </div>
-        </div>
+        />
       </div>
 
       {/* Participants Quick List */}

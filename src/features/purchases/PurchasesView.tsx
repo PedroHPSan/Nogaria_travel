@@ -10,6 +10,8 @@ import { StoreRadarModal } from '../../components/modals/StoreRadarModal';
 import { FreeTierBadge } from '../../components/common/FreeTierBadge';
 import { PurchaseDecisionCard } from './PurchaseDecisionCard';
 import { QuotaAllocationPanel } from './QuotaAllocationPanel';
+import { ViewHeader } from '../../components/ui/ViewHeader';
+import { SubTabs } from '../../components/ui/SubTabs';
 import type { PurchaseItem, Luggage, PurchaseAssumptions } from '../../types/database.types';
 import {
   ShoppingBag,
@@ -110,43 +112,20 @@ export const PurchasesView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Módulo de Compras Planejadas & Bagagens
-          </h2>
-          <p className="text-xs text-slate-400">
-            Controle de produtos (Apple, roupas, itens infantis), economia estimada EUA x Brasil e franquia de malas.
-          </p>
-        </div>
-
-        {/* Sub-tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
-          <button
-            onClick={() => setActiveSubTab('purchases')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'purchases'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Compras ({tripPurchases.length})
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('luggage')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'luggage'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <LuggageIcon className="w-3.5 h-3.5" />
-            Bagagens ({tripLuggages.length})
-          </button>
-        </div>
-      </div>
+      <ViewHeader
+        title="Módulo de Compras Planejadas & Bagagens"
+        subtitle="Controle de produtos (Apple, roupas, itens infantis), economia estimada EUA x Brasil e franquia de malas."
+        actions={
+          <SubTabs
+            items={[
+              { id: 'purchases', label: `Compras (${tripPurchases.length})`, icon: ShoppingBag, accent: 'purple' },
+              { id: 'luggage', label: `Bagagens (${tripLuggages.length})`, icon: LuggageIcon, accent: 'blue' }
+            ]}
+            activeId={activeSubTab}
+            onChange={setActiveSubTab}
+          />
+        }
+      />
 
       {/* SUB-TAB: PURCHASES */}
       {activeSubTab === 'purchases' && (

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ParticipantModal } from '../../components/modals/ParticipantModal';
+import { ViewHeader } from '../../components/ui/ViewHeader';
 import type { Participant } from '../../types/database.types';
 import { FileText, DollarSign, Ruler, HeartPulse, Plus, Edit2, Trash2, ShieldAlert } from 'lucide-react';
 
@@ -39,33 +40,28 @@ export const ParticipantsView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Participantes do Grupo ({tripParticipants.length})
-          </h2>
-          <p className="text-xs text-slate-400">
-            Cadastro individualizado com teto orçamentário, passaportes, vistos, regras por idade e restrições de altura.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Buscar participante..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 w-44"
-          />
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            Novo Participante
-          </button>
-        </div>
-      </div>
+      <ViewHeader
+        title={`Participantes do Grupo (${tripParticipants.length})`}
+        subtitle="Cadastro individualizado com teto orçamentário, passaportes, vistos, regras por idade e restrições de altura."
+        actions={
+          <>
+            <input
+              type="text"
+              placeholder="Buscar participante..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 w-44"
+            />
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              Novo Participante
+            </button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map(p => (

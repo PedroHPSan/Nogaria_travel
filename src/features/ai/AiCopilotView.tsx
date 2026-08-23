@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
+import { ViewHeader } from '../../components/ui/ViewHeader';
 import {
   Sparkles,
   Send,
@@ -99,33 +100,27 @@ export const AiCopilotView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Copiloto IA Transversal & Gestão de Provedores
-          </h2>
-          <p className="text-xs text-slate-400">
-            Interface de IA contextualizada com acesso aos módulos da viagem e gerenciamento seguro de tokens e modelos (Gemini, OpenAI, Claude, DeepSeek).
-          </p>
-        </div>
-
-        {/* Provider Switcher Selector */}
-        <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto text-xs">
-          <Cpu className="w-4 h-4 text-purple-400" />
-          <span className="font-semibold text-slate-300">Provedor Ativo:</span>
-          <select
-            value={activeProviderId}
-            onChange={e => setActiveProviderId(e.target.value)}
-            className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-white font-bold text-xs"
-          >
-            {aiProviders.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.provider.toUpperCase()} ({p.model_name})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <ViewHeader
+        title="Copiloto IA Transversal & Gestão de Provedores"
+        subtitle="Interface de IA contextualizada com acesso aos módulos da viagem e gerenciamento seguro de tokens e modelos (Gemini, OpenAI, Claude, DeepSeek)."
+        actions={
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+            <Cpu className="w-4 h-4 text-purple-400" />
+            <span className="font-semibold text-slate-300">Provedor Ativo:</span>
+            <select
+              value={activeProviderId}
+              onChange={e => setActiveProviderId(e.target.value)}
+              className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-white font-bold text-xs"
+            >
+              {aiProviders.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.provider.toUpperCase()} ({p.model_name})
+                </option>
+              ))}
+            </select>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat Main Window */}
