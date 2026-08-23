@@ -182,9 +182,9 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                 {/* Drilldown: Lista de Lançamentos da Categoria */}
                 {isExpanded && (
                   <div className="px-4 pb-4 pt-1 bg-slate-950/80 border-t border-slate-900">
-                    {c.expenses.length === 0 ? (
+                    {c.items.length === 0 ? (
                       <div className="text-center py-4 text-xs text-slate-500">
-                        Nenhum comprovante lançado nesta categoria ainda.{' '}
+                        Nenhum item lançado nesta categoria ainda.{' '}
                         <button
                           onClick={() => handleOpenAddExpense(c.category)}
                           className="text-blue-400 hover:underline font-bold"
@@ -195,37 +195,61 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                     ) : (
                       <div className="space-y-2">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 flex justify-between">
-                          <span>Comprovante / Descrição</span>
+                          <span>Origem / Comprovante / Descrição</span>
                           <span>Valor & Status</span>
                         </div>
-                        {c.expenses.map(exp => {
-                          const payer = participants.find(p => p.id === exp.paid_by_id);
-                          const beneficiaries = participants.filter(p => exp.beneficiary_ids?.includes(p.id));
+                        {c.items.map(item => {
+                          const payer = item.paid_by_id ? participants.find(p => p.id === item.paid_by_id) : null;
+                          const beneficiaries = participants.filter(p => item.beneficiary_ids?.includes(p.id));
+
+                          const SOURCE_LABELS: Record<string, string> = {
+                            flight: '✈️ Voo',
+                            accommodation: '🏨 Hotel',
+                            transport: '🚗 Transporte',
+                            purchase: '🛍️ Compra',
+                            itinerary: '🎟️ Roteiro',
+                            manual_expense: '🧾 Comprovante'
+                          };
 
                           return (
                             <div
-                              key={exp.id}
+                              key={item.id}
                               className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                             >
                               <div className="min-w-0 flex-1">
-                                <div className="font-bold text-white flex items-center gap-2">
-                                  {exp.description}
-                                  <button
-                                    onClick={() => handleToggleStatus(exp)}
-                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition ${
-                                      exp.status === 'paid'
+                                <div className="font-bold text-white flex items-center gap-2 flex-wrap">
+                                  <span className="px-2 py-0.5 rounded bg-slate-800/50 text-[10px] text-slate-300 border border-slate-700">
+                                    {SOURCE_LABELS[item.source] || item.source}
+                                  </span>
+                                  {item.description}
+                                  {item.is_synthetic ? (
+                                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                                      item.status === 'paid'
                                         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                                         : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                                    }`}
-                                  >
-                                    {exp.status === 'paid' ? 'Pago' : 'Pendente'}
-                                  </button>
+                                    }`}>
+                                      {item.status === 'paid' ? 'Pago' : 'Pendente'}
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleToggleStatus(item as Expense)}
+                                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition ${
+                                        item.status === 'paid'
+                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                      }`}
+                                    >
+                                      {item.status === 'paid' ? 'Pago' : 'Pendente'}
+                                    </button>
+                                  )}
                                 </div>
                                 <div className="text-[11px] text-slate-400 mt-1 flex flex-wrap items-center gap-3">
-                                  <span>Data: {new Date(exp.date).toLocaleDateString('pt-BR')}</span>
-                                  <span>
-                                    Pago por: <strong className="text-slate-200">{payer?.nickname || payer?.full_name || 'Pedro'}</strong>
-                                  </span>
+                                  <span>Data: {new Date(item.date).toLocaleDateString('pt-BR')}</span>
+                                  {payer && (
+                                    <span>
+                                      Pago por: <strong className="text-slate-200">{payer.nickname || payer.full_name || 'Pedro'}</strong>
+                                    </span>
+                                  )}
                                   {beneficiaries.length > 0 && (
                                     <span>
                                       Para:{' '}
@@ -238,29 +262,31 @@ export const DreCategories: React.FC<DreCategoriesProps> = ({
                               <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                                 <div className="text-right">
                                   <div className="font-extrabold text-sm text-white">
-                                    {formatVal(exp.amount_usd, exp.amount_brl)}
+                                    {formatVal(item.amount_usd, item.amount_brl)}
                                   </div>
                                   <div className="text-[10px] text-slate-400">
-                                    {exp.currency} {exp.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    {item.currency} {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={() => handleOpenEditExpense(exp)}
-                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                                    title="Editar despesa"
-                                  >
-                                    <Edit2 className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => deleteExpense(exp.id)}
-                                    className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 transition"
-                                    title="Excluir despesa"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
+                                {!item.is_synthetic && (
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => handleOpenEditExpense(item as Expense)}
+                                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                                      title="Editar despesa"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteExpense(item.id)}
+                                      className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 transition"
+                                      title="Excluir despesa"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
