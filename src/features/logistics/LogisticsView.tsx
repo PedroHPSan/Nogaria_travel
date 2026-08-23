@@ -5,6 +5,8 @@ import { AccommodationModal } from '../../components/modals/AccommodationModal';
 import { TransportModal } from '../../components/modals/TransportModal';
 import { DiningRadarModal } from '../../components/modals/DiningRadarModal';
 import { HotelServicesModal } from '../../components/modals/HotelServicesModal';
+import { ViewHeader } from '../../components/ui/ViewHeader';
+import { SubTabs } from '../../components/ui/SubTabs';
 import type { Flight, Accommodation, TransportReservation } from '../../types/database.types';
 import {
   Plane,
@@ -95,55 +97,21 @@ export const LogisticsView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Central de Logística da Viagem
-          </h2>
-          <p className="text-xs text-slate-400">
-            Gerencie voos por participante, reservas de hotel e devoluções de veículos sem conflitos de horário.
-          </p>
-        </div>
-
-        {/* Sub-tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
-          <button
-            onClick={() => setActiveSubTab('flights')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'flights'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Plane className="w-3.5 h-3.5" />
-            Voos ({tripFlights.length})
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('accommodations')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'accommodations'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Building className="w-3.5 h-3.5" />
-            Hospedagens ({tripAccs.length})
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('transports')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'transports'
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Car className="w-3.5 h-3.5" />
-            Veículos ({tripTransports.length})
-          </button>
-        </div>
-      </div>
+      <ViewHeader
+        title="Central de Logística da Viagem"
+        subtitle="Gerencie voos por participante, reservas de hotel e devoluções de veículos sem conflitos de horário."
+        actions={
+          <SubTabs
+            items={[
+              { id: 'flights', label: `Voos (${tripFlights.length})`, icon: Plane, accent: 'blue' },
+              { id: 'accommodations', label: `Hospedagens (${tripAccs.length})`, icon: Building, accent: 'emerald' },
+              { id: 'transports', label: `Veículos (${tripTransports.length})`, icon: Car, accent: 'amber' }
+            ]}
+            activeId={activeSubTab}
+            onChange={setActiveSubTab}
+          />
+        }
+      />
 
       {/* SUB-TAB: FLIGHTS */}
       {activeSubTab === 'flights' && (

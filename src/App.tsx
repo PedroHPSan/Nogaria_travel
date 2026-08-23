@@ -11,7 +11,6 @@ import { DashboardView } from './features/dashboard/DashboardView';
 import { ParticipantsView } from './features/participants/ParticipantsView';
 import { LogisticsView } from './features/logistics/LogisticsView';
 import { ItineraryView } from './features/itinerary/ItineraryView';
-import { TimelineView } from './features/timeline/TimelineView';
 import { GiftCardsView } from './features/financial/GiftCardsView';
 import { PurchasesView } from './features/purchases/PurchasesView';
 import { TasksDecisionsView } from './features/tasks_decisions/TasksDecisionsView';
@@ -22,11 +21,32 @@ import { DailyBriefingView } from './features/briefing/DailyBriefingView';
 import { DREView } from './features/financial/DREView';
 import { WriteFailureBanner } from './components/WriteFailureBanner';
 
+const ACTIVE_TAB_SESSION_KEY = 'ANTIGRAVITY_TRAVEL_PLATFORM_V1_active_tab';
+const VALID_TABS: NavTab[] = [
+  'dashboard', 'briefing', 'dre', 'participants', 'logistics', 'itinerary',
+  'purchases', 'financial', 'tasks_decisions', 'documents', 'audit', 'ai'
+];
+
+function getInitialTab(): NavTab {
+  const fromHash = window.location.hash.replace('#', '');
+  if (VALID_TABS.includes(fromHash as NavTab)) return fromHash as NavTab;
+  const stored = sessionStorage.getItem(ACTIVE_TAB_SESSION_KEY);
+  if (VALID_TABS.includes(stored as NavTab)) return stored as NavTab;
+  return 'dashboard';
+}
+
 function MainAppContent() {
-  const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
-  const { auditFindings } = useTrip();
+  const [activeTab, setActiveTabState] = useState<NavTab>(getInitialTab);
+  const { auditFindings, participants, tasks } = useTrip();
 
   const unresolvedAuditCount = auditFindings.filter(f => !f.resolved).length;
+  const pendingTaskCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+
+  const setActiveTab = (tab: NavTab) => {
+    setActiveTabState(tab);
+    sessionStorage.setItem(ACTIVE_TAB_SESSION_KEY, tab);
+    window.history.replaceState(null, '', `#${tab}`);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
@@ -39,6 +59,8 @@ function MainAppContent() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         auditCount={unresolvedAuditCount}
+        participantCount={participants.length}
+        pendingTaskCount={pendingTaskCount}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 pt-2">
@@ -67,10 +89,6 @@ function MainAppContent() {
 
         {activeTab === 'itinerary' && (
           <ItineraryView />
-        )}
-
-        {activeTab === 'timeline' && (
-          <TimelineView />
         )}
 
         {activeTab === 'purchases' && (

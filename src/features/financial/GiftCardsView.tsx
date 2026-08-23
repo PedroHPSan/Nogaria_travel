@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { GiftCardModal } from '../../components/modals/GiftCardModal';
-import { ExpenseModal } from '../../components/modals/ExpenseModal';
 import { LoyaltyModal } from '../../components/modals/LoyaltyModal';
-import type { GiftCard, Expense, LoyaltyAccount } from '../../types/database.types';
+import { calculateGiftCardPortfolioSavings } from '../../services/giftCardCalculator';
+import { ViewHeader } from '../../components/ui/ViewHeader';
+import { SubTabs } from '../../components/ui/SubTabs';
+import type { GiftCard, LoyaltyAccount } from '../../types/database.types';
 import {
   CreditCard,
   Plus,
   Edit2,
   Trash2,
   Award,
-  Receipt,
   Sparkles
 } from 'lucide-react';
 
@@ -22,41 +23,30 @@ export const GiftCardsView: React.FC = () => {
     addGiftCard,
     updateGiftCard,
     deleteGiftCard,
-    expenses,
-    addExpense,
-    updateExpense,
-    deleteExpense,
     loyaltyAccounts,
     addLoyaltyAccount,
     updateLoyaltyAccount,
     deleteLoyaltyAccount,
     formatAmount,
-    currency,
-    exchangeRate
+    currency
   } = useTrip();
 
 
-  const [activeSubTab, setActiveSubTab] = useState<'gift_cards' | 'expenses' | 'loyalty'>('gift_cards');
+  const [activeSubTab, setActiveSubTab] = useState<'gift_cards' | 'loyalty'>('gift_cards');
 
   // Modals
   const [isGcModalOpen, setIsGcModalOpen] = useState(false);
   const [editingGc, setEditingGc] = useState<GiftCard | null>(null);
 
-  const [isExpModalOpen, setIsExpModalOpen] = useState(false);
-  const [editingExp, setEditingExp] = useState<Expense | null>(null);
-
   const [isLoyModalOpen, setIsLoyModalOpen] = useState(false);
   const [editingLoy, setEditingLoy] = useState<LoyaltyAccount | null>(null);
 
   const tripGiftCards = giftCards.filter(g => g.trip_id === activeTrip.id);
-  const tripExpenses = expenses.filter(e => e.trip_id === activeTrip.id);
   const tripLoyalty = loyaltyAccounts.filter(l => l.trip_id === activeTrip.id);
 
   // Gift card summary calculations
-  const totalNominal = tripGiftCards.reduce((sum, g) => sum + g.nominal_value, 0);
-  const totalNetCost = tripGiftCards.reduce((sum, g) => sum + g.net_cost, 0);
-  const totalSavings = totalNominal - totalNetCost;
-  const avgSavingsPct = totalNominal > 0 ? (totalSavings / totalNominal) * 100 : 0;
+  const { totalNominal, totalNetCost, totalSavings, avgSavingsPct } =
+    calculateGiftCardPortfolioSavings(tripGiftCards);
 
 
   // Gift Card Triggers
@@ -67,16 +57,6 @@ export const GiftCardsView: React.FC = () => {
   const handleOpenEditGc = (g: GiftCard) => {
     setEditingGc(g);
     setIsGcModalOpen(true);
-  };
-
-  // Expense Triggers
-  const handleOpenAddExp = () => {
-    setEditingExp(null);
-    setIsExpModalOpen(true);
-  };
-  const handleOpenEditExp = (e: Expense) => {
-    setEditingExp(e);
-    setIsExpModalOpen(true);
   };
 
   // Loyalty Triggers
@@ -91,55 +71,20 @@ export const GiftCardsView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Módulo Financeiro & Inteligência de Benefícios
-          </h2>
-          <p className="text-xs text-slate-400">
-            Calculadora determinística de custo líquido de gift cards, rateio de despesas do grupo e saldos de milhas.
-          </p>
-        </div>
-
-        {/* Sub-tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
-          <button
-            onClick={() => setActiveSubTab('gift_cards')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'gift_cards'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <CreditCard className="w-3.5 h-3.5" />
-            Gift Cards ({tripGiftCards.length})
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('expenses')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'expenses'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Receipt className="w-3.5 h-3.5" />
-            Despesas & Rateios ({tripExpenses.length})
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('loyalty')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'loyalty'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Award className="w-3.5 h-3.5" />
-            Milhas & Fidelidade ({tripLoyalty.length})
-          </button>
-        </div>
-      </div>
+      <ViewHeader
+        title="Gift Cards & Milhas"
+        subtitle="Calculadora determinística de custo líquido de gift cards e saldos de milhas/fidelidade. Despesas e rateios ficam na DRE."
+        actions={
+          <SubTabs
+            items={[
+              { id: 'gift_cards', label: `Gift Cards (${tripGiftCards.length})`, icon: CreditCard, accent: 'emerald' },
+              { id: 'loyalty', label: `Milhas & Fidelidade (${tripLoyalty.length})`, icon: Award, accent: 'purple' }
+            ]}
+            activeId={activeSubTab}
+            onChange={setActiveSubTab}
+          />
+        }
+      />
 
       {/* SUB-TAB: GIFT CARDS */}
       {activeSubTab === 'gift_cards' && (
@@ -158,7 +103,7 @@ export const GiftCardsView: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  Custo líquido calculado descontando o valor pago e o cashback percentual recebido em {currency} (Cotação: R$ {exchangeRate.toFixed(2)}).
+                  Custo líquido calculado descontando o valor pago e o cashback percentual recebido, em {currency}.
                 </p>
               </div>
 
@@ -250,89 +195,6 @@ export const GiftCardsView: React.FC = () => {
         </div>
       )}
 
-      {/* SUB-TAB: EXPENSES & SPLITS */}
-      {activeSubTab === 'expenses' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Despesas & Divisão de Custos (Rateio)</h3>
-            <button
-              onClick={handleOpenAddExp}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              Nova Despesa
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tripExpenses.map(e => {
-              const payer = participants.find(p => p.id === e.paid_by_id);
-              return (
-                <div key={e.id} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4 relative">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold">
-                        <Receipt className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-base text-white">{e.description}</h4>
-                        <p className="text-xs text-slate-400">{e.category.toUpperCase()} • {new Date(e.date).toLocaleDateString('pt-BR')}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => handleOpenEditExp(e)}
-                        className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`Deseja excluir a despesa "${e.description}"?`)) deleteExpense(e.id);
-                        }}
-                        className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs">
-                    <div>
-                      <div className="text-slate-400 text-[10px]">Pago por</div>
-                      <div className="font-bold text-white text-sm">{payer?.full_name}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-slate-400 text-[10px]">Valor Total</div>
-                      <div className="font-bold text-emerald-400 text-sm">
-                        {e.currency === 'USD' ? `US$ ${e.amount}` : `R$ ${e.amount}`}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-[11px] text-slate-400 mb-1.5 font-medium">Dividido entre ({e.beneficiary_ids.length} participantes):</div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {e.beneficiary_ids.map(bId => {
-                        const p = participants.find(part => part.id === bId);
-                        if (!p) return null;
-                        return (
-                          <span key={bId} className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold flex items-center gap-1">
-                            <span className={`w-2 h-2 rounded-full ${p.avatar_color}`} />
-                            {p.full_name}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* SUB-TAB: LOYALTY & MILES */}
       {activeSubTab === 'loyalty' && (
         <div className="space-y-4">
@@ -408,18 +270,6 @@ export const GiftCardsView: React.FC = () => {
           else addGiftCard(gData);
         }}
         initialData={editingGc}
-        participants={participants}
-        tripId={activeTrip.id}
-      />
-
-      <ExpenseModal
-        isOpen={isExpModalOpen}
-        onClose={() => setIsExpModalOpen(false)}
-        onSave={eData => {
-          if (editingExp) updateExpense(editingExp.id, eData);
-          else addExpense(eData);
-        }}
-        initialData={editingExp}
         participants={participants}
         tripId={activeTrip.id}
       />

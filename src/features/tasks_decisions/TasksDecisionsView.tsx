@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { TaskDecisionModal } from '../../components/modals/TaskDecisionModal';
+import { ViewHeader } from '../../components/ui/ViewHeader';
+import { SubTabs } from '../../components/ui/SubTabs';
 import type { Task, Decision } from '../../types/database.types';
 import {
   CheckSquare,
@@ -64,43 +66,20 @@ export const TasksDecisionsView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Pendências & Registro de Decisões
-          </h2>
-          <p className="text-xs text-slate-400">
-            Acompanhe tarefas a concluir e preserve o histórico de escolhas de planejamento sem perder alternativas descartadas.
-          </p>
-        </div>
-
-        {/* Sub-tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
-          <button
-            onClick={() => setActiveSubTab('tasks')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'tasks'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <CheckSquare className="w-3.5 h-3.5" />
-            Pendências ({tripTasks.length})
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('decisions')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeSubTab === 'decisions'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <History className="w-3.5 h-3.5" />
-            Decisões ({tripDecisions.length})
-          </button>
-        </div>
-      </div>
+      <ViewHeader
+        title="Pendências & Registro de Decisões"
+        subtitle="Acompanhe tarefas a concluir e preserve o histórico de escolhas de planejamento sem perder alternativas descartadas."
+        actions={
+          <SubTabs
+            items={[
+              { id: 'tasks', label: `Pendências (${tripTasks.length})`, icon: CheckSquare, accent: 'blue' },
+              { id: 'decisions', label: `Decisões (${tripDecisions.length})`, icon: History, accent: 'purple' }
+            ]}
+            activeId={activeSubTab}
+            onChange={setActiveSubTab}
+          />
+        }
+      />
 
       {/* SUB-TAB: TASKS */}
       {activeSubTab === 'tasks' && (

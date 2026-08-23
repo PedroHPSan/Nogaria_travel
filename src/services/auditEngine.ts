@@ -176,3 +176,19 @@ export function runFullTripAudit(data: {
 
   return findings;
 }
+
+/**
+ * Preparation index: 100 minus a penalty per unresolved finding
+ * (20pt per critical, 10pt per warning), floored at 0.
+ */
+export function computePreparationScore(findings: AuditFinding[]): {
+  score: number;
+  unresolvedCritical: number;
+  unresolvedWarning: number;
+} {
+  const unresolvedCritical = findings.filter(f => f.severity === 'critical' && !f.resolved).length;
+  const unresolvedWarning = findings.filter(f => f.severity === 'warning' && !f.resolved).length;
+  const score = Math.max(0, 100 - (unresolvedCritical * 20 + unresolvedWarning * 10));
+
+  return { score, unresolvedCritical, unresolvedWarning };
+}

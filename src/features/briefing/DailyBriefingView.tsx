@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
+import { ViewHeader } from '../../components/ui/ViewHeader';
 import {
   Volume2,
   Play,
@@ -8,12 +9,9 @@ import {
   Square,
   Calendar,
   Clock,
-  Car,
-  CreditCard,
   Sparkles,
   Copy,
   Check,
-  Building,
   Ruler
 } from 'lucide-react';
 
@@ -191,38 +189,35 @@ export const DailyBriefingView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+      <ViewHeader
+        title={
+          <>
             <Volume2 className="w-5 h-5 text-indigo-400" />
             Briefing do Dia (Falado & Escrito)
-          </h2>
-          <p className="text-xs text-slate-400">
-            Relatório diário em áudio e texto consolidando atrações, logística, restrições de altura para crianças e dicas financeiras.
-          </p>
-        </div>
-
-        {/* Date Switcher */}
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-semibold text-slate-300">Data:</span>
-          <select
-            value={selectedDate}
-            onChange={e => {
-              handleStopSpeech();
-              setSelectedDate(e.target.value);
-            }}
-            className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-bold focus:outline-none focus:border-blue-500"
-          >
-            {tripDates.map(d => (
-              <option key={d} value={d}>
-                {new Date(`${d}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {d === '2026-09-19' ? 'Devolução SUV FLL' : 'Dia de Viagem'}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          </>
+        }
+        subtitle="Relatório diário em áudio e texto consolidando atrações, logística, restrições de altura para crianças e dicas financeiras."
+        actions={
+          <>
+            <Calendar className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-semibold text-slate-300">Data:</span>
+            <select
+              value={selectedDate}
+              onChange={e => {
+                handleStopSpeech();
+                setSelectedDate(e.target.value);
+              }}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-bold focus:outline-none focus:border-blue-500"
+            >
+              {tripDates.map(d => (
+                <option key={d} value={d}>
+                  {new Date(`${d}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {d === '2026-09-19' ? 'Devolução SUV FLL' : 'Dia de Viagem'}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+      />
 
       {/* Audio Player Card (Falado por IA) */}
       <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-950 shadow-xl relative overflow-hidden">
@@ -285,10 +280,10 @@ export const DailyBriefingView: React.FC = () => {
         )}
       </div>
 
-      {/* Written Briefing Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Column: Daily Itinerary & Highlights */}
-        <div className="lg:col-span-2 space-y-4">
+      {/* Written Briefing */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Daily Itinerary & Highlights */}
+        <div className="space-y-4">
           <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm text-white flex items-center gap-2">
@@ -346,48 +341,6 @@ export const DailyBriefingView: React.FC = () => {
             </h3>
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed whitespace-pre-line font-sans">
               {briefingContent}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Sidebar: Logistics & Financial Directives */}
-        <div className="space-y-4">
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Building className="w-4 h-4 text-emerald-400" />
-              Hospedagem & Base Ativa
-            </h3>
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs space-y-1">
-              <div className="font-bold text-white">{dayAccommodations[0]?.name || 'Four Points Fort Lauderdale / Hotel Orlando'}</div>
-              <div className="text-slate-400">{dayAccommodations[0]?.address || 'Orlando / Fort Lauderdale'}</div>
-              <div className="text-emerald-400 font-semibold mt-1">Café da Manhã: {dayAccommodations[0]?.is_breakfast_included ? 'Incluso ✅' : 'Por conta do grupo'}</div>
-            </div>
-          </div>
-
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Car className="w-4 h-4 text-amber-400" />
-              Logística de Transporte
-            </h3>
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs space-y-1.5">
-              <div className="font-semibold text-slate-200">Veículo Principal: SUV Alugado (Hertz / Alamo)</div>
-              <div className="text-slate-400">Condutor: Pedro & Bárbara</div>
-              {selectedDate === '2026-09-19' && (
-                <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] font-bold">
-                  ⚠️ Atenção: Devolução impreterível do carro no aeroporto FLL às 17h30!
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-purple-400" />
-              Recomendação Financeira
-            </h3>
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs space-y-1">
-              <div className="text-slate-300 font-semibold">Cotação do Dia: R$ {exchangeRate.toFixed(2)} / USD</div>
-              <div className="text-emerald-400 font-medium">Recomendação: Utilizar Gift Card Disney / Apple acumulado com desconto líquido.</div>
             </div>
           </div>
         </div>
