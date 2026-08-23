@@ -210,6 +210,7 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
   // 1. Sintetizar itens de todas as fontes em DreLineItem
   const unifiedItems: DreLineItem[] = [];
   const tripId = participants.length > 0 ? participants[0].trip_id : 'unknown';
+  const nowIso = new Date().toISOString();
 
   // 1.1 Voos
   flights.forEach(f => {
@@ -271,7 +272,7 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
         trip_id: tripId,
         source: 'transport',
         source_entity_id: t.id,
-        description: `Transporte: ${t.company} - ${t.vehicle_type}`,
+        description: `Transporte: ${t.provider_company}${t.category_or_model ? ` - ${t.category_or_model}` : ''}`,
         category: 'transport',
         amount: t.price_total,
         currency: t.currency,
@@ -296,7 +297,7 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
       trip_id: tripId,
       source: 'purchase',
       source_entity_id: p.id,
-      description: `Compra: ${p.item_name} ${p.store ? \`(\${p.store})\` : ''}`,
+      description: `Compra: ${p.product_name} ${p.store_name ? `(${p.store_name})` : ''}`,
       category: 'shopping',
       amount,
       currency: 'USD',
@@ -305,7 +306,7 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
       exchange_rate: rate,
       paid_by_id: undefined,
       beneficiary_ids: p.target_participant_id ? [p.target_participant_id] : [],
-      date: p.created_at || new Date().toISOString(),
+      date: nowIso,
       status: isPaid ? 'paid' : 'pending',
       is_synthetic: true
     });
@@ -315,7 +316,9 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
   itinerary.forEach(i => {
     if (i.estimated_cost && i.estimated_cost > 0) {
       const isPaid = i.status === 'confirmed' || i.status === 'completed';
-      const cat: Expense['category'] = i.type === 'park' || i.type === 'show' ? 'tickets' : (i.type === 'dining' ? 'food' : 'other');
+      const cat: Expense['category'] =
+        i.category === 'park' || i.category === 'event' ? 'tickets' : (i.category === 'restaurant' ? 'food' : 'other');
+      const itinCurrency: Currency = i.currency || 'USD';
       unifiedItems.push({
         id: `synth-itin-${i.id}`,
         trip_id: tripId,
@@ -324,13 +327,13 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
         description: `Roteiro: ${i.title}`,
         category: cat,
         amount: i.estimated_cost,
-        currency: 'USD',
-        amount_usd: i.estimated_cost,
-        amount_brl: i.estimated_cost * rate,
+        currency: itinCurrency,
+        amount_usd: toUsd(i.estimated_cost, itinCurrency),
+        amount_brl: toBrl(i.estimated_cost, itinCurrency),
         exchange_rate: rate,
         paid_by_id: undefined,
         beneficiary_ids: i.participant_ids || [],
-        date: i.start_time,
+        date: i.time_start,
         status: isPaid ? 'paid' : 'pending',
         is_synthetic: true
       });
