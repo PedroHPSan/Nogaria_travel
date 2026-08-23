@@ -378,6 +378,7 @@ export const ItineraryView: React.FC = () => {
           parkItems={parkItems}
           participants={participants}
           selectedDate={parkSelectedDate}
+          referenceDate={activeTrip.start_date}
           onSelectDate={date => {
             setParkSelectedDate(date);
             setViewMode('timeline');

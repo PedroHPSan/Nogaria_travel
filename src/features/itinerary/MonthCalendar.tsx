@@ -7,30 +7,33 @@ interface MonthCalendarProps {
   participants: Participant[];
   selectedDate: string;
   onSelectDate: (date: string) => void;
+  referenceDate: string;
 }
 
-const YEAR = 2026;
-const MONTH = 9; // Setembro — a viagem cabe inteira neste mês (ver spec da fatia 2)
-
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const MONTH_LABELS = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
 
-function buildMonthGrid(): (string | null)[] {
-  const firstWeekday = new Date(YEAR, MONTH - 1, 1).getDay();
-  const daysInMonth = new Date(YEAR, MONTH, 0).getDate();
+function buildMonthGrid(year: number, month: number): (string | null)[] {
+  const firstWeekday = new Date(year, month - 1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
   const cells: (string | null)[] = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let day = 1; day <= daysInMonth; day++) {
-    cells.push(`${YEAR}-${String(MONTH).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    cells.push(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
   }
   return cells;
 }
 
-export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, participants, selectedDate, onSelectDate }) => {
-  const cells = buildMonthGrid();
+export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, participants, selectedDate, onSelectDate, referenceDate }) => {
+  const [year, month] = referenceDate.split('-').map(Number);
+  const cells = buildMonthGrid(year, month);
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-bold text-white">Setembro 2026</h3>
+      <h3 className="text-sm font-bold text-white">{MONTH_LABELS[month - 1]} {year}</h3>
       <div className="grid grid-cols-7 gap-1.5 text-[10px] text-slate-500 font-semibold uppercase text-center">
         {WEEKDAY_LABELS.map(label => (
           <div key={label}>{label}</div>

@@ -24,24 +24,23 @@ export function runFullTripAudit(data: {
 }): AuditFinding[] {
   const findings: AuditFinding[] = [];
 
-  // 1. Audit Car Drop-off vs Flight Logistics (Critical Case from Prompt 3.6 & 3.21)
+  // 1. Audit Car Drop-off vs Flight Logistics
   const rentalCars = data.transports.filter(t => t.type === 'rental_car' && t.status === 'reserved');
   rentalCars.forEach(car => {
     const dropoffDate = new Date(car.dropoff_time);
-    
-    if (car.dropoff_time.includes('2026-09-19T17:30')) {
-      findings.push({
-        id: 'audit-car-01',
-        code: 'CAR_DROPOFF_FOLLOWUP_REQUIRED',
-        severity: 'critical',
-        category: 'logistics',
-        title: 'Devolução do Carro Alugado exige transporte complementar (19/09 17:30)',
-        description: 'O veículo será devolvido na locadora em 19/09 às 17h30. É necessário transporte (Uber/Transfer) para o hotel final (Four Points) ou aeroporto.',
-        affected_entities: ['Veículo Hertz/Alamo', 'Pedro', 'Bárbara'],
-        recommendation: 'Agendar Uber corporativo/pessoal ou transfer hotel para o horário das 17h45 em 19/09/2026.',
-        resolved: false
-      });
-    }
+    const dropoffLabel = dropoffDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+    findings.push({
+      id: `audit-car-followup-${car.id}`,
+      code: 'CAR_DROPOFF_FOLLOWUP_REQUIRED',
+      severity: 'critical',
+      category: 'logistics',
+      title: `Devolução do Carro Alugado exige transporte complementar (${dropoffLabel})`,
+      description: `O veículo será devolvido na locadora em ${dropoffLabel}. É necessário transporte (Uber/Transfer) para a próxima hospedagem ou aeroporto.`,
+      affected_entities: [car.provider_company || 'Veículo alugado', ...data.participants.map(p => p.nickname || p.full_name)],
+      recommendation: `Agendar Uber corporativo/pessoal ou transfer hotel para logo após ${dropoffLabel}.`,
+      resolved: false
+    });
 
     data.flights.forEach(flight => {
       const departureDate = new Date(flight.departure_time);
@@ -96,43 +95,38 @@ export function runFullTripAudit(data: {
   }
 
   // 3. Child Safety & Height/Age Restrictions Audit
-  const gabi = data.participants.find(p => p.nickname === 'Gabi' || p.age === 4);
-  if (gabi) {
+  data.participants.forEach(participant => {
+    const displayName = participant.nickname || participant.full_name;
     data.itinerary.forEach(item => {
-      if (item.min_height_cm && gabi.height_cm && gabi.height_cm < item.min_height_cm) {
+      if (item.min_height_cm && participant.height_cm && participant.height_cm < item.min_height_cm) {
         findings.push({
-          id: `audit-child-height-${item.id}`,
+          id: `audit-child-height-${item.id}-${participant.id}`,
           code: 'CHILD_HEIGHT_RESTRICTION',
           severity: 'warning',
           category: 'child_safety',
           title: `Atração '${item.title}' exige altura mínima de ${item.min_height_cm}cm`,
-          description: `Gabriela tem ${gabi.height_cm}cm. Ela não poderá ir nesta atração.`,
-          affected_entities: ['Gabriela (Gabi)', item.title],
-          recommendation: 'Planejar troca de acompanhantes (Rider Switch / Child Swap) ou atividade alternativa para Gabi.',
+          description: `${participant.full_name} tem ${participant.height_cm}cm. Não poderá ir nesta atração.`,
+          affected_entities: [participant.full_name, item.title],
+          recommendation: `Planejar troca de acompanhantes (Rider Switch / Child Swap) ou atividade alternativa para ${displayName}.`,
           resolved: false
         });
       }
-    });
-  }
 
-  const debora = data.participants.find(p => p.age === 12);
-  if (debora) {
-    data.itinerary.forEach(item => {
-      if (item.min_age_years && item.min_age_years > debora.age) {
+      if (item.min_age_years && item.min_age_years > participant.age) {
         findings.push({
-          id: `audit-child-age-${item.id}`,
+          id: `audit-child-age-${item.id}-${participant.id}`,
           code: 'MINOR_AGE_RESTRICTION',
           severity: 'warning',
           category: 'child_safety',
           title: `Restrição de idade em '${item.title}'`,
-          description: `Débora tem ${debora.age} anos e a atividade exige idade mínima de ${item.min_age_years} anos.`,
-          affected_entities: ['Débora', item.title],
-          recommendation: 'Remover Débora da lista de participantes desta atividade.',
+          description: `${participant.full_name} tem ${participant.age} anos e a atividade exige idade mínima de ${item.min_age_years} anos.`,
+          affected_entities: [participant.full_name, item.title],
+          recommendation: `Remover ${displayName} da lista de participantes desta atividade.`,
           resolved: false
         });
       }
     });
-  }
+  });
 
   // 4. Financial Audit: Gift Card Net Savings & Individual Budgets
   const totalGiftCardsNominal = data.giftCards.reduce((acc, g) => acc + g.nominal_value, 0);
@@ -153,26 +147,28 @@ export function runFullTripAudit(data: {
     });
   }
 
-  const pedro = data.participants.find(p => p.nickname === 'Pedro');
-  if (pedro) {
-    const pedroPurchases = data.purchases
-      .filter(p => p.target_participant_id === pedro.id)
-      .reduce((acc, item) => acc + item.target_price_usd * item.quantity, 0);
+  data.participants
+    .filter(p => p.budget_limit_usd > 0)
+    .forEach(participant => {
+      const displayName = participant.nickname || participant.full_name;
+      const purchasesTotal = data.purchases
+        .filter(p => p.target_participant_id === participant.id)
+        .reduce((acc, item) => acc + item.target_price_usd * item.quantity, 0);
 
-    if (pedroPurchases > pedro.budget_limit_usd) {
-      findings.push({
-        id: 'audit-pedro-budget',
-        code: 'PARTICIPANT_BUDGET_EXCEEDED',
-        severity: 'warning',
-        category: 'financial',
-        title: `Compras de Pedro (US$ ${pedroPurchases}) excedem teto (US$ ${pedro.budget_limit_usd})`,
-        description: `Compras planejadas por Pedro (incluindo iPhone Pro Max / Apple Watch) somam US$ ${pedroPurchases}, superando o orçamento individual.`,
-        affected_entities: ['Pedro'],
-        recommendation: 'Utilizar Gift Cards com desconto Apple ou reavaliar compra de seminovo.',
-        resolved: false
-      });
-    }
-  }
+      if (purchasesTotal > participant.budget_limit_usd) {
+        findings.push({
+          id: `audit-budget-${participant.id}`,
+          code: 'PARTICIPANT_BUDGET_EXCEEDED',
+          severity: 'warning',
+          category: 'financial',
+          title: `Compras de ${displayName} (US$ ${purchasesTotal}) excedem teto (US$ ${participant.budget_limit_usd})`,
+          description: `Compras planejadas por ${displayName} somam US$ ${purchasesTotal}, superando o orçamento individual.`,
+          affected_entities: [displayName],
+          recommendation: 'Utilizar Gift Cards com desconto ou reavaliar itens de menor prioridade.',
+          resolved: false
+        });
+      }
+    });
 
   return findings;
 }

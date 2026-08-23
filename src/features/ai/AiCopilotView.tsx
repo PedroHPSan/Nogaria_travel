@@ -30,11 +30,16 @@ export const AiCopilotView: React.FC = () => {
     aiProviders.find(p => p.is_default)?.id || aiProviders[0]?.id || 'ai-gemini'
   );
 
+  const minors = participants.filter(p => p.is_minor);
+  const minorsLabel = minors.length > 0
+    ? minors.map(p => `${p.nickname || p.full_name} (${p.age} anos)`).join(' e ')
+    : 'os participantes menores de idade';
+
   const [promptInput, setPromptInput] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp: string }[]>([
     {
       role: 'assistant',
-      content: `Olá! Sou o Copiloto de Inteligência Artificial da Plataforma de Viagens. Analisei a viagem "${activeTrip.title}" e estou pronto para responder perguntas sobre voos, hospedagens, gift cards, orçamento, bagagens ou restrições de idade para a pequena Gabi (4 anos) e Débora (12 anos).`,
+      content: `Olá! Sou o Copiloto de Inteligência Artificial da Plataforma de Viagens. Analisei a viagem "${activeTrip.title}" e estou pronto para responder perguntas sobre voos, hospedagens, gift cards, orçamento, bagagens ou restrições de idade para ${minorsLabel}.`,
       timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -68,15 +73,22 @@ export const AiCopilotView: React.FC = () => {
         const net = giftCards.reduce((s, g) => s + g.net_cost, 0);
         const savings = nominal - net;
         responseText = `A carteira possui US$ ${nominal} em valor nominal. O custo real líquido é de US$ ${net.toFixed(2)}, gerando uma economia efetiva total de US$ ${savings.toFixed(2)} (${((savings/nominal)*100).toFixed(1)}% de desconto real).`;
-      } else if (q.includes('pedro') || q.includes('orçamento')) {
-        const pedro = participants.find(p => p.nickname === 'Pedro');
-        responseText = `Pedro possui teto de orçamento de US$ ${pedro?.budget_limit_usd || 2000}. O foco de compras é iPhone Pro Max 512GB (US$ 1.399) e Apple Watch Ultra, abatendo saldo com Gift Cards Apple.`;
-      } else if (q.includes('gabi') || q.includes('altura') || q.includes('criança')) {
-        const gabi = participants.find(p => p.nickname === 'Gabi');
-        responseText = `Gabi tem 4 anos e ${gabi?.height_cm || 100}cm de altura. Ela não atinge a altura mínima de 130cm para montanhas-russas radicais como VelociCoaster na Universal. O grupo deve utilizar a funcionalidade Child Swap / Rider Switch.`;
-      } else if (q.includes('carro') || q.includes('devolução') || q.includes('19')) {
-        const car = transports.find(t => t.type === 'rental_car');
-        responseText = `A devolução do veículo (${car?.provider_company || 'Hertz / Alamo'}) em Fort Lauderdale está marcada para dia 19/09 às 17h30. Há uma pendência para agendar Uber XL corporativo para levar o grupo de 4 passageiros e malas ao hotel Four Points / Aeroporto FLL.`;
+      } else if (q.includes('orçamento')) {
+        const withBudget = participants.filter(p => p.budget_limit_usd > 0);
+        responseText = withBudget.length > 0
+          ? withBudget.map(p => `${p.nickname || p.full_name} possui teto de orçamento de US$ ${p.budget_limit_usd}.`).join('\n')
+          : 'Nenhum participante possui um teto de orçamento individual definido.';
+      } else if (q.includes('altura') || q.includes('criança')) {
+        const withHeight = participants.filter(p => p.height_cm != null);
+        responseText = withHeight.length > 0
+          ? withHeight.map(p => `${p.nickname || p.full_name} tem ${p.age} anos e ${p.height_cm}cm de altura.`).join('\n') +
+            '\nVerifique a altura mínima exigida em cada atração no Roteiro; abaixo do limite, use Child Swap / Rider Switch.'
+          : 'Nenhum participante possui altura cadastrada.';
+      } else if (q.includes('carro') || q.includes('devolução')) {
+        const car = transports.find(t => t.type === 'rental_car' && t.status === 'reserved');
+        responseText = car
+          ? `A devolução do veículo (${car.provider_company}) está marcada para ${new Date(car.dropoff_time).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}. Há uma pendência para agendar transporte complementar (Uber/Transfer) até a próxima hospedagem ou aeroporto.`
+          : 'Não há devolução de carro alugado pendente cadastrada nesta viagem.';
       } else {
         responseText = `Com base nos dados atualizados da viagem:\n- Participantes: ${participants.map(p => p.full_name).join(', ')}\n- Voos cadastrados: ${flights.length}\n- Gift Cards com saldo: ${giftCards.filter(g => g.status === 'active').length}\n- Apontamentos de auditoria: ${tasks.filter(t => t.status === 'pending').length} pendências.`;
       }
@@ -155,16 +167,16 @@ export const AiCopilotView: React.FC = () => {
               💳 Custo real gift cards
             </button>
             <button
-              onClick={() => handlePresetPrompt('Que atividades não são adequadas para Gabi?')}
+              onClick={() => handlePresetPrompt('Que atividades têm restrição de altura ou idade?')}
               className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
             >
-              👧 Atrações Gabi (4a)
+              👧 Restrições de altura/idade
             </button>
             <button
               onClick={() => handlePresetPrompt('Existe conflito entre a devolução do carro e o voo?')}
               className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
             >
-              🚗 Devolução carro 19/09
+              🚗 Devolução do carro
             </button>
           </div>
 
