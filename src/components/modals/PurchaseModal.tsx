@@ -242,7 +242,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               type="number"
               required
               min="0"
-              step="5"
+              step="0.01"
               value={targetPriceUsd}
               onChange={e => setTargetPriceUsd(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-success-400"
@@ -254,7 +254,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <input
               type="number"
               min="0"
-              step="5"
+              step="0.01"
               value={priceFoundUsd}
               onChange={e => setPriceFoundUsd(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
@@ -266,7 +266,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <input
               type="number"
               min="0"
-              step="50"
+              step="0.01"
               value={brlEquivalent}
               onChange={e => setBrlEquivalent(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="Ex: R$ 11.499"

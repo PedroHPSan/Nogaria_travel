@@ -272,7 +272,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
                 <label className="block text-ink-300 font-semibold mb-1">Impacto Financeiro Líquido (US$)</label>
                 <input
                   type="number"
-                  step="5"
+                  step="0.01"
                   value={decFinancialImpact}
                   onChange={e => setDecFinancialImpact(e.target.value === '' ? '' : Number(e.target.value))}
                   placeholder="Ex: 70.00 ou -50.00"

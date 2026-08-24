@@ -105,7 +105,7 @@ export const LoyaltyModal: React.FC<LoyaltyModalProps> = ({
               type="number"
               required
               min="0"
-              step="1000"
+              step="1"
               value={balancePoints}
               onChange={e => setBalancePoints(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-success-400"
@@ -117,7 +117,7 @@ export const LoyaltyModal: React.FC<LoyaltyModalProps> = ({
             <input
               type="number"
               min="0"
-              step="0.1"
+              step="0.01"
               value={cpmUsd}
               onChange={e => setCpmUsd(e.target.value === '' ? '' : Number(e.target.value))}
               placeholder="Ex: 3.50 para R$ 19,25/1k"

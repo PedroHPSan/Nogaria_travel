@@ -129,8 +129,8 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
             <input
               type="number"
               required
-              min="1"
-              step="5"
+              min="0.01"
+              step="0.01"
               value={nominalValue}
               onChange={e => {
                 const val = e.target.value === '' ? '' : Number(e.target.value);
@@ -147,7 +147,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
               type="number"
               required
               min="0"
-              step="0.5"
+              step="0.01"
               value={paidAmount}
               onChange={e => setPaidAmount(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-warning-400"
@@ -159,7 +159,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
             <input
               type="number"
               min="0"
-              step="0.5"
+              step="0.01"
               value={cashbackPct}
               onChange={e => setCashbackPct(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-accent-400"
@@ -228,7 +228,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
             <input
               type="number"
               min="0"
-              step="1"
+              step="0.01"
               value={currentBalance}
               onChange={e => setCurrentBalance(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"

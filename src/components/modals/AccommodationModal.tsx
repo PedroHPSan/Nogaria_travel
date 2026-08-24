@@ -219,7 +219,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
             <input
               type="number"
               min="0"
-              step="10"
+              step="0.01"
               value={priceTotal}
               onChange={e => setPriceTotal(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-success-400"
@@ -231,7 +231,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
             <input
               type="number"
               min="0"
-              step="1"
+              step="0.01"
               value={resortFee}
               onChange={e => setResortFee(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
@@ -243,7 +243,7 @@ export const AccommodationModal: React.FC<AccommodationModalProps> = ({
             <input
               type="number"
               min="0"
-              step="1"
+              step="0.01"
               value={parkingFee}
               onChange={e => setParkingFee(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"

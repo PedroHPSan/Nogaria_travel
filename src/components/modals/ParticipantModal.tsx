@@ -196,7 +196,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             <input
               type="number"
               min="0"
-              step="50"
+              step="0.01"
               value={budgetLimit}
               onChange={e => setBudgetLimit(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-success-400"

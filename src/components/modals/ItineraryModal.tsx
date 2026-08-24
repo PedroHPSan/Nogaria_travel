@@ -245,7 +245,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
             <input
               type="number"
               min="0"
-              step="10"
+              step="0.01"
               value={estimatedCost}
               onChange={e => setEstimatedCost(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold text-success-400"

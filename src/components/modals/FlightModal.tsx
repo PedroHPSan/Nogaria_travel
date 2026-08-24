@@ -254,7 +254,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
             <input
               type="number"
               min="0"
-              step="10"
+              step="0.01"
               value={priceCash}
               onChange={e => setPriceCash(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
@@ -266,7 +266,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
             <input
               type="number"
               min="0"
-              step="1000"
+              step="1"
               value={pricePoints}
               onChange={e => setPricePoints(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
@@ -278,7 +278,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({
             <input
               type="number"
               min="0"
-              step="1"
+              step="0.01"
               value={taxesAmount}
               onChange={e => setTaxesAmount(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"

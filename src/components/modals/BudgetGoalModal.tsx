@@ -152,7 +152,7 @@ export const BudgetGoalModal: React.FC<BudgetGoalModalProps> = ({
                   <input
                     type="number"
                     min="0"
-                    step="50"
+                    step="0.01"
                     value={currentVal || ''}
                     onChange={e => handleChange(cat, Number(e.target.value) || 0)}
                     placeholder="0"

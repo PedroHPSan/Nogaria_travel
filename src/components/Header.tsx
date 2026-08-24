@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
                   <span className="text-ink-400 text-[11px]">US$ 1 = R$</span>
                   <input
                     type="number"
-                    step="0.01"
+                    step="0.0001"
                     value={tempRate}
                     onChange={e => setTempRate(e.target.value)}
                     className="w-14 px-1 py-0.5 rounded bg-ink-950 border border-success-500 text-ink-100 text-xs font-bold"

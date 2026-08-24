@@ -121,7 +121,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               type="number"
               required
               min="0"
-              step="1"
+              step="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-bold text-success-400"
@@ -145,7 +145,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             <input
               type="number"
               min="1"
-              step="0.05"
+              step="0.0001"
               value={exchangeRate}
               onChange={e => setExchangeRate(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500 font-semibold"
