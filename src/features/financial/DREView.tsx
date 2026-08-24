@@ -429,7 +429,9 @@ export const DREView: React.FC = () => {
         isOpen={isExpenseModalOpen}
         onClose={() => setIsExpenseModalOpen(false)}
         onSave={(data) => {
-          if (editingExpense) {
+          // `editingExpense` também é usado como "rascunho" ao abrir o modal por
+          // categoria (id === ''), então só é edição quando o rascunho tem id real.
+          if (editingExpense && editingExpense.id) {
             updateExpense(editingExpense.id, data);
           } else {
             addExpense(data);
