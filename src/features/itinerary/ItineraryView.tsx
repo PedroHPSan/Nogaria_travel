@@ -40,7 +40,7 @@ export const ItineraryView: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [parkSelectedDate, setParkSelectedDate] = useState<string>('');
+  const [timelineDate, setTimelineDate] = useState<string>('');
 
   const tripItinerary = useMemo(
     () => itinerary.filter(i => i.trip_id === activeTrip.id),
@@ -108,34 +108,30 @@ export const ItineraryView: React.FC = () => {
 
   const gabi = participants.find(p => p.nickname === 'Gabi' || p.age <= 4);
 
-  // Timeline / Calendar modes only consider park items (Cronologia)
-  const parkItems = useMemo(
-    () => tripItinerary.filter(i => i.category === 'park'),
+  // Cronologia / Calendário consideram todos os itens do roteiro (parques, restaurantes, compras etc.)
+  const timelineDates = useMemo(
+    () => Array.from(new Set(tripItinerary.map(i => i.date).filter(Boolean))).sort(),
     [tripItinerary],
-  );
-  const parkDates = useMemo(
-    () => Array.from(new Set(parkItems.map(i => i.date))).sort(),
-    [parkItems],
   );
 
   useEffect(() => {
-    if (parkSelectedDate || parkDates.length === 0) return;
+    if (timelineDate || timelineDates.length === 0) return;
     const todayIso = new Date().toISOString().slice(0, 10);
-    const closest = parkDates.find(d => d >= todayIso) ?? parkDates[0];
-    setParkSelectedDate(closest);
+    const closest = timelineDates.find(d => d >= todayIso) ?? timelineDates[0];
+    setTimelineDate(closest);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parkDates.join(','), parkSelectedDate]);
+  }, [timelineDates.join(','), timelineDate]);
 
-  const parkDayItems = parkItems.filter(i => i.date === parkSelectedDate);
-  const parkName = parkDayItems[0]?.park;
+  const dayItems = tripItinerary.filter(i => i.date === timelineDate);
+  const dayParkName = dayItems.find(i => i.park)?.park;
 
   return (
     <div className="space-y-6 pb-20">
       <ViewHeader
         title={`Roteiro Diário & Atrações (${tripItinerary.length})`}
         subtitle={
-          viewMode === 'timeline' && parkSelectedDate
-            ? `${new Date(parkSelectedDate + 'T00:00:00').toLocaleDateString('pt-BR')}${parkName ? ` • ${parkName}` : ''} — Cronologia dos Parques`
+          viewMode === 'timeline' && timelineDate
+            ? `${new Date(timelineDate + 'T00:00:00').toLocaleDateString('pt-BR')}${dayParkName ? ` • ${dayParkName}` : ''} — Cronologia do Dia`
             : `Cronograma inteligente com validações de altura mínima para Gabi (4 anos • ${gabi?.height_cm || 100}cm) e Débora (12 anos).`
         }
         actions={
@@ -364,23 +360,41 @@ export const ItineraryView: React.FC = () => {
       )}
 
       {viewMode === 'timeline' && (
-        parkSelectedDate ? (
-          <DayTimeline items={parkDayItems} participants={participants} />
+        timelineDate ? (
+          <div className="space-y-4">
+            {/* Day Selector */}
+            <div className="flex flex-wrap gap-1.5">
+              {timelineDates.map(d => (
+                <button
+                  key={d}
+                  onClick={() => setTimelineDate(d)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border ${
+                    d === timelineDate
+                      ? 'bg-info-600/20 text-info-300 border-info-500/50'
+                      : 'bg-ink-900 text-ink-400 border-ink-800 hover:text-ink-100 hover:border-ink-700'
+                  }`}
+                >
+                  {new Date(d + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                </button>
+              ))}
+            </div>
+            <DayTimeline items={dayItems} participants={participants} />
+          </div>
         ) : (
           <div className="p-8 rounded-2xl glass-card text-center border border-ink-800 text-ink-400 text-xs">
-            Nenhum dia de parque cadastrado nesta viagem.
+            Nenhuma atividade cadastrada nesta viagem.
           </div>
         )
       )}
 
       {viewMode === 'calendar' && (
         <MonthCalendar
-          parkItems={parkItems}
+          items={tripItinerary}
           participants={participants}
-          selectedDate={parkSelectedDate}
+          selectedDate={timelineDate}
           referenceDate={activeTrip.start_date}
           onSelectDate={date => {
-            setParkSelectedDate(date);
+            setTimelineDate(date);
             setViewMode('timeline');
           }}
         />

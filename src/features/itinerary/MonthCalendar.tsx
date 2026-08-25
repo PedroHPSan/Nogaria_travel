@@ -3,7 +3,7 @@ import { computeCoverage } from '../../services/coverageEngine';
 import type { ItineraryItem, Participant } from '../../types/database.types';
 
 interface MonthCalendarProps {
-  parkItems: ItineraryItem[];
+  items: ItineraryItem[];
   participants: Participant[];
   selectedDate: string;
   onSelectDate: (date: string) => void;
@@ -27,7 +27,7 @@ function buildMonthGrid(year: number, month: number): (string | null)[] {
   return cells;
 }
 
-export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, participants, selectedDate, onSelectDate, referenceDate }) => {
+export const MonthCalendar: React.FC<MonthCalendarProps> = ({ items, participants, selectedDate, onSelectDate, referenceDate }) => {
   const [year, month] = referenceDate.split('-').map(Number);
   const cells = buildMonthGrid(year, month);
 
@@ -43,20 +43,21 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, partici
         {cells.map((date, idx) => {
           if (!date) return <div key={`empty-${idx}`} />;
 
-          const dayItems = parkItems.filter(i => i.date === date);
-          const hasParkDay = dayItems.length > 0;
-          const parkName = hasParkDay ? dayItems[0].park : undefined;
-          const coverage = hasParkDay ? computeCoverage(dayItems, participants) : null;
+          const dayItems = items.filter(i => i.date === date);
+          const hasItems = dayItems.length > 0;
+          const parkName = dayItems.find(i => i.park)?.park;
+          const hasCoverageItems = dayItems.some(i => i.item_type);
+          const coverage = hasCoverageItems ? computeCoverage(dayItems, participants) : null;
           const isSelected = date === selectedDate;
           const dayNumber = Number(date.slice(-2));
 
           return (
             <button
               key={date}
-              disabled={!hasParkDay}
-              onClick={() => hasParkDay && onSelectDate(date)}
+              disabled={!hasItems}
+              onClick={() => hasItems && onSelectDate(date)}
               className={`aspect-square rounded-xl border p-1.5 flex flex-col items-center justify-center gap-0.5 text-center transition ${
-                !hasParkDay
+                !hasItems
                   ? 'border-ink-800/60 text-ink-600 cursor-default'
                   : isSelected
                   ? 'border-info-500 bg-info-500/10 text-info-300'
@@ -64,10 +65,14 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, partici
               }`}
             >
               <span className="text-xs font-bold">{dayNumber}</span>
-              {hasParkDay && (
+              {hasItems && (
                 <>
-                  <span className="text-[9px] leading-tight truncate max-w-full">{parkName}</span>
-                  <span className="text-[9px] font-bold text-success-400">{coverage?.percent}%</span>
+                  <span className="text-[9px] leading-tight truncate max-w-full">
+                    {parkName ?? `${dayItems.length} ${dayItems.length === 1 ? 'item' : 'itens'}`}
+                  </span>
+                  {coverage && (
+                    <span className="text-[9px] font-bold text-success-400">{coverage.percent}%</span>
+                  )}
                 </>
               )}
             </button>

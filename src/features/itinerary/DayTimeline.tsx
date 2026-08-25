@@ -105,7 +105,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
       <div className="space-y-3">
         {sortedItems.length === 0 ? (
           <div className="p-8 rounded-2xl glass-card text-center border border-ink-800 text-ink-400 text-xs">
-            Nenhum item de parque para este dia.
+            Nenhuma atividade para este dia.
           </div>
         ) : (
           sortedItems.map(item => {
