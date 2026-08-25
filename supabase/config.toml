@@ -382,6 +382,15 @@ inspector_port = 56583
 # The Deno major version to use.
 deno_version = 2
 
+# Webhook público da Meta Cloud API — autenticação própria via verify_token (GET)
+# e assinatura X-Hub-Signature-256 (POST), sem JWT do Supabase.
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+# Disparado por pg_cron com header x-cron-secret, sem JWT do Supabase.
+[functions.daily-digest]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

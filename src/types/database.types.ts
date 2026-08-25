@@ -49,6 +49,7 @@ export interface Participant {
   visa_status?: 'valid' | 'pending' | 'exempt' | 'expired';
   dietary_restrictions?: string[];
   height_cm?: number;
+  whatsapp_phone?: string;
   notes?: string;
   budget_limit_usd: number;
   quota_eligible?: boolean;

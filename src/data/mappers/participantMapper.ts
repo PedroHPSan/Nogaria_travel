@@ -18,6 +18,7 @@ export interface ParticipantRow {
   visa_status: 'valid' | 'pending' | 'exempt' | 'expired' | null;
   dietary_restrictions: string[] | null;
   height_cm: number | null;
+  whatsapp_phone: string | null;
   notes: string | null;
   budget_limit_usd: number;
   avatar_color: string;
@@ -60,6 +61,7 @@ export function participantFromRow(row: ParticipantRow, today: string): Particip
     visa_status: row.visa_status ?? undefined,
     dietary_restrictions: row.dietary_restrictions ?? undefined,
     height_cm: row.height_cm ?? undefined,
+    whatsapp_phone: row.whatsapp_phone ?? undefined,
     notes: row.notes ?? undefined,
     budget_limit_usd: row.budget_limit_usd,
     avatar_color: row.avatar_color,
@@ -81,6 +83,7 @@ export function participantToInsert(p: Participant, today: string): ParticipantR
     visa_status: p.visa_status ?? null,
     dietary_restrictions: p.dietary_restrictions ?? null,
     height_cm: p.height_cm ?? null,
+    whatsapp_phone: p.whatsapp_phone ?? null,
     notes: p.notes ?? null,
     budget_limit_usd: p.budget_limit_usd,
     avatar_color: p.avatar_color,
