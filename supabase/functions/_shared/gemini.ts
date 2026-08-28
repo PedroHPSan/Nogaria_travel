@@ -27,6 +27,7 @@ interface FunctionCall {
 interface CandidatePart {
   text?: string;
   functionCall?: FunctionCall;
+  thoughtSignature?: string;
 }
 
 interface GenerateContentResponse {
@@ -103,7 +104,14 @@ export async function chatWithTools(input: {
     }
 
     // Devolve ao modelo a chamada e o resultado de cada tool.
-    contents.push({ role: 'model', parts: parts.map(p => (p.functionCall ? { functionCall: p.functionCall } : { text: p.text ?? '' })) });
+    contents.push({
+      role: 'model',
+      parts: parts.map(p =>
+        p.functionCall
+          ? { functionCall: p.functionCall, ...(p.thoughtSignature ? { thoughtSignature: p.thoughtSignature } : {}) }
+          : { text: p.text ?? '' },
+      ),
+    });
 
     const responseParts = [];
     for (const call of functionCalls) {

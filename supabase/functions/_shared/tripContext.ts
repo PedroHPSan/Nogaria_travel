@@ -106,7 +106,7 @@ export async function fetchTripContext(
   };
 }
 
-function addDaysIso(dateIso: string, days: number): string {
+export function addDaysIso(dateIso: string, days: number): string {
   const d = new Date(dateIso + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
@@ -137,5 +137,6 @@ export function buildSystemPrompt(ctx: TripContext, dateIso: string): string {
     '- Use as ferramentas disponíveis para consultar ou alterar dados reais do roteiro e das tarefas. Nunca invente horários, preços ou reservas.',
     '- Antes de executar uma ferramenta de escrita (marcar concluído, completar tarefa), confirme o item exato encontrado na resposta ao usuário.',
     '- Se a pergunta não for sobre a viagem, responda brevemente e redirecione para o assunto da viagem.',
+    '- Compras, gift cards e orçamento não têm ferramenta aqui: não tente calcular ou estimar nada. Responda em 1-2 frases dizendo que esse relatório é consultado no app (https://nogaria-travel.vercel.app), sem abrir uma conversa longa sobre o assunto.',
   ].join('\n');
 }

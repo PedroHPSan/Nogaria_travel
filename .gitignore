@@ -61,3 +61,4 @@ docs/Documentos oficiais viagem /PASSAGENS/Reserva YGI6YL realizada com sucesso.
 # Local tooling (machine-specific, regenerable)
 graphify-out/
 .claude/settings.json
+.claude/notion-session-log.local.json

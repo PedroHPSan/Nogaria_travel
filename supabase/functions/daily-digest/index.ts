@@ -1,7 +1,9 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { sendTextMessage } from '../_shared/whatsappClient.ts';
-import { fetchTripContext, localDateIso, youngestWithHeight } from '../_shared/tripContext.ts';
+import { fetchTripContext, localDateIso, youngestWithHeight, addDaysIso } from '../_shared/tripContext.ts';
 import { formatDailyDigest } from '../_shared/formatter.ts';
+
+const DIGEST_LEAD_DAYS = 1;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -32,11 +34,16 @@ Deno.serve(async request => {
     .eq('enabled', true);
   if (error) return json({ error: `Erro ao carregar configs: ${error.message}` }, 500);
 
+  // Disparo manual de teste: ignora a checagem de hora/janela (mesma auth do cron).
+  // Útil pra validar o formato do digest antes da janela real abrir.
+  const forceSend = request.headers.get('x-force-send') === cronSecret;
+  const dateOverride = forceSend ? new URL(request.url).searchParams.get('date') : null;
+
   const now = new Date();
   const summary: Record<string, string> = {};
 
   for (const config of configs ?? []) {
-    const todayIso = localDateIso(now, config.timezone);
+    const todayIso = dateOverride ?? localDateIso(now, config.timezone);
 
     // Roda 1x/hora; só envia quando a hora local bate com a digest_time do tenant.
     const digestHour = String(config.digest_time).slice(0, 2);
@@ -45,7 +52,7 @@ Deno.serve(async request => {
       hour: '2-digit',
       hour12: false,
     }).format(now);
-    if (localHour !== digestHour) {
+    if (!forceSend && localHour !== digestHour) {
       summary[config.tenant_id] = `skipped:hora-local ${localHour} != ${digestHour}`;
       continue;
     }
@@ -54,6 +61,13 @@ Deno.serve(async request => {
       const ctx = await fetchTripContext(supabase, config.tenant_id, todayIso);
       if (!ctx.trip) {
         summary[config.tenant_id] = 'skipped:sem-viagem-ativa';
+        continue;
+      }
+
+      // Só envia digest a partir de DIGEST_LEAD_DAYS antes do início da viagem até o fim.
+      const windowStart = addDaysIso(ctx.trip.start_date, -DIGEST_LEAD_DAYS);
+      if (!forceSend && (todayIso < windowStart || todayIso > ctx.trip.end_date)) {
+        summary[config.tenant_id] = `skipped:fora-da-janela (${windowStart} a ${ctx.trip.end_date})`;
         continue;
       }
 
@@ -97,24 +111,32 @@ Deno.serve(async request => {
       }
 
       let sentCount = 0;
+      const failures: string[] = [];
       for (const recipient of recipients) {
         const phone = recipient.whatsapp_phone!.replace(/\D/g, '');
-        const sent = await sendTextMessage({
-          phoneNumberId: config.phone_number_id,
-          accessToken: metaToken,
-          to: phone,
-          text,
-        });
-        await supabase.from('whatsapp_messages').insert({
-          tenant_id: config.tenant_id,
-          wa_message_id: sent.waMessageId,
-          direction: 'outbound',
-          sender_phone: phone,
-          body: text,
-        });
-        sentCount++;
+        try {
+          const sent = await sendTextMessage({
+            phoneNumberId: config.phone_number_id,
+            accessToken: metaToken,
+            to: phone,
+            text,
+          });
+          await supabase.from('whatsapp_messages').insert({
+            tenant_id: config.tenant_id,
+            wa_message_id: sent.waMessageId,
+            direction: 'outbound',
+            sender_phone: phone,
+            body: text,
+          });
+          sentCount++;
+        } catch (err) {
+          // Um destinatário sem janela de 24h aberta (ou outro erro pontual) não
+          // deve travar o envio pros demais.
+          console.error(`[daily-digest] Falha ao enviar para ${phone}:`, err);
+          failures.push(phone);
+        }
       }
-      summary[config.tenant_id] = `sent:${sentCount}`;
+      summary[config.tenant_id] = `sent:${sentCount}${failures.length ? ` failed:${failures.join(',')}` : ''}`;
     } catch (err) {
       console.error(`[daily-digest] Falha no tenant ${config.tenant_id}:`, err);
       summary[config.tenant_id] = 'error';
