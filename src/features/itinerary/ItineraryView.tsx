@@ -6,6 +6,7 @@ import { AttractionGuideModal } from '../../components/modals/AttractionGuideMod
 import { DayTimeline } from './DayTimeline';
 import { MonthCalendar } from './MonthCalendar';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { Avatar } from '../../components/Avatar';
 import type { ItineraryItem } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
 import {
@@ -327,13 +328,9 @@ export const ItineraryView: React.FC = () => {
                         const p = participants.find(part => part.id === pId);
                         if (!p) return null;
                         return (
-                          <span
-                            key={pId}
-                            title={p.full_name}
-                            className={`w-6 h-6 rounded-full ${p.avatar_color} text-white font-bold text-[10px] flex items-center justify-center border border-ink-900`}
-                          >
-                            {p.nickname ? p.nickname[0] : p.full_name[0]}
-                          </span>
+                          <div key={pId} className="border border-ink-900 rounded-full" title={p.full_name}>
+                            <Avatar participant={p} size="sm" />
+                          </div>
                         );
                       })}
                     </div>

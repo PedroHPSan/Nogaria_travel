@@ -5,10 +5,10 @@ export type KpiAccent = 'blue' | 'emerald' | 'amber' | 'purple';
 // Literal class strings (not template-interpolated) so Tailwind's build-time
 // scanner can find and generate them — see index.css / Tailwind v4 content scan.
 const ACCENT_CLASSES: Record<KpiAccent, { border: string; text: string; bg: string; bar: string; hoverBorder: string }> = {
-  blue: { border: 'border-info-500/20', text: 'text-info-400', bg: 'bg-info-500/10', bar: 'bg-info-500', hoverBorder: 'hover:border-info-500/40' },
-  emerald: { border: 'border-success-500/20', text: 'text-success-400', bg: 'bg-success-500/10', bar: 'bg-success-500', hoverBorder: 'hover:border-success-500/40' },
-  amber: { border: 'border-warning-500/20', text: 'text-warning-400', bg: 'bg-warning-500/10', bar: 'bg-warning-500', hoverBorder: 'hover:border-warning-500/40' },
-  purple: { border: 'border-accent-500/20', text: 'text-accent-400', bg: 'bg-accent-500/10', bar: 'bg-accent-500', hoverBorder: 'hover:border-accent-500/40' }
+  blue: { border: 'border-info-500/20', text: 'text-info-400', bg: 'bg-info-500/10', bar: 'bg-gradient-to-r from-sky-400 to-emerald-400', hoverBorder: 'hover:border-info-500/40' },
+  emerald: { border: 'border-success-500/20', text: 'text-success-400', bg: 'bg-success-500/10', bar: 'bg-gradient-to-r from-emerald-400 to-teal-400', hoverBorder: 'hover:border-success-500/40' },
+  amber: { border: 'border-warning-500/20', text: 'text-warning-400', bg: 'bg-warning-500/10', bar: 'bg-gradient-to-r from-amber-400 to-rose-400', hoverBorder: 'hover:border-warning-500/40' },
+  purple: { border: 'border-accent-500/20', text: 'text-accent-400', bg: 'bg-accent-500/10', bar: 'bg-gradient-to-r from-accent-400 to-pink-500', hoverBorder: 'hover:border-accent-500/40' }
 };
 
 interface KpiCardProps {

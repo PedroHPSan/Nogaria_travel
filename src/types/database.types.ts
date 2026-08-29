@@ -53,7 +53,9 @@ export interface Participant {
   notes?: string;
   budget_limit_usd: number;
   quota_eligible?: boolean;
-  avatar_color: string;
+  avatar_preset_id?: string | null;
+  avatar_emoji?: string | null;
+  avatar_color?: string | null;
 }
 
 export interface Flight {

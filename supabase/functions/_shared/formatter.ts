@@ -61,13 +61,13 @@ export function formatDatePtBr(dateIso: string): string {
 
 function formatItemLine(item: DigestItineraryItem, child: DigestChild | null): string {
   const timeRange = item.time_end ? `${item.time_start}–${item.time_end}` : item.time_start;
-  let line = `${categoryEmoji(item.category)} *${timeRange}* • ${item.title}`;
+  let line = `🔹 ${categoryEmoji(item.category)} *${timeRange}* • ${item.title}`;
   if (item.park) line += ` (${item.park})`;
 
   const childAlert =
     child && item.min_height_cm && child.height_cm && child.height_cm < item.min_height_cm;
   if (childAlert) {
-    line += `\n   ⚠️ Altura mínima ${item.min_height_cm}cm — ${child!.nickname} tem ${child!.height_cm}cm (usar Rider Switch)`;
+    line += `\n   👀 _Psst! A altura mínima é ${item.min_height_cm}cm. ${child!.nickname} tem ${child!.height_cm}cm, então vamos usar o Rider Switch aqui, ok?_`;
   }
   return line;
 }
@@ -87,22 +87,23 @@ export function formatDailyDigest(input: {
   const { tripTitle, dateIso, items, tasksDueSoon, nextFlight, child } = input;
 
   const lines: string[] = [];
-  lines.push(`🌎 *${tripTitle} — ROTEIRO DO DIA*`);
-  lines.push(`📅 ${formatDatePtBr(dateIso)}`);
+  lines.push(`☀️ *Bom dia, Família!* Hoje é dia de aventura!`);
+  lines.push(`📅 *${formatDatePtBr(dateIso)}* — ${tripTitle}`);
   lines.push('');
 
   if (items.length === 0) {
-    lines.push('Nenhuma atividade cadastrada para hoje. Dia livre! 🏖️');
+    lines.push('Hoje não temos programação oficial. Aproveitem o dia livre! 🏖️🍹');
   } else {
+    lines.push('🎢 *Nossa programação de hoje:*');
     for (const item of items) {
       lines.push(formatItemLine(item, child));
-      if (item.notes) lines.push(`   💡 ${item.notes}`);
+      if (item.notes) lines.push(`   💡 _${item.notes}_`);
     }
   }
 
   if (nextFlight) {
     lines.push('');
-    lines.push('🚨 *LEMBRETE DE VOO (próximas 24h)*');
+    lines.push('🚨 *Atenção ao nosso voo!* ✈️');
     const dep = new Date(nextFlight.departure_time).toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -111,16 +112,16 @@ export function formatDailyDigest(input: {
       timeZone: 'America/Sao_Paulo',
     });
     lines.push(
-      `✈️ ${nextFlight.airline} ${nextFlight.flight_number} • ${nextFlight.origin_airport} → ${nextFlight.destination_airport} • ${dep} • Localizador: *${nextFlight.booking_code}*`,
+      `Vamos voar com a ${nextFlight.airline} (${nextFlight.flight_number}) saindo de ${nextFlight.origin_airport} às ${dep}. Nosso localizador é *${nextFlight.booking_code}*!`,
     );
   }
 
   if (tasksDueSoon.length > 0) {
     lines.push('');
-    lines.push('⏰ *LEMBRETES (tarefas vencendo em 48h)*');
+    lines.push('✅ *Só um lembrete rápido:*');
     for (const task of tasksDueSoon) {
-      const due = task.due_date ? ` — vence ${formatDatePtBr(task.due_date)}` : '';
-      lines.push(`• ${task.title}${due}`);
+      const due = task.due_date ? `(até ${formatDatePtBr(task.due_date).split('-')[0].trim()})` : '';
+      lines.push(`👉 ${task.title} ${due}`);
     }
   }
 

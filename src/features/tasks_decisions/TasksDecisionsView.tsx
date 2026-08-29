@@ -3,6 +3,7 @@ import { useTrip } from '../../context/TripContext';
 import { TaskDecisionModal } from '../../components/modals/TaskDecisionModal';
 import { ViewHeader } from '../../components/ui/ViewHeader';
 import { SubTabs } from '../../components/ui/SubTabs';
+import { Avatar } from '../../components/Avatar';
 import type { Task, Decision } from '../../types/database.types';
 import {
   CheckSquare,
@@ -11,7 +12,6 @@ import {
   Trash2,
   CheckCircle2,
   Clock,
-  User,
   History
 } from 'lucide-react';
 
@@ -132,9 +132,9 @@ export const TasksDecisionsView: React.FC = () => {
 
                     <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-400 mt-2">
                       {assigned && (
-                        <span className="flex items-center gap-1">
-                          <User className="w-3 h-3 text-info-400" />
-                          Responsável: <strong className="text-ink-200">{assigned.full_name}</strong>
+                        <span className="flex items-center gap-1.5">
+                          <Avatar participant={assigned} size="sm" />
+                          <strong className="text-ink-200">{assigned.full_name}</strong>
                         </span>
                       )}
                       {t.due_date && (
@@ -232,7 +232,17 @@ export const TasksDecisionsView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-ink-800 text-ink-400">
-                    <span>Decidido por: <strong className="text-ink-200">{decidedBy?.full_name || 'Grupo'}</strong></span>
+                    <span className="flex items-center gap-1.5">
+                      Decidido por:
+                      {decidedBy ? (
+                        <>
+                          <Avatar participant={decidedBy} size="sm" />
+                          <strong className="text-ink-200">{decidedBy.full_name}</strong>
+                        </>
+                      ) : (
+                        <strong className="text-ink-200">Grupo</strong>
+                      )}
+                    </span>
                     {d.financial_impact_usd !== undefined && (
                       <span className="text-success-400 font-bold">Impacto: US$ {d.financial_impact_usd}</span>
                     )}

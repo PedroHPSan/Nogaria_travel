@@ -1,5 +1,6 @@
 import React from 'react';
 import { computeCoverage } from '../../services/coverageEngine';
+import { AchievementBadge } from '../../components/AchievementBadge';
 import type { ItineraryItem, Participant } from '../../types/database.types';
 
 interface MonthCalendarProps {
@@ -71,7 +72,10 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ items, participant
                     {parkName ?? `${dayItems.length} ${dayItems.length === 1 ? 'item' : 'itens'}`}
                   </span>
                   {coverage && (
-                    <span className="text-[9px] font-bold text-success-400">{coverage.percent}%</span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[9px] font-bold text-success-400">{coverage.percent}%</span>
+                      <AchievementBadge percent={coverage.percent} />
+                    </div>
                   )}
                 </>
               )}

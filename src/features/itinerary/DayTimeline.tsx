@@ -4,6 +4,9 @@ import { useTrip } from '../../context/TripContext';
 import { computeCoverage } from '../../services/coverageEngine';
 import type { ItineraryItem, Participant } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
+import { Avatar } from '../../components/Avatar';
+import { BadgeCelebration } from '../../components/BadgeCelebration';
+import { AchievementBadge } from '../../components/AchievementBadge';
 
 interface DayTimelineProps {
   items: ItineraryItem[];
@@ -76,7 +79,10 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
     <div className="space-y-4">
       <div className="p-4 rounded-2xl glass-panel border border-ink-800 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-ink-100">Cobertura do dia</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-ink-100">Cobertura do dia</span>
+            <AchievementBadge percent={coverage.percent} />
+          </div>
           <span className="text-lg font-bold text-info-400">{coverage.percent}%</span>
         </div>
         <div className="flex flex-wrap gap-2 text-[11px]">
@@ -92,15 +98,15 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
             if (!c || c.total === 0) return null;
             return (
               <span key={p.id} className="px-2 py-1 rounded-lg bg-ink-900 border border-ink-800 text-ink-300 flex items-center gap-1.5">
-                <span className={`w-4 h-4 rounded-full ${p.avatar_color} text-white text-[9px] font-bold flex items-center justify-center`}>
-                  {p.nickname ? p.nickname[0] : p.full_name[0]}
-                </span>
+                <Avatar participant={p} size="sm" />
                 {c.done}/{c.total}
               </span>
             );
           })}
         </div>
       </div>
+
+      {coverage.percent === 100 && <BadgeCelebration />}
 
       <div className="space-y-3">
         {sortedItems.length === 0 ? (
@@ -175,9 +181,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
                           STATUS_STYLES[status] ?? STATUS_STYLES.pending
                         }`}
                       >
-                        <span className={`w-4 h-4 rounded-full ${p.avatar_color} text-white text-[9px] font-bold flex items-center justify-center`}>
-                          {p.nickname ? p.nickname[0] : p.full_name[0]}
-                        </span>
+                        <Avatar participant={p} size="sm" />
                         {STATUS_LABELS[status] ?? status}
                       </button>
                     );

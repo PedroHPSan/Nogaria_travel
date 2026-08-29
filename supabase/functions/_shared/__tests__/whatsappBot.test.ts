@@ -26,7 +26,7 @@ describe('formatDailyDigest', () => {
       child: null,
     });
 
-    expect(text).toContain('*NOGÁRIA USA 2026 — ROTEIRO DO DIA*');
+    expect(text).toContain('*Bom dia, Família!*');
     expect(text).toContain('🎡 *09:00* • Space Mountain (Magic Kingdom)');
   });
 
@@ -40,7 +40,7 @@ describe('formatDailyDigest', () => {
       child: { nickname: 'Gabi', height_cm: 100 },
     });
 
-    expect(text).toContain('Altura mínima 112cm — Gabi tem 100cm');
+    expect(text).toContain('A altura mínima é 112cm');
     expect(text).toContain('Rider Switch');
   });
 
@@ -67,7 +67,7 @@ describe('formatDailyDigest', () => {
       child: null,
     });
 
-    expect(text).toContain('Dia livre');
+    expect(text).toContain('dia livre');
   });
 
   it('inclui lembretes de voo e tarefas quando presentes', () => {
@@ -87,10 +87,10 @@ describe('formatDailyDigest', () => {
       child: null,
     });
 
-    expect(text).toContain('*LEMBRETE DE VOO');
+    expect(text).toContain('Atenção ao nosso voo!');
     expect(text).toContain('LA8180');
     expect(text).toContain('*ABC123*');
-    expect(text).toContain('*LEMBRETES');
+    expect(text).toContain('Só um lembrete rápido:');
     expect(text).toContain('Comprar dólar');
   });
 });

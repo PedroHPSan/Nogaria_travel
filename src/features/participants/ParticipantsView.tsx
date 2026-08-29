@@ -3,6 +3,7 @@ import { useTrip } from '../../context/TripContext';
 import { ParticipantModal } from '../../components/modals/ParticipantModal';
 import { ViewHeader } from '../../components/ui/ViewHeader';
 import type { Participant } from '../../types/database.types';
+import { Avatar } from '../../components/Avatar';
 import { FileText, DollarSign, Ruler, HeartPulse, Plus, Edit2, Trash2, ShieldAlert } from 'lucide-react';
 
 export const ParticipantsView: React.FC = () => {
@@ -68,9 +69,7 @@ export const ParticipantsView: React.FC = () => {
           <div key={p.id} className="glass-card p-5 rounded-2xl border border-ink-800 space-y-4 relative group">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-2xl ${p.avatar_color} text-white font-bold flex items-center justify-center text-lg shadow-lg`}>
-                  {p.nickname ? p.nickname[0] : p.full_name[0]}
-                </div>
+                <Avatar participant={p} size="lg" />
                 <div>
                   <h3 className="font-bold text-base text-ink-100">{p.full_name}</h3>
                   <p className="text-xs text-ink-400">

@@ -21,7 +21,9 @@ export interface ParticipantRow {
   whatsapp_phone: string | null;
   notes: string | null;
   budget_limit_usd: number;
-  avatar_color: string;
+  avatar_preset_id: string | null;
+  avatar_emoji: string | null;
+  avatar_color: string | null;
 }
 
 /**
@@ -64,6 +66,8 @@ export function participantFromRow(row: ParticipantRow, today: string): Particip
     whatsapp_phone: row.whatsapp_phone ?? undefined,
     notes: row.notes ?? undefined,
     budget_limit_usd: row.budget_limit_usd,
+    avatar_preset_id: row.avatar_preset_id,
+    avatar_emoji: row.avatar_emoji,
     avatar_color: row.avatar_color,
   };
 }
@@ -86,6 +90,8 @@ export function participantToInsert(p: Participant, today: string): ParticipantR
     whatsapp_phone: p.whatsapp_phone ?? null,
     notes: p.notes ?? null,
     budget_limit_usd: p.budget_limit_usd,
-    avatar_color: p.avatar_color,
+    avatar_preset_id: p.avatar_preset_id ?? null,
+    avatar_emoji: p.avatar_emoji ?? null,
+    avatar_color: p.avatar_color ?? null,
   };
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { DreGlobalResult } from '../../../services/dreEngine';
 import { ArrowRightLeft, CheckCircle2 } from 'lucide-react';
+import { Avatar } from '../../../components/Avatar';
 
 interface DreParticipantsProps {
   dreResult: DreGlobalResult;
@@ -72,9 +73,13 @@ export const DreParticipants: React.FC<DreParticipantsProps> = ({ dreResult, for
           >
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className={`w-10 h-10 rounded-full ${p.avatar_color} text-white font-bold flex items-center justify-center text-sm shadow`}>
-                  {p.nickname ? p.nickname[0] : p.full_name[0]}
-                </div>
+                <Avatar participant={{
+                  full_name: p.full_name,
+                  nickname: p.nickname,
+                  avatar_preset_id: p.avatar_preset_id,
+                  avatar_emoji: p.avatar_emoji,
+                  avatar_color: p.avatar_color
+                }} size="md" />
                 <div className="min-w-0">
                   <h4 className="font-bold text-sm text-ink-100 truncate">{p.full_name}</h4>
                   <div className="text-[11px] text-ink-400">

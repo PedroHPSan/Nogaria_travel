@@ -45,7 +45,9 @@ export interface ParticipantDreSummary {
   participant_id: string;
   full_name: string;
   nickname?: string;
-  avatar_color: string;
+  avatar_preset_id?: string | null;
+  avatar_emoji?: string | null;
+  avatar_color?: string | null;
   budget_limit_usd: number;
   budget_limit_brl: number;
   total_consumed_usd: number;
@@ -337,6 +339,8 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
       participant_id: p.id,
       full_name: p.full_name,
       nickname: p.nickname,
+      avatar_preset_id: p.avatar_preset_id,
+      avatar_emoji: p.avatar_emoji,
       avatar_color: p.avatar_color,
       budget_limit_usd: p.budget_limit_usd || 0,
       budget_limit_brl: (p.budget_limit_usd || 0) * rate,
