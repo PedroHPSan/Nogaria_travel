@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Clapperboard } from 'lucide-react';
 import { useTrip } from '../../context/TripContext';
 import { computeCoverage } from '../../services/coverageEngine';
@@ -68,6 +68,15 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
   const sortedItems = sortItineraryChronologically(items);
   const coverage = computeCoverage(items, participants);
 
+  const [celebrationKey, setCelebrationKey] = useState(0);
+  const prevPercentRef = useRef(coverage.percent);
+  useEffect(() => {
+    if (coverage.percent === 100 && prevPercentRef.current !== 100) {
+      setCelebrationKey(k => k + 1);
+    }
+    prevPercentRef.current = coverage.percent;
+  }, [coverage.percent]);
+
   const handleStatusClick = (item: ItineraryItem, participantId: string) => {
     const current = item.participant_status?.[participantId];
     updateItineraryItem(item.id, {
@@ -106,7 +115,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
         </div>
       </div>
 
-      {coverage.percent === 100 && <BadgeCelebration />}
+      {celebrationKey > 0 && <BadgeCelebration key={celebrationKey} />}
 
       <div className="space-y-3">
         {sortedItems.length === 0 ? (

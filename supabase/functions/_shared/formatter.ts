@@ -120,7 +120,7 @@ export function formatDailyDigest(input: {
     lines.push('');
     lines.push('✅ *Só um lembrete rápido:*');
     for (const task of tasksDueSoon) {
-      const due = task.due_date ? `(até ${formatDatePtBr(task.due_date).split('-')[0].trim()})` : '';
+      const due = task.due_date ? `(até ${formatDatePtBr(task.due_date).split(',')[1].trim()})` : '';
       lines.push(`👉 ${task.title} ${due}`);
     }
   }
