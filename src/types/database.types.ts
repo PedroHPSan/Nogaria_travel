@@ -273,6 +273,17 @@ export interface Task {
   created_at: string;
 }
 
+export interface TripIdea {
+  id: string;
+  trip_id: string;
+  participant_id?: string;
+  content: string;
+  category?: 'negocio' | 'viagem' | 'outro';
+  source: 'whatsapp' | 'app';
+  status: 'novo' | 'em_analise' | 'descartado' | 'aprovado';
+  created_at: string;
+}
+
 export interface Decision {
   id: string;
   trip_id: string;

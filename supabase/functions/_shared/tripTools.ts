@@ -85,6 +85,30 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
       required: ['title'],
     },
   },
+  {
+    name: 'save_trip_idea',
+    description:
+      'Salva uma ideia de negócio ou de viagem que o participante compartilhou, para a sessão de brainstorming da família. ' +
+      'Use sempre que alguém mandar uma ideia, insight ou sugestão espontânea (ex: "ideia de negócio: ...", "e se a gente...", "seria legal fazer...").',
+    parameters: {
+      type: 'object',
+      properties: {
+        content: { type: 'string', description: 'O texto da ideia, resumido de forma clara.' },
+        category: { type: 'string', enum: ['negocio', 'viagem', 'outro'], description: 'Categoria da ideia (opcional).' },
+      },
+      required: ['content'],
+    },
+  },
+  {
+    name: 'list_trip_ideas',
+    description: 'Lista as últimas ideias já registradas na sessão de brainstorming da viagem.',
+    parameters: {
+      type: 'object',
+      properties: {
+        category: { type: 'string', enum: ['negocio', 'viagem', 'outro'], description: 'Filtrar por categoria (opcional).' },
+      },
+    },
+  },
 ];
 
 export interface ToolContext {
@@ -92,6 +116,8 @@ export interface ToolContext {
   tripId: string;
   todayIso: string;
   participants: ParticipantRow[];
+  /** Telefone de quem mandou a mensagem — usado para atribuir a ideia ao participante certo. */
+  senderPhone?: string;
 }
 
 function findParticipant(participants: ParticipantRow[], nameOrNick: string | null): ParticipantRow[] {
@@ -182,6 +208,46 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           title: item.title,
           markedFor: targets.map(p => p.nickname ?? p.full_name),
         };
+      }
+
+      case 'save_trip_idea': {
+        const content = requireString(args, 'content');
+        const category = optionalString(args, 'category');
+        if (category && !['negocio', 'viagem', 'outro'].includes(category)) {
+          throw new Error('Argumento inválido: category deve ser negocio, viagem ou outro.');
+        }
+
+        const senderDigits = (ctx.senderPhone ?? '').replace(/\D/g, '');
+        const author = participants.find(p => senderDigits && (p.whatsapp_phone ?? '').replace(/\D/g, '') === senderDigits);
+
+        const { data, error } = await supabase
+          .from('trip_ideas')
+          .insert({
+            trip_id: tripId,
+            participant_id: author?.id ?? null,
+            content,
+            category: category ?? null,
+            source: 'whatsapp',
+            status: 'novo',
+          })
+          .select('id')
+          .single();
+        if (error) throw new Error(`Erro ao salvar ideia: ${error.message}`);
+        return { saved: true, id: data.id, author: author?.nickname ?? author?.full_name ?? null };
+      }
+
+      case 'list_trip_ideas': {
+        const category = optionalString(args, 'category');
+        let query = supabase
+          .from('trip_ideas')
+          .select('content, category, status, created_at')
+          .eq('trip_id', tripId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (category) query = query.eq('category', category);
+        const { data, error } = await query;
+        if (error) throw new Error(`Erro ao consultar ideias: ${error.message}`);
+        return { ideas: data ?? [] };
       }
 
       case 'complete_task': {

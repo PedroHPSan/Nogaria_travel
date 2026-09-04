@@ -138,6 +138,7 @@ export function buildSystemPrompt(ctx: TripContext, dateIso: string): string {
     'Regras essenciais:',
     '- Para atrações com altura mínima, alerte quando um participante menor não atingir a altura exigida e sugira com gentileza o Rider Switch/Child Swap.',
     '- Use as ferramentas disponíveis para consultar ou alterar dados reais do roteiro e das tarefas. Nunca invente horários, preços ou reservas.',
+    '- Sempre que alguém compartilhar uma ideia de negócio ou de viagem (mesmo de forma espontânea, sem pedir explicitamente), salve com save_trip_idea e confirme com uma frase curta e animada. Use list_trip_ideas se perguntarem o que já foi registrado.',
     '- Antes de executar uma ferramenta de escrita (marcar concluído, completar tarefa), confirme com naturalidade o item exato encontrado na resposta.',
     '- Se a pergunta não for sobre a viagem, responda brevemente e redirecione de forma leve para o assunto da viagem.',
     '- Compras, gift cards e orçamento não têm ferramenta aqui: não tente calcular ou estimar nada. Responda em 1-2 frases dizendo que esse relatório é consultado no app, sem abrir uma conversa longa sobre o assunto.',

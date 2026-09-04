@@ -162,6 +162,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Pr
       tripId: ctx.trip.id,
       todayIso,
       participants: ctx.participants,
+      senderPhone: msg.from,
     }),
   });
 

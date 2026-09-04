@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Volume2,
   FileSpreadsheet,
+  Lightbulb,
   MoreHorizontal,
   X
 } from 'lucide-react';
@@ -27,6 +28,7 @@ export type NavTab =
   | 'tasks_decisions'
   | 'documents'
   | 'audit'
+  | 'ideas'
   | 'ai';
 
 type NavGroup = 'hoje' | 'planejamento' | 'dinheiro' | 'controle';
@@ -75,7 +77,8 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'purchases', group: 'dinheiro', label: 'Compras & Malas', short: 'Compras', icon: ShoppingBag },
     { id: 'tasks_decisions', group: 'controle', label: 'Pendências', short: 'Pendências', icon: CheckSquare, badge: pendingTaskCount > 0 ? pendingTaskCount : undefined },
     { id: 'audit', group: 'controle', label: 'Auditoria', short: 'Auditoria', icon: ShieldCheck, badge: auditCount > 0 ? auditCount : undefined },
-    { id: 'documents', group: 'controle', label: 'Vouchers & PDF', short: 'Documentos', icon: FileText }
+    { id: 'documents', group: 'controle', label: 'Vouchers & PDF', short: 'Documentos', icon: FileText },
+    { id: 'ideas', group: 'controle', label: 'Brainstorm', short: 'Ideias', icon: Lightbulb }
   ];
 
   const groupOrder: NavGroup[] = ['hoje', 'planejamento', 'dinheiro', 'controle'];

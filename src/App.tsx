@@ -17,6 +17,7 @@ import { PurchasesView } from './features/purchases/PurchasesView';
 import { TasksDecisionsView } from './features/tasks_decisions/TasksDecisionsView';
 import { DocumentsView } from './features/documents/DocumentsView';
 import { AuditView } from './features/audits/AuditView';
+import { IdeasView } from './features/ideas/IdeasView';
 import { AiCopilotView } from './features/ai/AiCopilotView';
 import { DailyBriefingView } from './features/briefing/DailyBriefingView';
 import { DREView } from './features/financial/DREView';
@@ -25,7 +26,7 @@ import { WriteFailureBanner } from './components/WriteFailureBanner';
 const ACTIVE_TAB_SESSION_KEY = 'ANTIGRAVITY_TRAVEL_PLATFORM_V1_active_tab';
 const VALID_TABS: NavTab[] = [
   'dashboard', 'briefing', 'dre', 'participants', 'logistics', 'itinerary',
-  'purchases', 'financial', 'tasks_decisions', 'documents', 'audit', 'ai'
+  'purchases', 'financial', 'tasks_decisions', 'documents', 'audit', 'ideas', 'ai'
 ];
 
 function getInitialTab(): NavTab {
@@ -110,6 +111,10 @@ function MainAppContent() {
 
         {activeTab === 'audit' && (
           <AuditView />
+        )}
+
+        {activeTab === 'ideas' && (
+          <IdeasView />
         )}
 
         {activeTab === 'ai' && (
