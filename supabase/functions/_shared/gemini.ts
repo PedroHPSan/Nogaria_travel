@@ -24,7 +24,7 @@ interface FunctionCall {
   args: Record<string, unknown>;
 }
 
-interface CandidatePart {
+export interface CandidatePart {
   text?: string;
   functionCall?: FunctionCall;
   thoughtSignature?: string;
@@ -38,6 +38,49 @@ interface GenerateContentResponse {
 export type ToolExecutor = (name: string, args: Record<string, unknown>) => Promise<unknown>;
 
 const MAX_TOOL_ROUNDS = 4;
+
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash';
+
+/**
+ * Resolve o modelo a usar a partir do `model_name` salvo em `ai_provider_configs`.
+ * O campo é texto livre na UI do Copiloto, então pode chegar vazio, com um modelo
+ * de outro provedor (gpt-*, claude-*) ou com uma geração descontinuada do Gemini —
+ * qualquer um desses derrubaria o bot com HTTP 404 na API do Gemini.
+ */
+export function resolveGeminiModel(modelName: string | null | undefined): string {
+  const name = (modelName ?? '').trim();
+  if (!name.startsWith('gemini-')) return DEFAULT_GEMINI_MODEL;
+  if (name.includes('1.5') || name.includes('2.5') || name.includes('flash-latest')) return DEFAULT_GEMINI_MODEL;
+  return name;
+}
+
+/**
+ * Normaliza o histórico antes de enviá-lo ao modelo: remove mensagens vazias
+ * (a API rejeita `text: ''`) e garante que a conversa comece com o usuário.
+ */
+export function sanitizeHistory(history: ChatMessage[]): ChatMessage[] {
+  const nonEmpty = history.filter(m => m.text.trim().length > 0);
+  const firstUser = nonEmpty.findIndex(m => m.role === 'user');
+  return firstUser === -1 ? [] : nonEmpty.slice(firstUser);
+}
+
+/**
+ * Monta o turno do modelo que é ecoado de volta junto com os resultados das tools.
+ * Preserva o `thoughtSignature` (obrigatório no Gemini 3.x para function calling)
+ * e descarta partes sem conteúdo — devolver `{ text: '' }` gera HTTP 400.
+ */
+export function buildModelTurnParts(parts: CandidatePart[]): Record<string, unknown>[] {
+  const result: Record<string, unknown>[] = [];
+  for (const p of parts) {
+    const signature = p.thoughtSignature ? { thoughtSignature: p.thoughtSignature } : {};
+    if (p.functionCall) {
+      result.push({ functionCall: p.functionCall, ...signature });
+    } else if (p.text && p.text.trim()) {
+      result.push({ text: p.text, ...signature });
+    }
+  }
+  return result;
+}
 
 async function generateContent(
   model: string,
@@ -79,7 +122,7 @@ export async function chatWithTools(input: {
   const { apiKey, model, temperature, systemPrompt, history, userText, tools, executeTool } = input;
 
   const contents: Record<string, unknown>[] = [
-    ...history.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+    ...sanitizeHistory(history).map(m => ({ role: m.role, parts: [{ text: m.text }] })),
     { role: 'user', parts: [{ text: userText }] },
   ];
 
@@ -104,14 +147,7 @@ export async function chatWithTools(input: {
     }
 
     // Devolve ao modelo a chamada e o resultado de cada tool.
-    contents.push({
-      role: 'model',
-      parts: parts.map(p =>
-        p.functionCall
-          ? { functionCall: p.functionCall, ...(p.thoughtSignature ? { thoughtSignature: p.thoughtSignature } : {}) }
-          : { text: p.text ?? '' },
-      ),
-    });
+    contents.push({ role: 'model', parts: buildModelTurnParts(parts) });
 
     const responseParts = [];
     for (const call of functionCalls) {
