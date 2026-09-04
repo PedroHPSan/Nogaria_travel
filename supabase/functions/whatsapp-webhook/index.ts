@@ -1,12 +1,16 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
-import { chatWithTools, type ChatMessage } from '../_shared/gemini.ts';
+import { chatWithTools, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
 import { sendTextMessage } from '../_shared/whatsappClient.ts';
 import { fetchTripContext, buildSystemPrompt, localDateIso } from '../_shared/tripContext.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
 
-const DEFAULT_MODEL = 'gemini-3.5-flash';
 const HISTORY_LIMIT = 10;
 const MAX_BODY_CHARS = 4000;
+
+// Runtime das Edge Functions do Supabase: `waitUntil` mantém a instância viva
+// depois da Response ser devolvida, permitindo responder 200 à Meta na hora e
+// processar (Gemini + tools + envio) em background. Ausente em testes locais.
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -72,16 +76,26 @@ async function verifySignature(rawBody: string, signatureHeader: string | null):
   return expected === signatureHeader.slice('sha256='.length);
 }
 
-async function loadHistory(supabase: SupabaseClient, tenantId: string, phone: string): Promise<ChatMessage[]> {
+// Histórico recente da conversa com este telefone. A mensagem atual já foi
+// gravada antes desta consulta (é o que garante a idempotência), então ela é
+// excluída aqui — senão iria ao modelo duas vezes seguidas como turno do usuário.
+async function loadHistory(
+  supabase: SupabaseClient,
+  tenantId: string,
+  phone: string,
+  currentWaMessageId: string,
+): Promise<ChatMessage[]> {
   const { data } = await supabase
     .from('whatsapp_messages')
-    .select('direction, body')
+    .select('direction, body, wa_message_id')
     .eq('tenant_id', tenantId)
-    .or(`sender_phone.eq.${phone}`)
+    .eq('sender_phone', phone)
     .order('created_at', { ascending: false })
-    .limit(HISTORY_LIMIT);
+    .limit(HISTORY_LIMIT + 1);
 
   return (data ?? [])
+    .filter(m => m.wa_message_id !== currentWaMessageId)
+    .slice(0, HISTORY_LIMIT)
     .reverse()
     .map(m => ({ role: m.direction === 'inbound' ? 'user' as const : 'model' as const, text: m.body }));
 }
@@ -121,18 +135,20 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Pr
   const apiKey = Deno.env.get('GEMINI_API_KEY');
   if (!apiKey) throw new Error('GEMINI_API_KEY não configurada nas secrets do Supabase.');
 
+  // Só configs do Gemini: o Copiloto permite provedores OpenAI/Claude/DeepSeek
+  // com is_active, e o nome desses modelos não existe na API do Gemini.
   const { data: aiConfig } = await supabase
     .from('ai_provider_configs')
     .select('model_name, temperature')
     .eq('tenant_id', config.tenant_id)
+    .eq('provider', 'gemini')
     .eq('is_active', true)
     .order('is_default', { ascending: false })
     .limit(1)
     .maybeSingle();
-  let model = aiConfig?.model_name || DEFAULT_MODEL;
-  if (model.includes('1.5') || model.includes('2.5') || model.includes('flash-latest')) model = DEFAULT_MODEL;
+  const model = resolveGeminiModel(aiConfig?.model_name);
 
-  const history = await loadHistory(supabase, config.tenant_id, msg.from);
+  const history = await loadHistory(supabase, config.tenant_id, msg.from, msg.waMessageId);
   const { text, usage } = await chatWithTools({
     apiKey,
     model,
@@ -198,6 +214,8 @@ Deno.serve(async request => {
 
   const rawBody = await request.text();
   if (!(await verifySignature(rawBody, request.headers.get('X-Hub-Signature-256')))) {
+    // Sem este log, um App Secret rotacionado na Meta vira "silêncio total" no bot.
+    console.warn('[whatsapp-webhook] Assinatura X-Hub-Signature-256 inválida ou ausente — confira META_WA_APP_SECRET.');
     return json({ error: 'Assinatura inválida.' }, 401);
   }
 
@@ -213,16 +231,30 @@ Deno.serve(async request => {
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey);
 
   const messages = extractIncomingMessages(payload);
+  if (messages.length === 0) return json({ accepted: 0 });
+
+  // A Meta exige 200 rápido (senão reenvia o evento e, com falhas repetidas,
+  // desativa a assinatura do webhook). Gemini com thinking + tools + envio leva
+  // dezenas de segundos, então o processamento roda depois da Response.
+  const processing = processMessages(supabase, messages);
+  if (typeof EdgeRuntime !== 'undefined') {
+    EdgeRuntime.waitUntil(processing);
+    return json({ accepted: messages.length });
+  }
+  return json({ accepted: messages.length, results: await processing });
+});
+
+async function processMessages(supabase: SupabaseClient, messages: IncomingMessage[]): Promise<Record<string, string>> {
   const results: Record<string, string> = {};
   for (const msg of messages) {
     try {
       results[msg.waMessageId] = await handleMessage(supabase, msg);
     } catch (error) {
+      // Falhas individuais ficam no log da function (Dashboard → Edge Functions → Logs).
       console.error(`[whatsapp-webhook] Falha ao processar ${msg.waMessageId}:`, error);
       results[msg.waMessageId] = 'error';
     }
+    console.log(`[whatsapp-webhook] ${msg.waMessageId}: ${results[msg.waMessageId]}`);
   }
-
-  // A Meta exige 200 rápido; falhas individuais ficam no log da function.
-  return json({ processed: messages.length, results });
-});
+  return results;
+}

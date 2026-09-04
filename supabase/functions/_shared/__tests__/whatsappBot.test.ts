@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { formatDailyDigest, formatDatePtBr, type DigestItineraryItem } from '../formatter.ts';
 import { buildSystemPrompt, localDateIso, youngestWithHeight, type ParticipantRow, type TripContext } from '../tripContext.ts';
 import { createToolExecutor } from '../tripTools.ts';
+import { DEFAULT_GEMINI_MODEL, buildModelTurnParts, resolveGeminiModel, sanitizeHistory } from '../gemini.ts';
 
 const baseItem: DigestItineraryItem = {
   date: '2026-08-25',
@@ -183,5 +184,62 @@ describe('createToolExecutor — validação de argumentos', () => {
     await expect(
       executor('mark_itinerary_item_done', { title: 'Space Mountain', participant: 'Fulano' }),
     ).rejects.toThrow('não encontrado');
+  });
+});
+
+describe('resolveGeminiModel', () => {
+  it('mantém um modelo Gemini válido', () => {
+    expect(resolveGeminiModel('gemini-3.5-flash')).toBe('gemini-3.5-flash');
+    expect(resolveGeminiModel('gemini-3-pro')).toBe('gemini-3-pro');
+  });
+
+  it('cai no default para nomes vazios, de outro provedor ou de gerações descontinuadas', () => {
+    expect(resolveGeminiModel(undefined)).toBe(DEFAULT_GEMINI_MODEL);
+    expect(resolveGeminiModel('')).toBe(DEFAULT_GEMINI_MODEL);
+    expect(resolveGeminiModel('gpt-4o')).toBe(DEFAULT_GEMINI_MODEL);
+    expect(resolveGeminiModel('claude-sonnet-5')).toBe(DEFAULT_GEMINI_MODEL);
+    expect(resolveGeminiModel('gemini-1.5-flash')).toBe(DEFAULT_GEMINI_MODEL);
+    expect(resolveGeminiModel('gemini-2.5-pro')).toBe(DEFAULT_GEMINI_MODEL);
+    expect(resolveGeminiModel('gemini-flash-latest')).toBe(DEFAULT_GEMINI_MODEL);
+  });
+});
+
+describe('sanitizeHistory', () => {
+  it('remove mensagens vazias e garante que a conversa comece pelo usuário', () => {
+    const history = sanitizeHistory([
+      { role: 'model', text: 'Oi! Como posso ajudar?' },
+      { role: 'user', text: '   ' },
+      { role: 'user', text: 'Qual o roteiro de hoje?' },
+      { role: 'model', text: '' },
+      { role: 'model', text: 'Hoje é Magic Kingdom 🎢' },
+    ]);
+    expect(history).toEqual([
+      { role: 'user', text: 'Qual o roteiro de hoje?' },
+      { role: 'model', text: 'Hoje é Magic Kingdom 🎢' },
+    ]);
+  });
+
+  it('retorna vazio quando só há turnos do modelo', () => {
+    expect(sanitizeHistory([{ role: 'model', text: 'Bom dia!' }])).toEqual([]);
+  });
+});
+
+describe('buildModelTurnParts', () => {
+  it('ecoa functionCall com thoughtSignature e descarta partes vazias', () => {
+    const parts = buildModelTurnParts([
+      { text: '' },
+      { functionCall: { name: 'get_itinerary', args: { date: '2026-09-04' } }, thoughtSignature: 'sig-1' },
+      { thoughtSignature: 'sig-orfa' },
+      { text: 'Deixa eu conferir...' },
+    ]);
+    expect(parts).toEqual([
+      { functionCall: { name: 'get_itinerary', args: { date: '2026-09-04' } }, thoughtSignature: 'sig-1' },
+      { text: 'Deixa eu conferir...' },
+    ]);
+  });
+
+  it('não adiciona thoughtSignature quando o modelo não a envia', () => {
+    const parts = buildModelTurnParts([{ functionCall: { name: 'get_tasks', args: {} } }]);
+    expect(parts).toEqual([{ functionCall: { name: 'get_tasks', args: {} } }]);
   });
 });
