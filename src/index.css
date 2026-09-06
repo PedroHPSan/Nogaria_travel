@@ -1,39 +1,83 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+@theme {
+  /* Brand tokens (Nogaria) — see issue #13 §4.1 / #15. */
+  --font-display: 'Sora', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /*
+   * Semantic aliases for the literal Tailwind palette classes the UI used
+   * directly (slate-*, blue-*, rose-*, amber-*, emerald-*, purple-*).
+   * Each alias points at the exact same Tailwind color it replaces, so this
+   * is a pure rename — zero visual change — that gives the app one place
+   * to swap the underlying palette for the brand colors later (issue #15).
+   *   slate   -> ink      (neutrals: surfaces, borders, body/muted text)
+   *   blue    -> info
+   *   rose    -> danger
+   *   amber   -> warning
+   *   emerald -> success
+   *   purple  -> accent
+   */
+  --color-ink-100: var(--color-slate-100);
+  --color-ink-200: var(--color-slate-200);
+  --color-ink-300: var(--color-slate-300);
+  --color-ink-400: var(--color-slate-400);
+  --color-ink-500: var(--color-slate-500);
+  --color-ink-600: var(--color-slate-600);
+  --color-ink-700: var(--color-slate-700);
+  --color-ink-800: var(--color-slate-800);
+  --color-ink-900: var(--color-slate-900);
+  --color-ink-950: var(--color-slate-950);
+
+  /* info now aliases Tailwind's `sky` family instead of `blue` — sky-400/500
+     (#38bdf8/#0ea5e9) sit close to the Nogaria brand blue (--brand-sky
+     #2FBEEC), so this reuses the existing "alias to a stock Tailwind
+     palette" pattern to bring the brand hue into every info-* usage without
+     hand-rolled shades. */
+  --color-info-200: var(--color-sky-200);
+  --color-info-300: var(--color-sky-300);
+  --color-info-400: var(--color-sky-400);
+  --color-info-500: var(--color-sky-500);
+  --color-info-600: var(--color-sky-600);
+  --color-info-900: var(--color-sky-900);
+  --color-info-950: var(--color-sky-950);
+
+  --color-danger-100: var(--color-rose-100);
+  --color-danger-200: var(--color-rose-200);
+  --color-danger-300: var(--color-rose-300);
+  --color-danger-400: var(--color-rose-400);
+  --color-danger-500: var(--color-rose-500);
+  --color-danger-600: var(--color-rose-600);
+  --color-danger-900: var(--color-rose-900);
+  --color-danger-950: var(--color-rose-950);
+
+  --color-warning-200: var(--color-amber-200);
+  --color-warning-300: var(--color-amber-300);
+  --color-warning-400: var(--color-amber-400);
+  --color-warning-500: var(--color-amber-500);
+  --color-warning-600: var(--color-amber-600);
+  --color-warning-950: var(--color-amber-950);
+
+  --color-success-300: var(--color-emerald-300);
+  --color-success-400: var(--color-emerald-400);
+  --color-success-500: var(--color-emerald-500);
+  --color-success-600: var(--color-emerald-600);
+  --color-success-950: var(--color-emerald-950);
+
+  --color-accent-200: var(--color-purple-200);
+  --color-accent-300: var(--color-purple-300);
+  --color-accent-400: var(--color-purple-400);
+  --color-accent-500: var(--color-purple-500);
+  --color-accent-600: var(--color-purple-600);
+  --color-accent-800: var(--color-purple-800);
+  --color-accent-900: var(--color-purple-900);
+  --color-accent-950: var(--color-purple-950);
+}
+
 @layer base {
   :root {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 10%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-
-    --radius: 0.75rem;
-
-    /* Brand tokens (Nogaria) — see issue #13 §4.1. Not yet consumed by components. */
+    /* Brand tokens (Nogaria) — see issue #13 §4.1. */
     --brand-sky: #2FBEEC;
     --brand-sky-alt: #30B8E8;
     --brand-mint: #52FF7F;
@@ -41,18 +85,80 @@
     --brand-navy: #004078;
     --gradient-brand: linear-gradient(135deg, #2FBEEC 0%, #52FF7F 100%);
 
-    --font-display: 'Sora', system-ui, sans-serif;
-    --font-sans: 'Inter', system-ui, sans-serif;
+    /* Dashboard hero banner glow — tuned per theme since raw dark-tinted
+       gradient stops (e.g. indigo-900 at low opacity) read as a muddy
+       gray-purple wash on a light surface instead of a subtle glow. */
+    --hero-glow-from: rgba(12, 74, 110, 0.6);
+    --hero-glow-via: rgba(49, 46, 129, 0.4);
+  }
+
+  /*
+   * Light theme — flips the `ink` neutral ramp (page/card surfaces and body
+   * text) and darkens/lightens the handful of accent steps that were tuned
+   * for text on a dark surface. Solid-fill steps (500/600) and low-opacity
+   * washes (e.g. bg-info-500/10) are left alone — they read fine on white
+   * too. Activated via `data-theme="light"` on <html>, set by ThemeContext
+   * (and stamped pre-paint by an inline script in index.html to avoid a
+   * flash of the wrong theme).
+   */
+  :root[data-theme='light'] {
+    --color-ink-100: var(--color-slate-900);
+    --color-ink-200: var(--color-slate-800);
+    --color-ink-300: var(--color-slate-700);
+    --color-ink-400: var(--color-slate-600);
+    --color-ink-500: var(--color-slate-500);
+    --color-ink-600: var(--color-slate-400);
+    --color-ink-700: var(--color-slate-300);
+    --color-ink-800: var(--color-slate-200);
+    --color-ink-900: #ffffff;
+    --color-ink-950: var(--color-slate-100);
+
+    --color-info-200: var(--color-sky-800);
+    --color-info-300: var(--color-sky-700);
+    --color-info-400: var(--color-sky-600);
+    --color-info-950: var(--color-sky-100);
+
+    --color-danger-100: var(--color-rose-900);
+    --color-danger-200: var(--color-rose-800);
+    --color-danger-300: var(--color-rose-700);
+    --color-danger-400: var(--color-rose-600);
+    --color-danger-950: var(--color-rose-100);
+
+    --color-warning-200: var(--color-amber-800);
+    --color-warning-300: var(--color-amber-700);
+    --color-warning-400: var(--color-amber-600);
+    --color-warning-950: var(--color-amber-100);
+
+    --color-success-300: var(--color-emerald-700);
+    --color-success-400: var(--color-emerald-600);
+    --color-success-950: var(--color-emerald-100);
+
+    --color-accent-200: var(--color-purple-800);
+    --color-accent-300: var(--color-purple-700);
+    --color-accent-400: var(--color-purple-600);
+    --color-accent-950: var(--color-purple-100);
+
+    --hero-glow-from: rgba(224, 242, 254, 0.9);
+    --hero-glow-via: rgba(224, 231, 255, 0.7);
   }
 }
 
+.hero-banner {
+  background: linear-gradient(to right, var(--hero-glow-from), var(--hero-glow-via), var(--color-ink-900));
+}
+
+.hero-banner-diag {
+  background: linear-gradient(135deg, var(--hero-glow-from), var(--hero-glow-via), var(--color-ink-900));
+}
+
 body {
-  background-color: #030712;
-  color: #f9fafb;
+  background-color: var(--color-ink-950);
+  color: var(--color-ink-100);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   min-height: 100vh;
   margin: 0;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 /* Glassmorphism utilities */
@@ -68,6 +174,16 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme='light'] .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme='light'] .glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 /* Keyboard focus ring — overrides the focus:outline-none utility used across
@@ -91,5 +207,15 @@ body {
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 1);
+}
+
+:root[data-theme='light'] ::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.5);
+}
+:root[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.8);
+}
+:root[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 1);
 }

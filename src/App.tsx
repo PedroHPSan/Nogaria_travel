@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { TripProvider, useTrip } from './context/TripContext';
 import { TripWizard } from './features/onboarding/TripWizard';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthGate } from './features/auth/AuthGate';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
@@ -16,6 +17,7 @@ import { PurchasesView } from './features/purchases/PurchasesView';
 import { TasksDecisionsView } from './features/tasks_decisions/TasksDecisionsView';
 import { DocumentsView } from './features/documents/DocumentsView';
 import { AuditView } from './features/audits/AuditView';
+import { IdeasView } from './features/ideas/IdeasView';
 import { AiCopilotView } from './features/ai/AiCopilotView';
 import { DailyBriefingView } from './features/briefing/DailyBriefingView';
 import { DREView } from './features/financial/DREView';
@@ -24,7 +26,7 @@ import { WriteFailureBanner } from './components/WriteFailureBanner';
 const ACTIVE_TAB_SESSION_KEY = 'ANTIGRAVITY_TRAVEL_PLATFORM_V1_active_tab';
 const VALID_TABS: NavTab[] = [
   'dashboard', 'briefing', 'dre', 'participants', 'logistics', 'itinerary',
-  'purchases', 'financial', 'tasks_decisions', 'documents', 'audit', 'ai'
+  'purchases', 'financial', 'tasks_decisions', 'documents', 'audit', 'ideas', 'ai'
 ];
 
 function getInitialTab(): NavTab {
@@ -49,7 +51,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-ink-950 text-ink-100 flex flex-col font-sans antialiased selection:bg-info-600 selection:text-white">
       <Header
         onOpenAudit={() => setActiveTab('audit')}
         onOpenAi={() => setActiveTab('ai')}
@@ -111,6 +113,10 @@ function MainAppContent() {
           <AuditView />
         )}
 
+        {activeTab === 'ideas' && (
+          <IdeasView />
+        )}
+
         {activeTab === 'ai' && (
           <AiCopilotView />
         )}
@@ -128,8 +134,8 @@ const AppOuWizard = ({ children }: { children: ReactNode }) => {
     return (
       <>
         {banner}
-        <div className="flex min-h-screen items-center justify-center bg-slate-950">
-          <p className="text-sm text-slate-400">Carregando suas viagens…</p>
+        <div className="flex min-h-screen items-center justify-center bg-ink-950">
+          <p className="text-sm text-ink-400">Carregando suas viagens…</p>
         </div>
       </>
     );
@@ -154,15 +160,17 @@ const AppOuWizard = ({ children }: { children: ReactNode }) => {
 
 export function App() {
   return (
-    <AuthProvider>
-      <AuthGate>
-        <TripProvider>
-          <AppOuWizard>
-            <MainAppContent />
-          </AppOuWizard>
-        </TripProvider>
-      </AuthGate>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthGate>
+          <TripProvider>
+            <AppOuWizard>
+              <MainAppContent />
+            </AppOuWizard>
+          </TripProvider>
+        </AuthGate>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

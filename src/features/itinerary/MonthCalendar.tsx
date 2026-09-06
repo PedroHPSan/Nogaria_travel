@@ -1,37 +1,41 @@
 import React from 'react';
 import { computeCoverage } from '../../services/coverageEngine';
+import { AchievementBadge } from '../../components/AchievementBadge';
 import type { ItineraryItem, Participant } from '../../types/database.types';
 
 interface MonthCalendarProps {
-  parkItems: ItineraryItem[];
+  items: ItineraryItem[];
   participants: Participant[];
   selectedDate: string;
   onSelectDate: (date: string) => void;
+  referenceDate: string;
 }
 
-const YEAR = 2026;
-const MONTH = 9; // Setembro — a viagem cabe inteira neste mês (ver spec da fatia 2)
-
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const MONTH_LABELS = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
 
-function buildMonthGrid(): (string | null)[] {
-  const firstWeekday = new Date(YEAR, MONTH - 1, 1).getDay();
-  const daysInMonth = new Date(YEAR, MONTH, 0).getDate();
+function buildMonthGrid(year: number, month: number): (string | null)[] {
+  const firstWeekday = new Date(year, month - 1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
   const cells: (string | null)[] = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let day = 1; day <= daysInMonth; day++) {
-    cells.push(`${YEAR}-${String(MONTH).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    cells.push(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
   }
   return cells;
 }
 
-export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, participants, selectedDate, onSelectDate }) => {
-  const cells = buildMonthGrid();
+export const MonthCalendar: React.FC<MonthCalendarProps> = ({ items, participants, selectedDate, onSelectDate, referenceDate }) => {
+  const [year, month] = referenceDate.split('-').map(Number);
+  const cells = buildMonthGrid(year, month);
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-bold text-white">Setembro 2026</h3>
-      <div className="grid grid-cols-7 gap-1.5 text-[10px] text-slate-500 font-semibold uppercase text-center">
+      <h3 className="text-sm font-bold text-ink-100">{MONTH_LABELS[month - 1]} {year}</h3>
+      <div className="grid grid-cols-7 gap-1.5 text-[10px] text-ink-500 font-semibold uppercase text-center">
         {WEEKDAY_LABELS.map(label => (
           <div key={label}>{label}</div>
         ))}
@@ -40,31 +44,39 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ parkItems, partici
         {cells.map((date, idx) => {
           if (!date) return <div key={`empty-${idx}`} />;
 
-          const dayItems = parkItems.filter(i => i.date === date);
-          const hasParkDay = dayItems.length > 0;
-          const parkName = hasParkDay ? dayItems[0].park : undefined;
-          const coverage = hasParkDay ? computeCoverage(dayItems, participants) : null;
+          const dayItems = items.filter(i => i.date === date);
+          const hasItems = dayItems.length > 0;
+          const parkName = dayItems.find(i => i.park)?.park;
+          const hasCoverageItems = dayItems.some(i => i.item_type);
+          const coverage = hasCoverageItems ? computeCoverage(dayItems, participants) : null;
           const isSelected = date === selectedDate;
           const dayNumber = Number(date.slice(-2));
 
           return (
             <button
               key={date}
-              disabled={!hasParkDay}
-              onClick={() => hasParkDay && onSelectDate(date)}
+              disabled={!hasItems}
+              onClick={() => hasItems && onSelectDate(date)}
               className={`aspect-square rounded-xl border p-1.5 flex flex-col items-center justify-center gap-0.5 text-center transition ${
-                !hasParkDay
-                  ? 'border-slate-800/60 text-slate-600 cursor-default'
+                !hasItems
+                  ? 'border-ink-800/60 text-ink-600 cursor-default'
                   : isSelected
-                  ? 'border-blue-500 bg-blue-500/10 text-blue-300'
-                  : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-blue-500/50'
+                  ? 'border-info-500 bg-info-500/10 text-info-300'
+                  : 'border-ink-800 bg-ink-900/60 text-ink-300 hover:border-info-500/50'
               }`}
             >
               <span className="text-xs font-bold">{dayNumber}</span>
-              {hasParkDay && (
+              {hasItems && (
                 <>
-                  <span className="text-[9px] leading-tight truncate max-w-full">{parkName}</span>
-                  <span className="text-[9px] font-bold text-emerald-400">{coverage?.percent}%</span>
+                  <span className="text-[9px] leading-tight truncate max-w-full">
+                    {parkName ?? `${dayItems.length} ${dayItems.length === 1 ? 'item' : 'itens'}`}
+                  </span>
+                  {coverage && (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[9px] font-bold text-success-400">{coverage.percent}%</span>
+                      <AchievementBadge percent={coverage.percent} />
+                    </div>
+                  )}
                 </>
               )}
             </button>

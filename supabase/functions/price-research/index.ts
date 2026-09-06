@@ -146,6 +146,7 @@ Deno.serve(async (request) => {
         .from('ai_provider_configs')
         .select('*')
         .eq('tenant_id', tenantId)
+        .eq('provider', 'gemini')
         .eq('is_active', true)
         .order('is_default', { ascending: false })
         .limit(1)
@@ -153,8 +154,15 @@ Deno.serve(async (request) => {
       config = c;
     }
 
-    let modelName = config?.model_name || DEFAULT_AI_MODEL;
-    if (modelName.includes('1.5') || modelName.includes('2.5') || modelName.includes('flash-latest')) {
+    // model_name é texto livre na UI: nomes de outro provedor ou gerações
+    // descontinuadas do Gemini retornariam HTTP 404 na API.
+    let modelName = String(config?.model_name ?? '').trim();
+    if (
+      !modelName.startsWith('gemini-') ||
+      modelName.includes('1.5') ||
+      modelName.includes('2.5') ||
+      modelName.includes('flash-latest')
+    ) {
       modelName = DEFAULT_AI_MODEL;
     }
     const modelTemperature = Number(config?.temperature ?? 0.2);

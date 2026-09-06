@@ -20,8 +20,11 @@ const row: ParticipantRow = {
   visa_status: 'valid',
   dietary_restrictions: null,
   height_cm: null,
+  whatsapp_phone: null,
   notes: null,
   budget_limit_usd: 600,
+  avatar_preset_id: null,
+  avatar_emoji: null,
   avatar_color: 'bg-purple-500',
 };
 

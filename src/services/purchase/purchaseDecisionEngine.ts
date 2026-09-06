@@ -349,10 +349,12 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
       });
     }
     if (quotaShare.excedente_usd > 0) {
+      const owner = participants.find(p => p.id === quotaShare.quota_owner_id);
+      const ownerLabel = owner?.nickname ?? owner?.full_name ?? quotaShare.quota_owner_id;
       alerts.push({
         code: 'QUOTA_EXCEEDED',
         severity: 'critical',
-        message: `A cota de ${quotaShare.quota_owner_id} está US$ ${quotaShare.excedente_usd.toFixed(2)} acima do limite.`,
+        message: `A cota de ${ownerLabel} está US$ ${quotaShare.excedente_usd.toFixed(2)} acima do limite.`,
       });
     }
     if (giftCard && usNet.gift_card_covered_usd > 0 && usNet.gift_card_covered_usd < usNet.bruto_usd) {
@@ -378,10 +380,12 @@ export function decidePurchases(input: DecisionInput): PurchaseDecision[] {
     }
     for (const hint of quotaResult.rebalance) {
       if (hint.from_owner_id !== quotaShare.quota_owner_id) continue;
+      const toOwner = participants.find(p => p.id === hint.to_owner_id);
+      const toOwnerLabel = toOwner?.nickname ?? toOwner?.full_name ?? hint.to_owner_id;
       alerts.push({
         code: 'REBALANCE_AVAILABLE',
         severity: 'info',
-        message: `${hint.to_owner_id} tem US$ ${hint.folga_usd.toFixed(2)} de cota livre.`,
+        message: `${toOwnerLabel} tem US$ ${hint.folga_usd.toFixed(2)} de cota livre.`,
       });
     }
 

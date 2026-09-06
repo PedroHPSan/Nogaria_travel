@@ -16,6 +16,44 @@ function extractJsonText(text: string): string {
   return trimmed;
 }
 
+// A response cut off by maxOutputTokens lands here without a closing '}'/']' for the
+// candidates array — extractJsonText's lastIndexOf('}') then grabs the last COMPLETE
+// candidate object as the string's end, leaving the outer object/array unclosed. Rather
+// than discard the whole (already paid-for) response, count unmatched braces/brackets
+// outside of string literals and append what's missing to close them.
+function repairTruncatedJson(jsonText: string): string {
+  let inString = false;
+  let escaped = false;
+  const stack: string[] = [];
+
+  for (const ch of jsonText) {
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === '{' || ch === '[') {
+      stack.push(ch === '{' ? '}' : ']');
+    } else if (ch === '}' || ch === ']') {
+      stack.pop();
+    }
+  }
+
+  if (stack.length === 0) return jsonText;
+
+  // Drop a dangling trailing comma (from a candidate object that got cut off mid-field)
+  // before closing out every still-open brace/bracket, innermost first.
+  const withoutTrailingComma = jsonText.replace(/,\s*$/, '');
+  return withoutTrailingComma + stack.reverse().join('');
+}
+
 function sanitizeCandidates(rawCandidates: unknown[], fallbackDate: string): PriceQuoteCandidate[] {
   if (!Array.isArray(rawCandidates)) return [];
 
@@ -116,7 +154,7 @@ export async function searchPrices(
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
       },
     }),
   });
@@ -130,13 +168,22 @@ export async function searchPrices(
   const data = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '{"candidates":[]}';
 
+  const jsonText = extractJsonText(text);
   let parsed: { candidates?: unknown[] };
   try {
-    const jsonText = extractJsonText(text);
     parsed = JSON.parse(jsonText);
   } catch {
-    console.error(`[price-research] Resposta do Gemini não é JSON válido: ${text.slice(0, 500)}`);
-    throw new Error('O serviço de pesquisa de preços retornou uma resposta inválida. Tente novamente.');
+    // Most commonly a maxOutputTokens cutoff mid-array rather than a malformed response —
+    // try recovering the candidates that did arrive complete before giving up entirely.
+    try {
+      parsed = JSON.parse(repairTruncatedJson(jsonText));
+      console.warn(
+        `[price-research] Resposta do Gemini truncada, recuperada via repairTruncatedJson (finishReason: ${data?.candidates?.[0]?.finishReason ?? 'desconhecido'})`,
+      );
+    } catch {
+      console.error(`[price-research] Resposta do Gemini não é JSON válido: ${text.slice(0, 500)}`);
+      throw new Error('O serviço de pesquisa de preços retornou uma resposta inválida. Tente novamente.');
+    }
   }
 
   const sanitized = sanitizeCandidates(parsed.candidates ?? [], today);

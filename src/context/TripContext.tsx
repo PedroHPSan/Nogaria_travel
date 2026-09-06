@@ -7,6 +7,7 @@ import type {
   Accommodation,
   TransportReservation,
   ItineraryItem,
+  TripIdea,
   GiftCard,
   PurchaseItem,
   Luggage,
@@ -46,6 +47,7 @@ import type { WriteFailure } from '../data/useWriteFailures';
 import { useTripsData } from '../data/useTripsData';
 import { useParticipantsData } from '../data/useParticipantsData';
 import { useItineraryData } from '../data/useItineraryData';
+import { useTripIdeasData } from '../data/useTripIdeasData';
 import { useExpensesData } from '../data/useExpensesData';
 import { usePurchasesData } from '../data/usePurchasesData';
 import { useGiftCardsData } from '../data/useGiftCardsData';
@@ -131,6 +133,11 @@ interface TripContextType {
   addItineraryItem: (i: Omit<ItineraryItem, 'id'>) => void;
   updateItineraryItem: (id: string, i: Partial<ItineraryItem>) => void;
   deleteItineraryItem: (id: string) => void;
+
+  ideas: TripIdea[];
+  addIdea: (i: Omit<TripIdea, 'id' | 'created_at'>) => void;
+  updateIdea: (id: string, i: Partial<TripIdea>) => void;
+  deleteIdea: (id: string) => void;
 
   giftCards: GiftCard[];
   addGiftCard: (g: Omit<GiftCard, 'id' | 'net_cost' | 'cashback_amount' | 'effective_savings' | 'effective_savings_pct'>) => void;
@@ -436,6 +443,17 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateItineraryItem,
     deleteItineraryItem,
   } = useItineraryData({
+    client,
+    tripId: activeTripIdResolvido,
+    recordFailure,
+  });
+
+  const {
+    ideas,
+    addIdea,
+    updateIdea,
+    deleteIdea,
+  } = useTripIdeasData({
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
@@ -865,6 +883,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addItineraryItem,
         updateItineraryItem,
         deleteItineraryItem,
+
+        ideas,
+        addIdea,
+        updateIdea,
+        deleteIdea,
 
         giftCards,
         addGiftCard,

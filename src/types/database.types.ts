@@ -49,10 +49,13 @@ export interface Participant {
   visa_status?: 'valid' | 'pending' | 'exempt' | 'expired';
   dietary_restrictions?: string[];
   height_cm?: number;
+  whatsapp_phone?: string;
   notes?: string;
   budget_limit_usd: number;
   quota_eligible?: boolean;
-  avatar_color: string;
+  avatar_preset_id?: string | null;
+  avatar_emoji?: string | null;
+  avatar_color?: string | null;
 }
 
 export interface Flight {
@@ -267,6 +270,17 @@ export interface Task {
   priority: 'high' | 'medium' | 'low';
   category: 'logistics' | 'finance' | 'tickets' | 'documents' | 'shopping' | 'general';
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  created_at: string;
+}
+
+export interface TripIdea {
+  id: string;
+  trip_id: string;
+  participant_id?: string;
+  content: string;
+  category?: 'negocio' | 'viagem' | 'outro';
+  source: 'whatsapp' | 'app';
+  status: 'novo' | 'em_analise' | 'descartado' | 'aprovado';
   created_at: string;
 }
 

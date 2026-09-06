@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Clapperboard } from 'lucide-react';
 import { useTrip } from '../../context/TripContext';
 import { computeCoverage } from '../../services/coverageEngine';
 import type { ItineraryItem, Participant } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
+import { Avatar } from '../../components/Avatar';
+import { BadgeCelebration } from '../../components/BadgeCelebration';
+import { AchievementBadge } from '../../components/AchievementBadge';
 
 interface DayTimelineProps {
   items: ItineraryItem[];
@@ -18,11 +21,11 @@ const ITEM_TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-slate-800 text-slate-400 border-slate-700',
-  done: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
-  skipped: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
-  height_restricted: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-  not_applicable: 'bg-slate-800 text-slate-500 border-slate-700',
+  pending: 'bg-ink-800 text-ink-400 border-ink-700',
+  done: 'bg-success-500/20 text-success-400 border-success-500/40',
+  skipped: 'bg-danger-500/10 text-danger-400 border-danger-500/30',
+  height_restricted: 'bg-warning-500/10 text-warning-400 border-warning-500/30',
+  not_applicable: 'bg-ink-800 text-ink-500 border-ink-700',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -65,6 +68,15 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
   const sortedItems = sortItineraryChronologically(items);
   const coverage = computeCoverage(items, participants);
 
+  const [celebrationKey, setCelebrationKey] = useState(0);
+  const prevPercentRef = useRef(coverage.percent);
+  useEffect(() => {
+    if (coverage.percent === 100 && prevPercentRef.current !== 100) {
+      setCelebrationKey(k => k + 1);
+    }
+    prevPercentRef.current = coverage.percent;
+  }, [coverage.percent]);
+
   const handleStatusClick = (item: ItineraryItem, participantId: string) => {
     const current = item.participant_status?.[participantId];
     updateItineraryItem(item.id, {
@@ -74,14 +86,17 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
 
   return (
     <div className="space-y-4">
-      <div className="p-4 rounded-2xl glass-panel border border-slate-800 space-y-3">
+      <div className="p-4 rounded-2xl glass-panel border border-ink-800 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-white">Cobertura do dia</span>
-          <span className="text-lg font-bold text-blue-400">{coverage.percent}%</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-ink-100">Cobertura do dia</span>
+            <AchievementBadge percent={coverage.percent} />
+          </div>
+          <span className="text-lg font-bold text-info-400">{coverage.percent}%</span>
         </div>
         <div className="flex flex-wrap gap-2 text-[11px]">
           {(['attraction', 'show', 'experience', 'character'] as const).map(type => (
-            <span key={type} className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
+            <span key={type} className="px-2 py-1 rounded-lg bg-ink-900 border border-ink-800 text-ink-300">
               {ITEM_TYPE_LABELS[type]}: {coverage.byType[type].done}/{coverage.byType[type].total}
             </span>
           ))}
@@ -91,10 +106,8 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
             const c = coverage.byParticipant[p.id];
             if (!c || c.total === 0) return null;
             return (
-              <span key={p.id} className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 flex items-center gap-1.5">
-                <span className={`w-4 h-4 rounded-full ${p.avatar_color} text-white text-[9px] font-bold flex items-center justify-center`}>
-                  {p.nickname ? p.nickname[0] : p.full_name[0]}
-                </span>
+              <span key={p.id} className="px-2 py-1 rounded-lg bg-ink-900 border border-ink-800 text-ink-300 flex items-center gap-1.5">
+                <Avatar participant={p} size="sm" />
                 {c.done}/{c.total}
               </span>
             );
@@ -102,10 +115,12 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
         </div>
       </div>
 
+      {celebrationKey > 0 && <BadgeCelebration key={celebrationKey} />}
+
       <div className="space-y-3">
         {sortedItems.length === 0 ? (
-          <div className="p-8 rounded-2xl glass-card text-center border border-slate-800 text-slate-400 text-xs">
-            Nenhum item de parque para este dia.
+          <div className="p-8 rounded-2xl glass-card text-center border border-ink-800 text-ink-400 text-xs">
+            Nenhuma atividade para este dia.
           </div>
         ) : (
           sortedItems.map(item => {
@@ -116,52 +131,52 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
               <div
                 key={item.id}
                 className={`glass-card p-4 rounded-2xl border space-y-3 ${
-                  isShow ? 'border-purple-500/40 bg-purple-500/5' : 'border-slate-800'
+                  isShow ? 'border-accent-500/40 bg-accent-500/5' : 'border-ink-800'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-                        isShow ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/10 text-blue-400'
+                        isShow ? 'bg-accent-500/20 text-accent-300' : 'bg-info-500/10 text-info-400'
                       }`}
                     >
                       {isShow ? <Clapperboard className="w-4 h-4" /> : item.time_start}
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-ink-800 text-ink-300 border border-ink-700">
                           {item.item_type ? ITEM_TYPE_LABELS[item.item_type] : item.category}
                         </span>
                         {isShow && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-accent-500/20 text-accent-300 border border-accent-500/30">
                             Horário fixo {item.show_block_start}–{item.show_block_end}
                           </span>
                         )}
                         {!isShow && item.time_is_estimated && (
-                          <span className="text-[10px] text-slate-500">~ horário estimado</span>
+                          <span className="text-[10px] text-ink-500">~ horário estimado</span>
                         )}
                         {item.counts_toward_completion === false && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-900 text-slate-500 border border-slate-800">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-ink-900 text-ink-500 border border-ink-800">
                             Não conta para cobertura
                           </span>
                         )}
                       </div>
-                      <h4 className="font-bold text-base text-white mt-0.5">{item.title}</h4>
+                      <h4 className="font-bold text-base text-ink-100 mt-0.5">{item.title}</h4>
                     </div>
                   </div>
                 </div>
 
                 {conflict && (
-                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                  <div className="p-3 rounded-xl bg-warning-500/10 border border-warning-500/30 text-warning-300 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-warning-400" />
                     <div>
                       Conflita com <strong>{conflict.title}</strong> ({conflict.show_block_start}–{conflict.show_block_end}).
                     </div>
                   </div>
                 )}
 
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/60">
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-ink-800/60">
                   {item.participant_ids.map(pId => {
                     const p = participants.find(part => part.id === pId);
                     if (!p) return null;
@@ -175,9 +190,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
                           STATUS_STYLES[status] ?? STATUS_STYLES.pending
                         }`}
                       >
-                        <span className={`w-4 h-4 rounded-full ${p.avatar_color} text-white text-[9px] font-bold flex items-center justify-center`}>
-                          {p.nickname ? p.nickname[0] : p.full_name[0]}
-                        </span>
+                        <Avatar participant={p} size="sm" />
                         {STATUS_LABELS[status] ?? status}
                       </button>
                     );
