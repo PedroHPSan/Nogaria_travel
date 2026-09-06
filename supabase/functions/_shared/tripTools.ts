@@ -4,7 +4,7 @@
 
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import type { GeminiToolDeclaration } from './gemini.ts';
-import type { ParticipantRow } from './tripContext.ts';
+import { formatLocalTime, type ParticipantRow } from './tripContext.ts';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_TITLE_LENGTH = 255;
@@ -95,7 +95,7 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
   },
   {
     name: 'get_flight_info',
-    description: 'Retorna os voos da viagem com horários, trechos e localizadores.',
+    description: 'Retorna os voos da viagem com horários (já no fuso local do destino, não converta), trechos e localizadores.',
     parameters: { type: 'object', properties: {} },
   },
   {
@@ -169,6 +169,8 @@ export interface ToolContext {
   tripId: string;
   todayIso: string;
   participants: ParticipantRow[];
+  /** Fuso do tenant (whatsapp_configs.timezone) — usado para converter horários de voo (UTC no banco) antes de expor ao modelo. */
+  timeZone: string;
   /** Telefone de quem mandou a mensagem — usado para atribuir a ideia ao participante certo. */
   senderPhone?: string;
 }
@@ -228,7 +230,7 @@ async function searchTasks(supabase: SupabaseClient, tripId: string, query: stri
 }
 
 export function createToolExecutor(ctx: ToolContext): (name: string, args: Record<string, unknown>) => Promise<unknown> {
-  const { supabase, tripId, todayIso, participants } = ctx;
+  const { supabase, tripId, todayIso, participants, timeZone } = ctx;
 
   return async (name, args) => {
     switch (name) {
@@ -270,7 +272,14 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           .order('departure_time', { ascending: true })
           .limit(MAX_FLIGHT_ROWS);
         if (error) throw new Error(`Erro ao consultar voos: ${error.message}`);
-        return { flights: data ?? [] };
+        // departure_time/arrival_time vêm em UTC do Postgres; convertidos aqui para
+        // o fuso do tenant, senão o modelo lê os dígitos crus como se já fossem hora local.
+        const flights = (data ?? []).map(f => ({
+          ...f,
+          departure_time: formatLocalTime(f.departure_time, timeZone),
+          arrival_time: f.arrival_time ? formatLocalTime(f.arrival_time, timeZone) : null,
+        }));
+        return { flights, timezone: timeZone };
       }
 
       case 'mark_itinerary_item_done': {

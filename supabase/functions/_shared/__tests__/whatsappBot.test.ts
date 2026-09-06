@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { formatDailyDigest, formatDatePtBr, type DigestItineraryItem } from '../formatter.ts';
-import { buildSystemPrompt, localDateIso, youngestWithHeight, type ParticipantRow, type TripContext } from '../tripContext.ts';
+import {
+  buildSystemPrompt,
+  formatLocalTime,
+  localDateIso,
+  resolveDigestTriggers,
+  youngestWithHeight,
+  type ParticipantRow,
+  type TripContext,
+} from '../tripContext.ts';
 import { createToolExecutor, resolveMatch } from '../tripTools.ts';
 import { DEFAULT_GEMINI_MODEL, backoffDelayMs, buildModelTurnParts, resolveGeminiModel, sanitizeHistory } from '../gemini.ts';
 
@@ -25,6 +33,7 @@ describe('formatDailyDigest', () => {
       tasksDueSoon: [],
       nextFlight: null,
       child: null,
+      timezone: 'America/New_York',
     });
 
     expect(text).toContain('*Bom dia, Família!*');
@@ -39,6 +48,7 @@ describe('formatDailyDigest', () => {
       tasksDueSoon: [],
       nextFlight: null,
       child: { nickname: 'Gabi', height_cm: 100 },
+      timezone: 'America/New_York',
     });
 
     expect(text).toContain('A altura mínima é 112cm');
@@ -53,6 +63,7 @@ describe('formatDailyDigest', () => {
       tasksDueSoon: [],
       nextFlight: null,
       child: { nickname: 'Débora', height_cm: 150 },
+      timezone: 'America/New_York',
     });
 
     expect(text).not.toContain('Rider Switch');
@@ -66,6 +77,7 @@ describe('formatDailyDigest', () => {
       tasksDueSoon: [],
       nextFlight: null,
       child: null,
+      timezone: 'America/New_York',
     });
 
     expect(text).toContain('dia livre');
@@ -86,6 +98,7 @@ describe('formatDailyDigest', () => {
         booking_code: 'ABC123',
       },
       child: null,
+      timezone: 'America/New_York',
     });
 
     expect(text).toContain('Atenção ao nosso voo!');
@@ -93,6 +106,25 @@ describe('formatDailyDigest', () => {
     expect(text).toContain('*ABC123*');
     expect(text).toContain('Só um lembrete rápido:');
     expect(text).toContain('Comprar dólar');
+    // 10:30 UTC = 06:30 em America/New_York (EDT) — não o fuso do remetente.
+    expect(text).toContain('06:30');
+  });
+
+  it('modo tomorrow troca a saudação e o texto de dia livre, sem mexer no resto', () => {
+    const text = formatDailyDigest({
+      tripTitle: 'Viagem',
+      dateIso: '2026-08-26',
+      items: [baseItem],
+      tasksDueSoon: [],
+      nextFlight: null,
+      child: null,
+      timezone: 'America/New_York',
+      mode: 'tomorrow',
+    });
+
+    expect(text).toContain('Boa noite, Família!');
+    expect(text).toContain('Programação de amanhã:');
+    expect(text).not.toContain('Bom dia, Família!');
   });
 });
 
@@ -108,6 +140,47 @@ describe('localDateIso', () => {
     const now = new Date('2026-08-25T01:30:00Z');
     expect(localDateIso(now, 'America/Sao_Paulo')).toBe('2026-08-24');
     expect(localDateIso(now, 'UTC')).toBe('2026-08-25');
+  });
+});
+
+describe('formatLocalTime', () => {
+  it('converte um timestamp UTC do banco para o fuso do destino', () => {
+    // AD2705 chegando em FLL: 10:20 UTC é 06:20 em America/New_York (EDT) —
+    // servir o valor cru fazia o bot informar 10:20 como se já fosse hora local.
+    expect(formatLocalTime('2026-09-06T10:20:00Z', 'America/New_York')).toBe('06/09, 06:20');
+  });
+
+  it('respeita fusos diferentes para o mesmo instante', () => {
+    expect(formatLocalTime('2026-09-06T10:20:00Z', 'America/Sao_Paulo')).toBe('06/09, 07:20');
+  });
+});
+
+describe('resolveDigestTriggers', () => {
+  const base = { todayIso: '2026-09-06', digestTime: '06:00', eveningDigestTime: '22:00' };
+
+  it('dispara o resumo de hoje às 06h', () => {
+    expect(resolveDigestTriggers({ ...base, localHour: '06' })).toEqual([
+      { mode: 'today', dateIso: '2026-09-06' },
+    ]);
+  });
+
+  it('dispara a prévia de amanhã às 22h', () => {
+    expect(resolveDigestTriggers({ ...base, localHour: '22' })).toEqual([
+      { mode: 'tomorrow', dateIso: '2026-09-07' },
+    ]);
+  });
+
+  it('não dispara nada fora dos dois horários', () => {
+    expect(resolveDigestTriggers({ ...base, localHour: '14' })).toEqual([]);
+  });
+
+  it('dispara os dois se as configs caírem na mesma hora, em vez de descartar uma', () => {
+    expect(
+      resolveDigestTriggers({ todayIso: '2026-09-06', digestTime: '08:00', eveningDigestTime: '08:00', localHour: '08' }),
+    ).toEqual([
+      { mode: 'today', dateIso: '2026-09-06' },
+      { mode: 'tomorrow', dateIso: '2026-09-07' },
+    ]);
   });
 });
 
@@ -147,7 +220,7 @@ describe('buildSystemPrompt', () => {
       nextFlight: null,
     };
 
-    const prompt = buildSystemPrompt(ctx, '2026-08-25');
+    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
     expect(prompt).toContain('NOGÁRIA USA 2026');
     expect(prompt).toContain('Gabi (100cm)');
     expect(prompt).toContain('Rider Switch');
@@ -162,6 +235,7 @@ describe('createToolExecutor — validação de argumentos', () => {
     tripId: 'trip1',
     todayIso: '2026-08-25',
     participants: [],
+    timeZone: 'America/New_York',
   });
 
   it('rejeita data fora do formato AAAA-MM-DD', async () => {
@@ -273,23 +347,31 @@ describe('buildSystemPrompt — pré-carregamento do dia', () => {
   };
 
   it('injeta roteiro, tarefas e voo do dia — o que elimina uma rodada de tool', () => {
-    const prompt = buildSystemPrompt(ctx, '2026-08-25');
+    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
     expect(prompt).toContain('09:00-11:00 Space Mountain (Magic Kingdom) [altura mín. 112cm]');
     expect(prompt).toContain('Comprar dólar');
     expect(prompt).toContain('LA8180');
     expect(prompt).toContain('SEM chamar ferramenta');
   });
 
+  it('converte o horário do voo para o fuso do tenant, não expõe o UTC cru', () => {
+    // 10:30 UTC = 06:30 em America/New_York (EDT). Servir o valor cru fazia o
+    // bot informar "10:30" como se já fosse hora local de Orlando.
+    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
+    expect(prompt).not.toContain('2026-08-26T10:30:00Z');
+    expect(prompt).toContain('06:30');
+  });
+
   it('mantém o bloco estático como prefixo, antes de qualquer dado variável', () => {
-    const a = buildSystemPrompt(ctx, '2026-08-25');
-    const b = buildSystemPrompt({ ...ctx, todayItems: [], tasksDueSoon: [] }, '2026-08-30');
+    const a = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
+    const b = buildSystemPrompt({ ...ctx, todayItems: [], tasksDueSoon: [] }, '2026-08-30', 'America/New_York');
     const marker = '--- CONTEXTO DE HOJE ---';
     // O prefixo idêntico é o que o cache implícito do Gemini reaproveita.
     expect(a.slice(0, a.indexOf(marker))).toBe(b.slice(0, b.indexOf(marker)));
   });
 
   it('marca dia livre quando não há atividades', () => {
-    const prompt = buildSystemPrompt({ ...ctx, todayItems: [] }, '2026-08-25');
+    const prompt = buildSystemPrompt({ ...ctx, todayItems: [] }, '2026-08-25', 'America/New_York');
     expect(prompt).toContain('nenhuma atividade cadastrada (dia livre)');
   });
 });
@@ -326,6 +408,7 @@ describe('set_activity_reminder — validação', () => {
     tripId: 'trip1',
     todayIso: '2026-08-25',
     participants: [],
+    timeZone: 'America/New_York',
   });
 
   it('exige minutes_before inteiro dentro do intervalo', async () => {
