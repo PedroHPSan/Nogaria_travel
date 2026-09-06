@@ -127,6 +127,7 @@ Deno.serve(async request => {
             direction: 'outbound',
             sender_phone: phone,
             body: text,
+            kind: 'digest',
           });
           sentCount++;
         } catch (err) {

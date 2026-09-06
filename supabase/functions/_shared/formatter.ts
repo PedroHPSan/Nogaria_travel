@@ -127,3 +127,51 @@ export function formatDailyDigest(input: {
 
   return lines.join('\n');
 }
+
+/** "45 min", "1h", "1h30" — antecedência em linguagem natural. */
+export function formatLeadTime(minutes: number): string {
+  const total = Math.max(0, Math.round(minutes));
+  if (total < 60) return `${total} min`;
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+  return rest === 0 ? `${hours}h` : `${hours}h${String(rest).padStart(2, '0')}`;
+}
+
+export interface ReminderItem {
+  time_start: string;
+  title: string;
+  category: string;
+  park: string | null;
+  city: string | null;
+  notes: string | null;
+  min_height_cm: number | null;
+}
+
+/**
+ * Aviso de uma atividade que está prestes a começar. Mensagem curta de
+ * propósito: chega no meio do dia da família, então tem que ser lida de relance.
+ */
+export function formatActivityReminder(input: {
+  item: ReminderItem;
+  minutesUntil: number;
+  child: DigestChild | null;
+}): string {
+  const { item, minutesUntil, child } = input;
+  const lines: string[] = [];
+
+  lines.push(`⏰ *Daqui a ${formatLeadTime(minutesUntil)}!* ${categoryEmoji(item.category)}`);
+  lines.push(`*${item.time_start.slice(0, 5)}* • ${item.title}`);
+
+  const place = item.park ?? item.city;
+  if (place) lines.push(`📍 ${place}`);
+
+  if (child && item.min_height_cm && child.height_cm && child.height_cm < item.min_height_cm) {
+    lines.push(
+      `👀 _Altura mínima ${item.min_height_cm}cm — ${child.nickname} tem ${child.height_cm}cm. Bora de Rider Switch!_`,
+    );
+  }
+
+  if (item.notes) lines.push(`💡 _${item.notes}_`);
+
+  return lines.join('\n');
+}

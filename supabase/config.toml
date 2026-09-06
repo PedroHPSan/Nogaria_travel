@@ -391,6 +391,10 @@ verify_jwt = false
 [functions.daily-digest]
 verify_jwt = false
 
+# Avisos de atividade por horário. Mesmo disparo por pg_cron + x-cron-secret.
+[functions.activity-reminders]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
