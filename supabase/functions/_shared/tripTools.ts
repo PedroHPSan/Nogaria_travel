@@ -9,6 +9,43 @@ import type { ParticipantRow } from './tripContext.ts';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_TITLE_LENGTH = 255;
 
+// Tetos das leituras: sem eles, uma viagem madura despeja a tabela inteira no
+// contexto do modelo — token bloat que atrasa o TTFT de toda resposta seguinte.
+const MAX_ROWS = 50;
+const MAX_FLIGHT_ROWS = 20;
+const MAX_SEARCH_CANDIDATES = 5;
+
+// Limiares de entity resolution. `search_itinerary_items`/`search_tasks`
+// devolvem candidatos com score de similaridade (0-1); a escrita só acontece
+// quando o melhor candidato é bom o bastante E está claramente à frente do
+// segundo. Empate técnico vira desambiguação, não um chute.
+const MIN_DECISIVE_SCORE = 0.6;
+const MIN_SCORE_MARGIN = 0.15;
+
+interface ScoredRow {
+  id: string;
+  title: string;
+  score: number;
+}
+
+type Resolution<T extends ScoredRow> =
+  | { kind: 'none' }
+  | { kind: 'one'; row: T }
+  | { kind: 'ambiguous'; rows: T[] };
+
+/**
+ * Decide entre agir e perguntar. Um único candidato fraco também vira pergunta:
+ * "achei só isso, com 0.35 de similaridade" é um falso positivo esperando
+ * acontecer numa tool de escrita.
+ */
+export function resolveMatch<T extends ScoredRow>(rows: T[]): Resolution<T> {
+  if (rows.length === 0) return { kind: 'none' };
+  const [best, runnerUp] = rows;
+  const decisive =
+    best.score >= MIN_DECISIVE_SCORE && (!runnerUp || best.score - runnerUp.score >= MIN_SCORE_MARGIN);
+  return decisive ? { kind: 'one', row: best } : { kind: 'ambiguous', rows: rows.slice(0, MAX_SEARCH_CANDIDATES) };
+}
+
 function requireString(args: Record<string, unknown>, field: string): string {
   const value = args[field];
   if (typeof value !== 'string' || !value.trim() || value.length > MAX_TITLE_LENGTH) {
@@ -86,6 +123,22 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
     },
   },
   {
+    name: 'set_activity_reminder',
+    description:
+      'Define de quantos minutos de antecedência a família quer ser avisada de uma atividade do roteiro. ' +
+      'Use quando pedirem algo como "me avisa 30 minutos antes do jantar" ou "avisa com 2 horas de antecedência do Magic Kingdom". ' +
+      'Use minutes_before = 0 para desligar o aviso daquela atividade.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Título (exato ou aproximado) da atividade.' },
+        minutes_before: { type: 'integer', description: 'Antecedência do aviso, em minutos (0 a 720).' },
+        date: { type: 'string', description: 'Data AAAA-MM-DD (opcional, default hoje).' },
+      },
+      required: ['title', 'minutes_before'],
+    },
+  },
+  {
     name: 'save_trip_idea',
     description:
       'Salva uma ideia de negócio ou de viagem que o participante compartilhou, para a sessão de brainstorming da família. ' +
@@ -130,6 +183,50 @@ function findParticipant(participants: ParticipantRow[], nameOrNick: string | nu
   return match;
 }
 
+interface ItineraryMatch extends ScoredRow {
+  item_date: string;
+  time_start: string | null;
+  participant_status: Record<string, string> | null;
+}
+
+interface TaskMatch extends ScoredRow {
+  status: string;
+  due_date: string | null;
+}
+
+/**
+ * Busca ranqueada no roteiro via RPC `search_itinerary_items`, que normaliza
+ * acento e tolera erro de digitação (unaccent + trigrama). Substitui o
+ * `ilike '%texto%'`, que não casava "montanha russa" com "Montanha-Russa".
+ */
+async function searchItinerary(
+  supabase: SupabaseClient,
+  tripId: string,
+  query: string,
+  date: string | null,
+): Promise<ItineraryMatch[]> {
+  const { data, error } = await supabase.rpc('search_itinerary_items', {
+    p_trip_id: tripId,
+    p_query: query,
+    p_date: date,
+    p_limit: MAX_SEARCH_CANDIDATES,
+  });
+  if (error) throw new Error(`Erro ao consultar roteiro: ${error.message}`);
+  return (data ?? []) as ItineraryMatch[];
+}
+
+/** Mesma busca ranqueada, sobre tarefas ainda abertas. */
+async function searchTasks(supabase: SupabaseClient, tripId: string, query: string): Promise<TaskMatch[]> {
+  const { data, error } = await supabase.rpc('search_tasks', {
+    p_trip_id: tripId,
+    p_query: query,
+    p_statuses: ['pending', 'in_progress'],
+    p_limit: MAX_SEARCH_CANDIDATES,
+  });
+  if (error) throw new Error(`Erro ao consultar tarefas: ${error.message}`);
+  return (data ?? []) as TaskMatch[];
+}
+
 export function createToolExecutor(ctx: ToolContext): (name: string, args: Record<string, unknown>) => Promise<unknown> {
   const { supabase, tripId, todayIso, participants } = ctx;
 
@@ -142,7 +239,8 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           .select('date, time_start, time_end, title, category, city, park, notes, min_height_cm')
           .eq('trip_id', tripId)
           .eq('date', date)
-          .order('time_start', { ascending: true });
+          .order('time_start', { ascending: true })
+          .limit(MAX_ROWS);
         if (error) throw new Error(`Erro ao consultar roteiro: ${error.message}`);
         return { date, items: data ?? [] };
       }
@@ -156,7 +254,8 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           .from('tasks')
           .select('title, due_date, priority, status, category')
           .eq('trip_id', tripId)
-          .order('due_date', { ascending: true });
+          .order('due_date', { ascending: true })
+          .limit(MAX_ROWS);
         if (status) query = query.eq('status', status);
         const { data, error } = await query;
         if (error) throw new Error(`Erro ao consultar tarefas: ${error.message}`);
@@ -168,7 +267,8 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           .from('flights')
           .select('airline, flight_number, origin_airport, destination_airport, departure_time, arrival_time, booking_code, status')
           .eq('trip_id', tripId)
-          .order('departure_time', { ascending: true });
+          .order('departure_time', { ascending: true })
+          .limit(MAX_FLIGHT_ROWS);
         if (error) throw new Error(`Erro ao consultar voos: ${error.message}`);
         return { flights: data ?? [] };
       }
@@ -178,21 +278,20 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
         const date = optionalDate(args, 'date') ?? todayIso;
         const targets = findParticipant(participants, optionalString(args, 'participant'));
 
-        const { data: items, error } = await supabase
-          .from('itinerary_items')
-          .select('id, title, participant_status')
-          .eq('trip_id', tripId)
-          .eq('date', date)
-          .ilike('title', `%${title}%`);
-        if (error) throw new Error(`Erro ao consultar roteiro: ${error.message}`);
-        if (!items || items.length === 0) {
+        const items = await searchItinerary(supabase, tripId, title, date);
+        const resolution = resolveMatch(items);
+        if (resolution.kind === 'none') {
           return { found: false, message: `Nenhuma atividade encontrada com "${title}" em ${date}.` };
         }
-        if (items.length > 1) {
-          return { found: true, ambiguous: true, matches: items.map(i => i.title) };
+        if (resolution.kind === 'ambiguous') {
+          return {
+            found: true,
+            ambiguous: true,
+            matches: resolution.rows.map(i => ({ title: i.title, time: i.time_start, score: i.score })),
+          };
         }
 
-        const item = items[0];
+        const item = resolution.row;
         const current = (item.participant_status ?? {}) as Record<string, string>;
         const next = { ...current };
         for (const p of targets) next[p.id] = 'done';
@@ -207,6 +306,41 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           updated: true,
           title: item.title,
           markedFor: targets.map(p => p.nickname ?? p.full_name),
+        };
+      }
+
+      case 'set_activity_reminder': {
+        const title = requireString(args, 'title');
+        const date = optionalDate(args, 'date') ?? todayIso;
+        const minutes = args.minutes_before;
+        if (typeof minutes !== 'number' || !Number.isInteger(minutes) || minutes < 0 || minutes > 720) {
+          throw new Error('Argumento inválido: minutes_before deve ser um inteiro entre 0 e 720.');
+        }
+
+        const items = await searchItinerary(supabase, tripId, title, date);
+        const resolution = resolveMatch(items);
+        if (resolution.kind === 'none') {
+          return { found: false, message: `Nenhuma atividade encontrada com "${title}" em ${date}.` };
+        }
+        if (resolution.kind === 'ambiguous') {
+          return {
+            found: true,
+            ambiguous: true,
+            matches: resolution.rows.map(i => ({ title: i.title, time: i.time_start, score: i.score })),
+          };
+        }
+
+        const { error: updErr } = await supabase
+          .from('itinerary_items')
+          .update({ reminder_minutes_before: minutes })
+          .eq('id', resolution.row.id);
+        if (updErr) throw new Error(`Erro ao ajustar o aviso: ${updErr.message}`);
+        return {
+          found: true,
+          updated: true,
+          title: resolution.row.title,
+          minutes_before: minutes,
+          disabled: minutes === 0,
         };
       }
 
@@ -252,26 +386,25 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
 
       case 'complete_task': {
         const title = requireString(args, 'title');
-        const { data: tasks, error } = await supabase
-          .from('tasks')
-          .select('id, title, status')
-          .eq('trip_id', tripId)
-          .in('status', ['pending', 'in_progress'])
-          .ilike('title', `%${title}%`);
-        if (error) throw new Error(`Erro ao consultar tarefas: ${error.message}`);
-        if (!tasks || tasks.length === 0) {
+        const tasks = await searchTasks(supabase, tripId, title);
+        const resolution = resolveMatch(tasks);
+        if (resolution.kind === 'none') {
           return { found: false, message: `Nenhuma tarefa pendente encontrada com "${title}".` };
         }
-        if (tasks.length > 1) {
-          return { found: true, ambiguous: true, matches: tasks.map(t => t.title) };
+        if (resolution.kind === 'ambiguous') {
+          return {
+            found: true,
+            ambiguous: true,
+            matches: resolution.rows.map(t => ({ title: t.title, due_date: t.due_date, score: t.score })),
+          };
         }
 
         const { error: updErr } = await supabase
           .from('tasks')
           .update({ status: 'completed' })
-          .eq('id', tasks[0].id);
+          .eq('id', resolution.row.id);
         if (updErr) throw new Error(`Erro ao atualizar tarefa: ${updErr.message}`);
-        return { found: true, updated: true, title: tasks[0].title };
+        return { found: true, updated: true, title: resolution.row.title };
       }
 
       default:

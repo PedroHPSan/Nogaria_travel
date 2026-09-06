@@ -85,11 +85,15 @@ async function loadHistory(
   phone: string,
   currentWaMessageId: string,
 ): Promise<ChatMessage[]> {
+  // `kind = 'chat'` exclui digests e avisos automáticos: são textos longos que
+  // entrariam como turnos do modelo e consumiriam a janela de contexto sem
+  // serem diálogo. Serve o índice (tenant_id, sender_phone, created_at desc).
   const { data } = await supabase
     .from('whatsapp_messages')
     .select('direction, body, wa_message_id')
     .eq('tenant_id', tenantId)
     .eq('sender_phone', phone)
+    .eq('kind', 'chat')
     .order('created_at', { ascending: false })
     .limit(HISTORY_LIMIT + 1);
 
@@ -101,6 +105,8 @@ async function loadHistory(
 }
 
 async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Promise<string> {
+  const startedAt = Date.now();
+
   // Idempotência: Meta reenvia webhooks; wa_message_id é unique no banco.
   const { data: config } = await supabase
     .from('whatsapp_configs')
@@ -115,6 +121,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Pr
     direction: 'inbound',
     sender_phone: msg.from,
     body: msg.text,
+    kind: 'chat',
   });
   if (insertErr?.code === '23505') return 'ignored:duplicate';
   if (insertErr) throw new Error(`Falha ao registrar mensagem: ${insertErr.message}`);
@@ -173,27 +180,38 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Pr
     text,
   });
 
-  await supabase.from('whatsapp_messages').insert({
-    tenant_id: config.tenant_id,
-    wa_message_id: sent.waMessageId,
-    direction: 'outbound',
-    sender_phone: msg.from,
-    body: text,
-  });
+  // A resposta já saiu. Falha de escrita daqui pra baixo é problema de
+  // observabilidade, não de conversa — não pode escalar e virar fallback
+  // enviado por cima de uma resposta que deu certo.
+  try {
+    await supabase.from('whatsapp_messages').insert({
+      tenant_id: config.tenant_id,
+      wa_message_id: sent.waMessageId,
+      direction: 'outbound',
+      sender_phone: msg.from,
+      body: text,
+      kind: 'chat',
+    });
 
-  // Mesmo modelo de custo do price-research (Gemini Flash).
-  const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
-  await supabase.from('ai_usage_logs').insert({
-    tenant_id: config.tenant_id,
-    user_name: msg.from,
-    function_name: 'whatsapp_bot',
-    provider: 'gemini',
-    model,
-    tokens_input: usage.tokensIn,
-    tokens_output: usage.tokensOut,
-    estimated_cost_usd: Number(cost.toFixed(6)),
-    timestamp: new Date().toISOString(),
-  });
+    // Mesmo modelo de custo do price-research (Gemini Flash).
+    const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
+    await supabase.from('ai_usage_logs').insert({
+      tenant_id: config.tenant_id,
+      user_name: msg.from,
+      function_name: 'whatsapp_bot',
+      provider: 'gemini',
+      model,
+      tokens_input: usage.tokensIn,
+      tokens_output: usage.tokensOut,
+      estimated_cost_usd: Number(cost.toFixed(6)),
+      timestamp: new Date().toISOString(),
+      latency_ms: Date.now() - startedAt,
+      tool_rounds: usage.toolRounds,
+      tools_called: usage.toolsCalled.join(','),
+    });
+  } catch (err) {
+    console.error(`[whatsapp-webhook] Falha ao registrar telemetria de ${msg.waMessageId}:`, err);
+  }
 
   return 'replied';
 }
@@ -245,6 +263,26 @@ Deno.serve(async request => {
   return json({ accepted: messages.length, results: await processing });
 });
 
+/**
+ * O 200 já foi devolvido à Meta, então ela não reenvia: sem esta mensagem, uma
+ * falha do Gemini ou do banco vira silêncio absoluto do lado da família — o
+ * pior modo de falha possível, porque é indistinguível de "o bot ignorou".
+ */
+async function sendFallback(msg: IncomingMessage): Promise<boolean> {
+  try {
+    await sendTextMessage({
+      phoneNumberId: msg.phoneNumberId,
+      accessToken: Deno.env.get('META_WA_TOKEN') ?? '',
+      to: msg.from,
+      text: 'Ops, tive um probleminha técnico aqui e não consegui responder agora. 😅 Manda de novo em instantes?',
+    });
+    return true;
+  } catch (error) {
+    console.error(`[whatsapp-webhook] Falha ao enviar fallback para ${msg.from}:`, error);
+    return false;
+  }
+}
+
 async function processMessages(supabase: SupabaseClient, messages: IncomingMessage[]): Promise<Record<string, string>> {
   const results: Record<string, string> = {};
   for (const msg of messages) {
@@ -253,7 +291,7 @@ async function processMessages(supabase: SupabaseClient, messages: IncomingMessa
     } catch (error) {
       // Falhas individuais ficam no log da function (Dashboard → Edge Functions → Logs).
       console.error(`[whatsapp-webhook] Falha ao processar ${msg.waMessageId}:`, error);
-      results[msg.waMessageId] = 'error';
+      results[msg.waMessageId] = (await sendFallback(msg)) ? 'error:fallback-enviado' : 'error';
     }
     console.log(`[whatsapp-webhook] ${msg.waMessageId}: ${results[msg.waMessageId]}`);
   }

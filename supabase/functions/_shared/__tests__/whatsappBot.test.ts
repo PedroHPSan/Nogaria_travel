@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { formatDailyDigest, formatDatePtBr, type DigestItineraryItem } from '../formatter.ts';
 import { buildSystemPrompt, localDateIso, youngestWithHeight, type ParticipantRow, type TripContext } from '../tripContext.ts';
-import { createToolExecutor } from '../tripTools.ts';
-import { DEFAULT_GEMINI_MODEL, buildModelTurnParts, resolveGeminiModel, sanitizeHistory } from '../gemini.ts';
+import { createToolExecutor, resolveMatch } from '../tripTools.ts';
+import { DEFAULT_GEMINI_MODEL, backoffDelayMs, buildModelTurnParts, resolveGeminiModel, sanitizeHistory } from '../gemini.ts';
 
 const baseItem: DigestItineraryItem = {
   date: '2026-08-25',
@@ -241,5 +241,108 @@ describe('buildModelTurnParts', () => {
   it('não adiciona thoughtSignature quando o modelo não a envia', () => {
     const parts = buildModelTurnParts([{ functionCall: { name: 'get_tasks', args: {} } }]);
     expect(parts).toEqual([{ functionCall: { name: 'get_tasks', args: {} } }]);
+  });
+});
+
+describe('buildSystemPrompt — pré-carregamento do dia', () => {
+  const ctx: TripContext = {
+    tenantId: 't1',
+    trip: {
+      id: 'trip1',
+      title: 'NOGÁRIA USA 2026',
+      destination_main: 'Orlando',
+      start_date: '2026-08-20',
+      end_date: '2026-09-01',
+      currency_base: 'USD',
+    },
+    participants: [
+      { id: '3', full_name: 'Gabriela', nickname: 'Gabi', is_minor: true, height_cm: 100, whatsapp_phone: null },
+    ],
+    todayItems: [
+      { time_start: '09:00:00', time_end: '11:00:00', title: 'Space Mountain', park: 'Magic Kingdom', min_height_cm: 112 },
+    ],
+    tasksDueSoon: [{ title: 'Comprar dólar', due_date: '2026-08-26', priority: 'high' }],
+    nextFlight: {
+      airline: 'LATAM',
+      flight_number: 'LA8180',
+      origin_airport: 'GRU',
+      destination_airport: 'MCO',
+      departure_time: '2026-08-26T10:30:00Z',
+      booking_code: 'ABC123',
+    },
+  };
+
+  it('injeta roteiro, tarefas e voo do dia — o que elimina uma rodada de tool', () => {
+    const prompt = buildSystemPrompt(ctx, '2026-08-25');
+    expect(prompt).toContain('09:00-11:00 Space Mountain (Magic Kingdom) [altura mín. 112cm]');
+    expect(prompt).toContain('Comprar dólar');
+    expect(prompt).toContain('LA8180');
+    expect(prompt).toContain('SEM chamar ferramenta');
+  });
+
+  it('mantém o bloco estático como prefixo, antes de qualquer dado variável', () => {
+    const a = buildSystemPrompt(ctx, '2026-08-25');
+    const b = buildSystemPrompt({ ...ctx, todayItems: [], tasksDueSoon: [] }, '2026-08-30');
+    const marker = '--- CONTEXTO DE HOJE ---';
+    // O prefixo idêntico é o que o cache implícito do Gemini reaproveita.
+    expect(a.slice(0, a.indexOf(marker))).toBe(b.slice(0, b.indexOf(marker)));
+  });
+
+  it('marca dia livre quando não há atividades', () => {
+    const prompt = buildSystemPrompt({ ...ctx, todayItems: [] }, '2026-08-25');
+    expect(prompt).toContain('nenhuma atividade cadastrada (dia livre)');
+  });
+});
+
+describe('resolveMatch — entity resolution', () => {
+  it('age quando o melhor candidato é forte e isolado', () => {
+    const result = resolveMatch([
+      { id: 'a', title: 'Expedition Everest', score: 0.95 },
+      { id: 'b', title: 'Everest Base Camp', score: 0.4 },
+    ]);
+    expect(result).toEqual({ kind: 'one', row: { id: 'a', title: 'Expedition Everest', score: 0.95 } });
+  });
+
+  it('pergunta quando há empate técnico no topo', () => {
+    const result = resolveMatch([
+      { id: 'a', title: 'Jantar no Be Our Guest', score: 0.8 },
+      { id: 'b', title: 'Jantar no Cinderella', score: 0.75 },
+    ]);
+    expect(result.kind).toBe('ambiguous');
+  });
+
+  it('pergunta quando o único candidato é fraco — falso positivo em escrita é pior', () => {
+    expect(resolveMatch([{ id: 'a', title: 'Piscina do hotel', score: 0.35 }]).kind).toBe('ambiguous');
+  });
+
+  it('reporta ausência quando nada pontuou', () => {
+    expect(resolveMatch([])).toEqual({ kind: 'none' });
+  });
+});
+
+describe('set_activity_reminder — validação', () => {
+  const executor = createToolExecutor({
+    supabase: {} as never,
+    tripId: 'trip1',
+    todayIso: '2026-08-25',
+    participants: [],
+  });
+
+  it('exige minutes_before inteiro dentro do intervalo', async () => {
+    await expect(executor('set_activity_reminder', { title: 'Jantar' })).rejects.toThrow('minutes_before');
+    await expect(executor('set_activity_reminder', { title: 'Jantar', minutes_before: -5 })).rejects.toThrow('minutes_before');
+    await expect(executor('set_activity_reminder', { title: 'Jantar', minutes_before: 900 })).rejects.toThrow('minutes_before');
+    await expect(executor('set_activity_reminder', { title: 'Jantar', minutes_before: '30' })).rejects.toThrow('minutes_before');
+  });
+
+  it('exige título', async () => {
+    await expect(executor('set_activity_reminder', { minutes_before: 30 })).rejects.toThrow('title');
+  });
+});
+
+describe('backoffDelayMs', () => {
+  it('cresce exponencialmente entre as tentativas', () => {
+    expect(backoffDelayMs(1)).toBe(400);
+    expect(backoffDelayMs(2)).toBe(800);
   });
 });

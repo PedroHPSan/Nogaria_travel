@@ -12,6 +12,10 @@ export interface GeminiToolDeclaration {
 export interface GeminiUsage {
   tokensIn: number;
   tokensOut: number;
+  /** Rodadas de function calling gastas — o principal driver de latência. */
+  toolRounds: number;
+  /** Tools efetivamente executadas, para medir roteamento de intenção. */
+  toolsCalled: string[];
 }
 
 export interface ChatMessage {
@@ -82,26 +86,84 @@ export function buildModelTurnParts(parts: CandidatePart[]): Record<string, unkn
   return result;
 }
 
+const REQUEST_TIMEOUT_MS = 25_000;
+const MAX_ATTEMPTS = 3;
+// 429/5xx e timeout são transitórios; 400/403/404 são erro de configuração e
+// repetir só queima tempo do orçamento de latência.
+const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504]);
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+interface AttemptResult {
+  data?: GenerateContentResponse;
+  error?: Error;
+  retryable: boolean;
+}
+
+async function generateContentOnce(
+  model: string,
+  apiKey: string,
+  temperature: number,
+  body: Record<string, unknown>,
+): Promise<AttemptResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${ENDPOINT}/${model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        generationConfig: { temperature },
+        ...body,
+      }),
+      // Sem timeout, uma chamada pendurada consome a instância inteira e o
+      // usuário nunca recebe resposta — o pior modo de falha de um bot.
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return { error: new Error(`Falha de rede ao chamar o Gemini: ${reason}`), retryable: true };
+  }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    return {
+      error: new Error(`Gemini retornou HTTP ${response.status}: ${errorText.slice(0, 300)}`),
+      retryable: RETRYABLE_STATUS.has(response.status),
+    };
+  }
+
+  try {
+    return { data: (await response.json()) as GenerateContentResponse, retryable: false };
+  } catch {
+    return { error: new Error('Resposta do Gemini não é um JSON válido.'), retryable: true };
+  }
+}
+
+/** Backoff exponencial: 400ms, 800ms. */
+export function backoffDelayMs(attempt: number): number {
+  return 400 * 2 ** (attempt - 1);
+}
+
 async function generateContent(
   model: string,
   apiKey: string,
   temperature: number,
   body: Record<string, unknown>,
 ): Promise<GenerateContentResponse> {
-  const response = await fetch(`${ENDPOINT}/${model}:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      generationConfig: { temperature },
-      ...body,
-    }),
-  });
+  let lastError = new Error('Gemini não respondeu.');
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini retornou HTTP ${response.status}: ${errorText.slice(0, 300)}`);
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const result = await generateContentOnce(model, apiKey, temperature, body);
+    if (result.data) return result.data;
+
+    lastError = result.error!;
+    if (!result.retryable || attempt === MAX_ATTEMPTS) break;
+
+    console.warn(`[gemini] tentativa ${attempt}/${MAX_ATTEMPTS} falhou: ${lastError.message}`);
+    await sleep(backoffDelayMs(attempt));
   }
-  return (await response.json()) as GenerateContentResponse;
+
+  throw lastError;
 }
 
 /**
@@ -126,7 +188,7 @@ export async function chatWithTools(input: {
     { role: 'user', parts: [{ text: userText }] },
   ];
 
-  const usage: GeminiUsage = { tokensIn: 0, tokensOut: 0 };
+  const usage: GeminiUsage = { tokensIn: 0, tokensOut: 0, toolRounds: 0, toolsCalled: [] };
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const data = await generateContent(model, apiKey, temperature, {
@@ -145,6 +207,9 @@ export async function chatWithTools(input: {
       const text = parts.map(p => p.text ?? '').join('').trim();
       return { text: text || 'Desculpe, não consegui gerar uma resposta agora.', usage };
     }
+
+    usage.toolRounds++;
+    for (const call of functionCalls) usage.toolsCalled.push(call.name);
 
     // Devolve ao modelo a chamada e o resultado de cada tool.
     contents.push({ role: 'model', parts: buildModelTurnParts(parts) });
