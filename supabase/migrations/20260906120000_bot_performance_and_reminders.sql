@@ -243,6 +243,9 @@ create index if not exists activity_reminders_item_idx
 
 alter table public.activity_reminders enable row level security;
 
+-- Idempotente: esta migração pode ser aplicada à mão pelo SQL Editor antes de
+-- entrar no histórico do CLI, e reaplicá-la não pode falhar no meio.
+drop policy if exists activity_reminders_all on public.activity_reminders;
 create policy activity_reminders_all on public.activity_reminders for all
   to authenticated using (public.is_tenant_member(tenant_id)) with check (public.is_tenant_member(tenant_id));
 
