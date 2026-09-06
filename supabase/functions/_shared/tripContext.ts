@@ -52,6 +52,22 @@ export function localDateIso(now: Date, timeZone: string): string {
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
+/**
+ * Horário local ("DD/MM HH:MM") de um timestamp UTC (ex: flights.departure_time),
+ * no fuso informado. Sem isso, o valor cru do Postgres (UTC) chega ao Gemini como
+ * se já fosse hora local — foi o que fez o bot informar horário de voo errado.
+ */
+export function formatLocalTime(isoUtc: string, timeZone: string): string {
+  return new Date(isoUtc).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone,
+  });
+}
+
 /** Viagem em andamento na data informada, ou a próxima a começar. */
 export async function resolveActiveTrip(
   supabase: SupabaseClient,
@@ -108,7 +124,7 @@ export async function fetchTripContext(
       .order('due_date', { ascending: true }),
     supabase
       .from('flights')
-      .select('airline, flight_number, origin_airport, destination_airport, departure_time, booking_code')
+      .select('airline, flight_number, origin_airport, destination_airport, departure_time, arrival_time, booking_code')
       .eq('trip_id', trip.id)
       .in('status', ['booked', 'confirmed'])
       .gte('departure_time', new Date().toISOString())
@@ -131,6 +147,37 @@ export function addDaysIso(dateIso: string, days: number): string {
   const d = new Date(dateIso + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+export type DigestMode = 'today' | 'tomorrow';
+
+export interface DigestTrigger {
+  mode: DigestMode;
+  dateIso: string;
+}
+
+/**
+ * Decide quais digests disparam nesta hora local do tenant: de manhã
+ * (digest_time) o resumo de HOJE, à noite (evening_digest_time) a prévia de
+ * AMANHÃ. Função pura para ser testável sem mockar hora do sistema — o
+ * daily-digest roda a cada hora e só isso já decide o que (não) enviar.
+ * Retorna as duas se as configs caírem na mesma hora (config incomum, mas
+ * mais seguro que silenciosamente descartar uma).
+ */
+export function resolveDigestTriggers(input: {
+  localHour: string;
+  todayIso: string;
+  digestTime: string;
+  eveningDigestTime: string;
+}): DigestTrigger[] {
+  const triggers: DigestTrigger[] = [];
+  if (input.digestTime.slice(0, 2) === input.localHour) {
+    triggers.push({ mode: 'today', dateIso: input.todayIso });
+  }
+  if (input.eveningDigestTime.slice(0, 2) === input.localHour) {
+    triggers.push({ mode: 'tomorrow', dateIso: addDaysIso(input.todayIso, 1) });
+  }
+  return triggers;
 }
 
 /** Menor participante com altura cadastrada — referência dos alertas de altura mínima. */
@@ -184,7 +231,7 @@ function preloadedItineraryLines(items: Record<string, unknown>[]): string[] {
 }
 
 /** System prompt do bot: prefixo estático + contexto do dia já resolvido. */
-export function buildSystemPrompt(ctx: TripContext, dateIso: string): string {
+export function buildSystemPrompt(ctx: TripContext, dateIso: string, timeZone: string): string {
   const trip = ctx.trip;
   const roster = ctx.participants
     .map(p => `${p.nickname ?? p.full_name}${p.height_cm ? ` (${p.height_cm}cm)` : ''}${p.is_minor ? ' [menor]' : ''}`)
@@ -215,7 +262,7 @@ export function buildSystemPrompt(ctx: TripContext, dateIso: string): string {
     const flight = ctx.nextFlight;
     dynamic.push(
       flight
-        ? `Voo nas próximas 24h: ${String(flight.airline)} ${String(flight.flight_number)}, ${String(flight.origin_airport)} → ${String(flight.destination_airport)}, saída ${String(flight.departure_time)}, localizador ${String(flight.booking_code)}.`
+        ? `Voo nas próximas 24h: ${String(flight.airline)} ${String(flight.flight_number)}, ${String(flight.origin_airport)} → ${String(flight.destination_airport)}, saída ${formatLocalTime(String(flight.departure_time), timeZone)}${flight.arrival_time ? `, chegada ${formatLocalTime(String(flight.arrival_time), timeZone)}` : ''} (horário local, fuso ${timeZone}), localizador ${String(flight.booking_code)}.`
         : 'Voo nas próximas 24h: nenhum.',
     );
   }

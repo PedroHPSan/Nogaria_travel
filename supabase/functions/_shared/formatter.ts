@@ -83,18 +83,31 @@ export function formatDailyDigest(input: {
   tasksDueSoon: DigestTask[];
   nextFlight: DigestFlight | null;
   child: DigestChild | null;
+  /** Fuso do tenant (whatsapp_configs.timezone) — usado para converter o horário do voo, que chega em UTC do banco. */
+  timezone: string;
+  /** 'today' (digest da manhã) ou 'tomorrow' (prévia da noite) — só muda o texto de abertura; dateIso já vem no dia certo. */
+  mode?: 'today' | 'tomorrow';
 }): string {
-  const { tripTitle, dateIso, items, tasksDueSoon, nextFlight, child } = input;
+  const { tripTitle, dateIso, items, tasksDueSoon, nextFlight, child, timezone, mode = 'today' } = input;
+  const isTomorrow = mode === 'tomorrow';
 
   const lines: string[] = [];
-  lines.push(`☀️ *Bom dia, Família!* Hoje é dia de aventura!`);
+  lines.push(
+    isTomorrow
+      ? `🌙 *Boa noite, Família!* Um gostinho do que vem por aí amanhã:`
+      : `☀️ *Bom dia, Família!* Hoje é dia de aventura!`,
+  );
   lines.push(`📅 *${formatDatePtBr(dateIso)}* — ${tripTitle}`);
   lines.push('');
 
   if (items.length === 0) {
-    lines.push('Hoje não temos programação oficial. Aproveitem o dia livre! 🏖️🍹');
+    lines.push(
+      isTomorrow
+        ? 'Amanhã não temos programação oficial. Dia livre! 🏖️🍹'
+        : 'Hoje não temos programação oficial. Aproveitem o dia livre! 🏖️🍹',
+    );
   } else {
-    lines.push('🎢 *Nossa programação de hoje:*');
+    lines.push(isTomorrow ? '🎢 *Programação de amanhã:*' : '🎢 *Nossa programação de hoje:*');
     for (const item of items) {
       lines.push(formatItemLine(item, child));
       if (item.notes) lines.push(`   💡 _${item.notes}_`);
@@ -109,7 +122,7 @@ export function formatDailyDigest(input: {
       month: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'America/Sao_Paulo',
+      timeZone: timezone,
     });
     lines.push(
       `Vamos voar com a ${nextFlight.airline} (${nextFlight.flight_number}) saindo de ${nextFlight.origin_airport} às ${dep}. Nosso localizador é *${nextFlight.booking_code}*!`,

@@ -160,7 +160,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Pr
     apiKey,
     model,
     temperature: Number(aiConfig?.temperature ?? 0.4),
-    systemPrompt: buildSystemPrompt(ctx, todayIso),
+    systemPrompt: buildSystemPrompt(ctx, todayIso, config.timezone),
     history,
     userText: msg.text,
     tools: TOOL_DECLARATIONS,
@@ -169,6 +169,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Pr
       tripId: ctx.trip.id,
       todayIso,
       participants: ctx.participants,
+      timeZone: config.timezone,
       senderPhone: msg.from,
     }),
   });
