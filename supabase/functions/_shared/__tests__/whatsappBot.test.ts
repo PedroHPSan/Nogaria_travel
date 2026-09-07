@@ -232,10 +232,15 @@ describe('createToolExecutor — validação de argumentos', () => {
   // As validações rodam antes de qualquer acesso ao banco, então um stub vazio basta.
   const executor = createToolExecutor({
     supabase: {} as never,
+    tenantId: 't1',
     tripId: 'trip1',
     todayIso: '2026-08-25',
     participants: [],
     timeZone: 'America/New_York',
+    senderPhone: '5511999990000',
+    phoneNumberId: 'pn1',
+    metaAccessToken: 'token',
+    googleMapsApiKey: null,
   });
 
   it('rejeita data fora do formato AAAA-MM-DD', async () => {
@@ -405,10 +410,15 @@ describe('resolveMatch — entity resolution', () => {
 describe('set_activity_reminder — validação', () => {
   const executor = createToolExecutor({
     supabase: {} as never,
+    tenantId: 't1',
     tripId: 'trip1',
     todayIso: '2026-08-25',
     participants: [],
     timeZone: 'America/New_York',
+    senderPhone: '5511999990000',
+    phoneNumberId: 'pn1',
+    metaAccessToken: 'token',
+    googleMapsApiKey: null,
   });
 
   it('exige minutes_before inteiro dentro do intervalo', async () => {

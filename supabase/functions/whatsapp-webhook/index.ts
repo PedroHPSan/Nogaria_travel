@@ -15,15 +15,29 @@ declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | unde
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-interface IncomingMessage {
+interface IncomingTextMessage {
+  kind: 'text';
   waMessageId: string;
   from: string;
   text: string;
   phoneNumberId: string;
 }
 
-// Extrai mensagens de texto do payload do webhook da Meta. Qualquer outro tipo
-// (status de entrega, mídia, reações) é ignorado propositalmente.
+interface IncomingLocationMessage {
+  kind: 'location';
+  waMessageId: string;
+  from: string;
+  lat: number;
+  lng: number;
+  phoneNumberId: string;
+}
+
+type IncomingMessage = IncomingTextMessage | IncomingLocationMessage;
+
+// Extrai mensagens de texto e localização do payload do webhook da Meta.
+// Qualquer outro tipo (status de entrega, mídia, reações) é ignorado
+// propositalmente. Localização entra aqui porque get_directions depende dela
+// como origem — antes disso o webhook descartava esse tipo de mensagem.
 function extractIncomingMessages(payload: unknown): IncomingMessage[] {
   const messages: IncomingMessage[] = [];
   if (typeof payload !== 'object' || payload === null) return messages;
@@ -44,14 +58,17 @@ function extractIncomingMessages(payload: unknown): IncomingMessage[] {
 
       for (const msg of msgs) {
         const m = msg as Record<string, unknown>;
+        if (typeof m.id !== 'string' || typeof m.from !== 'string') continue;
+
         const text = (m.text as Record<string, unknown> | undefined)?.body;
-        if (typeof m.id === 'string' && typeof m.from === 'string' && typeof text === 'string' && text.trim()) {
-          messages.push({
-            waMessageId: m.id,
-            from: m.from,
-            text: text.trim().slice(0, MAX_BODY_CHARS),
-            phoneNumberId,
-          });
+        if (typeof text === 'string' && text.trim()) {
+          messages.push({ kind: 'text', waMessageId: m.id, from: m.from, text: text.trim().slice(0, MAX_BODY_CHARS), phoneNumberId });
+          continue;
+        }
+
+        const location = m.location as Record<string, unknown> | undefined;
+        if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
+          messages.push({ kind: 'location', waMessageId: m.id, from: m.from, lat: location.latitude, lng: location.longitude, phoneNumberId });
         }
       }
     }
@@ -104,7 +121,61 @@ async function loadHistory(
     .map(m => ({ role: m.direction === 'inbound' ? 'user' as const : 'model' as const, text: m.body }));
 }
 
-async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Promise<string> {
+/**
+ * Localização compartilhada: não passa pelo Gemini (não é uma pergunta),
+ * só atualiza o cache de posição usado por get_directions como origem e
+ * confirma o recebimento. Idempotente pelo mesmo unique de wa_message_id.
+ */
+async function handleLocationMessage(supabase: SupabaseClient, msg: IncomingLocationMessage): Promise<string> {
+  const { data: config } = await supabase
+    .from('whatsapp_configs')
+    .select('tenant_id, timezone, enabled')
+    .eq('phone_number_id', msg.phoneNumberId)
+    .maybeSingle();
+  if (!config || !config.enabled) return 'ignored:no-config';
+
+  const { error: insertErr } = await supabase.from('whatsapp_messages').insert({
+    tenant_id: config.tenant_id,
+    wa_message_id: msg.waMessageId,
+    direction: 'inbound',
+    sender_phone: msg.from,
+    body: '[localização compartilhada]',
+    kind: 'chat',
+  });
+  if (insertErr?.code === '23505') return 'ignored:duplicate';
+  if (insertErr) throw new Error(`Falha ao registrar localização: ${insertErr.message}`);
+
+  const todayIso = localDateIso(new Date(), config.timezone);
+  const ctx = await fetchTripContext(supabase, config.tenant_id, todayIso);
+  const senderDigits = msg.from.replace(/\D/g, '');
+  const sender = ctx.participants.find(p => (p.whatsapp_phone ?? '').replace(/\D/g, '') === senderDigits);
+
+  if (sender && ctx.trip) {
+    const { error: upsertErr } = await supabase.from('participant_locations').upsert(
+      {
+        tenant_id: config.tenant_id,
+        trip_id: ctx.trip.id,
+        participant_id: sender.id,
+        lat: msg.lat,
+        lng: msg.lng,
+        shared_at: new Date().toISOString(),
+      },
+      { onConflict: 'participant_id' },
+    );
+    if (upsertErr) console.error(`[whatsapp-webhook] Falha ao salvar localização de ${msg.from}:`, upsertErr);
+  }
+
+  await sendTextMessage({
+    phoneNumberId: msg.phoneNumberId,
+    accessToken: Deno.env.get('META_WA_TOKEN') ?? '',
+    to: msg.from,
+    text: '📍 Localização recebida! Já uso ela pra calcular a rota quando você perguntar "como chego lá".',
+  });
+
+  return 'replied:location';
+}
+
+async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage): Promise<string> {
   const startedAt = Date.now();
 
   // Idempotência: Meta reenvia webhooks; wa_message_id é unique no banco.
@@ -166,11 +237,15 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingMessage): Pr
     tools: TOOL_DECLARATIONS,
     executeTool: createToolExecutor({
       supabase,
+      tenantId: config.tenant_id,
       tripId: ctx.trip.id,
       todayIso,
       participants: ctx.participants,
       timeZone: config.timezone,
       senderPhone: msg.from,
+      phoneNumberId: msg.phoneNumberId,
+      metaAccessToken: Deno.env.get('META_WA_TOKEN') ?? '',
+      googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? null,
     }),
   });
 
@@ -269,7 +344,7 @@ Deno.serve(async request => {
  * falha do Gemini ou do banco vira silêncio absoluto do lado da família — o
  * pior modo de falha possível, porque é indistinguível de "o bot ignorou".
  */
-async function sendFallback(msg: IncomingMessage): Promise<boolean> {
+async function sendFallback(msg: IncomingTextMessage): Promise<boolean> {
   try {
     await sendTextMessage({
       phoneNumberId: msg.phoneNumberId,
@@ -288,11 +363,11 @@ async function processMessages(supabase: SupabaseClient, messages: IncomingMessa
   const results: Record<string, string> = {};
   for (const msg of messages) {
     try {
-      results[msg.waMessageId] = await handleMessage(supabase, msg);
+      results[msg.waMessageId] = msg.kind === 'location' ? await handleLocationMessage(supabase, msg) : await handleMessage(supabase, msg);
     } catch (error) {
       // Falhas individuais ficam no log da function (Dashboard → Edge Functions → Logs).
       console.error(`[whatsapp-webhook] Falha ao processar ${msg.waMessageId}:`, error);
-      results[msg.waMessageId] = (await sendFallback(msg)) ? 'error:fallback-enviado' : 'error';
+      results[msg.waMessageId] = msg.kind === 'text' && (await sendFallback(msg)) ? 'error:fallback-enviado' : 'error';
     }
     console.log(`[whatsapp-webhook] ${msg.waMessageId}: ${results[msg.waMessageId]}`);
   }
