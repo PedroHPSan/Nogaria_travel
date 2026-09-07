@@ -197,6 +197,39 @@ describe('selectDueReminders', () => {
   });
 });
 
+describe('cadência do cron vs. horários redondos do roteiro — bug real em produção', () => {
+  // Bug observado: TODO aviso saía com "Daqui a 57 min!", não importa a
+  // atividade. Causa: o cron batia em minutos fixos (3,13,23,...,53) — passo
+  // de 10 min, mesmo fator dos horários redondos do roteiro (17:20, 18:00,
+  // 19:30, ...) e da antecedência padrão (60min, múltiplo de 10). O primeiro
+  // tick depois de (horário - 60min) caía sempre 3min depois do limiar, dando
+  // minutesUntil = 57 em todo item, todo dia — não uma coincidência pontual.
+  const lead = 60;
+  const roundActivities = [17 * 60 + 20, 18 * 60, 19 * 60 + 30, 20 * 60, 20 * 60 + 30]; // 17:20, 18:00, 19:30, 20:00, 20:30
+
+  function minutesUntilAtFirstTick(activityStart: number, tickOffsets: number[]): number {
+    const threshold = activityStart - lead;
+    // Primeiro tick (em qualquer hora,ripetido a cada hora) >= o minuto do limiar dentro da hora.
+    const thresholdMinuteOfHour = ((threshold % 60) + 60) % 60;
+    const nextTickOffset = tickOffsets.find(t => t >= thresholdMinuteOfHour) ?? tickOffsets[0] + 60;
+    const tickMinute = threshold - thresholdMinuteOfHour + nextTickOffset;
+    return activityStart - tickMinute;
+  }
+
+  it('cadência antiga (passo de 10min, offset 3) trava sempre no mesmo minutesUntil — o bug', () => {
+    const oldTicks = [3, 13, 23, 33, 43, 53];
+    const results = roundActivities.map(a => minutesUntilAtFirstTick(a, oldTicks));
+    expect(new Set(results).size).toBe(1); // sempre o mesmo valor — reproduz o bug
+    expect(results[0]).toBe(57);
+  });
+
+  it('cadência nova (passo de 7min) varia o minutesUntil entre atividades — o fix', () => {
+    const newTicks = [2, 9, 16, 23, 30, 37, 44, 51, 58];
+    const results = roundActivities.map(a => minutesUntilAtFirstTick(a, newTicks));
+    expect(new Set(results).size).toBeGreaterThan(1); // deixa de ser um valor fixo
+  });
+});
+
 describe('addDaysIso', () => {
   it('atravessa a virada de mês', () => {
     expect(addDaysIso('2026-09-30', 1)).toBe('2026-10-01');
