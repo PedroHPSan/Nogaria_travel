@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { sendCopilotMessage } from '../../services/ai/copilotClient';
 import {
   Sparkles,
   Send,
   Sliders,
   Cpu,
-  History
+  History,
+  AlertTriangle
 } from 'lucide-react';
 
 
@@ -14,15 +16,9 @@ export const AiCopilotView: React.FC = () => {
   const {
     activeTrip,
     participants,
-    flights,
-    accommodations,
-    transports,
-    giftCards,
-    tasks,
     aiProviders,
     updateAiProvider,
-    aiLogs,
-    addAiLog
+    aiLogs
   } = useTrip();
 
 
@@ -52,69 +48,30 @@ export const AiCopilotView: React.FC = () => {
     handleSend(text);
   };
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const query = textToSend || promptInput;
     if (!query.trim() || isProcessing) return;
 
     const userTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const historyForCall = messages.map(m => ({ role: m.role, text: m.content }));
     setMessages(prev => [...prev, { role: 'user', content: query, timestamp: userTime }]);
     if (!textToSend) setPromptInput('');
     setIsProcessing(true);
 
-    setTimeout(() => {
-      let responseText = '';
-      const q = query.toLowerCase();
+    // ai_usage_logs já é gravado pela Edge Function — addAiLog() não é chamado
+    // aqui de novo pra não duplicar o registro de custo.
+    const result = await sendCopilotMessage({ trip_id: activeTrip.id, message: query, history: historyForCall });
 
-      if (q.includes('hotel') || q.includes('hospedagem')) {
-        const confirmAccs = accommodations.filter(a => a.status === 'confirmed');
-        responseText = `Existem ${confirmAccs.length} hospedagens confirmadas ativas:\n1. ${confirmAccs.map(a => `${a.name} (${a.city})`).join('\n2. ')}.\nNota: A reserva do Celebration Suites foi substituída pelo Four Points FLL para garantir proximidade do aeroporto FLL no voo noturno de devolução.`;
-      } else if (q.includes('gift card') || q.includes('economia') || q.includes('custo real')) {
-        const nominal = giftCards.reduce((s, g) => s + g.nominal_value, 0);
-        const net = giftCards.reduce((s, g) => s + g.net_cost, 0);
-        const savings = nominal - net;
-        responseText = `A carteira possui US$ ${nominal} em valor nominal. O custo real líquido é de US$ ${net.toFixed(2)}, gerando uma economia efetiva total de US$ ${savings.toFixed(2)} (${((savings/nominal)*100).toFixed(1)}% de desconto real).`;
-      } else if (q.includes('orçamento')) {
-        const withBudget = participants.filter(p => p.budget_limit_usd > 0);
-        responseText = withBudget.length > 0
-          ? withBudget.map(p => `${p.nickname || p.full_name} possui teto de orçamento de US$ ${p.budget_limit_usd}.`).join('\n')
-          : 'Nenhum participante possui um teto de orçamento individual definido.';
-      } else if (q.includes('altura') || q.includes('criança')) {
-        const withHeight = participants.filter(p => p.height_cm != null);
-        responseText = withHeight.length > 0
-          ? withHeight.map(p => `${p.nickname || p.full_name} tem ${p.age} anos e ${p.height_cm}cm de altura.`).join('\n') +
-            '\nVerifique a altura mínima exigida em cada atração no Roteiro; abaixo do limite, use Child Swap / Rider Switch.'
-          : 'Nenhum participante possui altura cadastrada.';
-      } else if (q.includes('carro') || q.includes('devolução')) {
-        const car = transports.find(t => t.type === 'rental_car' && t.status === 'reserved');
-        responseText = car
-          ? `A devolução do veículo (${car.provider_company}) está marcada para ${new Date(car.dropoff_time).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}. Há uma pendência para agendar transporte complementar (Uber/Transfer) até a próxima hospedagem ou aeroporto.`
-          : 'Não há devolução de carro alugado pendente cadastrada nesta viagem.';
-      } else {
-        responseText = `Com base nos dados atualizados da viagem:\n- Participantes: ${participants.map(p => p.full_name).join(', ')}\n- Voos cadastrados: ${flights.length}\n- Gift Cards com saldo: ${giftCards.filter(g => g.status === 'active').length}\n- Apontamentos de auditoria: ${tasks.filter(t => t.status === 'pending').length} pendências.`;
-      }
-
-      const botTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      setMessages(prev => [...prev, { role: 'assistant', content: responseText, timestamp: botTime }]);
-      setIsProcessing(false);
-
-      // Log AI Usage
-      addAiLog({
-        user_name: 'Usuário SaaS',
-        function_name: 'Chat Copiloto Contextual',
-        provider: activeProvider?.provider ?? 'gemini',
-        model: activeProvider?.model_name ?? 'gemini-3.5-flash',
-        tokens_input: query.length * 2 + 300,
-        tokens_output: responseText.length * 2,
-        estimated_cost_usd: 0.0008
-      });
-    }, 1000);
+    const botTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    setMessages(prev => [...prev, { role: 'assistant', content: result.text ?? result.error ?? 'Não consegui responder agora.', timestamp: botTime }]);
+    setIsProcessing(false);
   };
 
   return (
     <div className="space-y-6 pb-20">
       <ViewHeader
-        title="Copiloto IA Transversal & Gestão de Provedores"
-        subtitle="Interface de IA contextualizada com acesso aos módulos da viagem e gerenciamento seguro de tokens e modelos (Gemini, OpenAI, Claude, DeepSeek)."
+        title="Copiloto IA & Configuração do Gemini"
+        subtitle="Chat com acesso real ao roteiro, tarefas e voos da viagem via Gemini. Suporte a outros provedores (OpenAI, Claude, DeepSeek) ainda não foi implementado."
         actions={
           <div className="flex items-center gap-2 p-1.5 rounded-xl bg-ink-900 border border-ink-800 text-xs">
             <Cpu className="w-4 h-4 text-accent-400" />
@@ -144,7 +101,7 @@ export const AiCopilotView: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm text-ink-100">Assistente de Viagem IA</h3>
-                <p className="text-[10px] text-success-400 font-semibold">Provedor: {activeProvider?.provider} • {activeProvider?.model_name}</p>
+                <p className="text-[10px] text-success-400 font-semibold">Provedor: gemini • {activeProvider?.model_name}</p>
               </div>
             </div>
             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-info-500/10 text-info-400 border border-info-500/20">
@@ -152,31 +109,32 @@ export const AiCopilotView: React.FC = () => {
             </span>
           </div>
 
+          {activeProvider && activeProvider.provider !== 'gemini' && (
+            <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              O provedor "{activeProvider.provider}" ainda não foi implementado — as respostas usam Gemini de qualquer forma.
+            </div>
+          )}
+
           {/* Quick Presets */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar text-[11px]">
             <button
-              onClick={() => handlePresetPrompt('Existe algum dia sem hotel?')}
+              onClick={() => handlePresetPrompt('O que temos no roteiro de hoje?')}
               className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
-              ❓ Há dias sem hotel?
+              📅 Roteiro de hoje
             </button>
             <button
-              onClick={() => handlePresetPrompt('Qual é o custo real dos gift cards?')}
+              onClick={() => handlePresetPrompt('Quais tarefas estão pendentes?')}
               className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
-              💳 Custo real gift cards
+              📋 Tarefas pendentes
             </button>
             <button
-              onClick={() => handlePresetPrompt('Que atividades têm restrição de altura ou idade?')}
+              onClick={() => handlePresetPrompt('Quando é o próximo voo?')}
               className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
-              👧 Restrições de altura/idade
-            </button>
-            <button
-              onClick={() => handlePresetPrompt('Existe conflito entre a devolução do carro e o voo?')}
-              className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
-            >
-              🚗 Devolução do carro
+              ✈️ Próximo voo
             </button>
           </div>
 
