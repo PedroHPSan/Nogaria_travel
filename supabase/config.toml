@@ -399,6 +399,10 @@ verify_jwt = false
 [functions.exchange-rate-sync]
 verify_jwt = false
 
+# Check-in em lote de itens vencidos do roteiro. Mesmo disparo por pg_cron + x-cron-secret.
+[functions.activity-checkins]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
