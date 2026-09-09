@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, useCallb
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabaseClient';
 import type { Profile, Tenant, UserRole } from '../types/database.types';
+import { LEGAL_VERSION } from '../features/legal/legalTexts';
 
 // Must match TripContext.tsx's STORAGE_KEY. Not imported directly to avoid a
 // circular dependency (TripContext.tsx already imports useAuth from this file).
@@ -29,6 +30,10 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<{ error: string | null }>;
   createTenant: (name: string) => Promise<{ error: string | null }>;
+  /** Registra o aceite da versão atual dos termos/política em profiles (LGPD). */
+  acceptTerms: () => Promise<{ error: string | null }>;
+  /** true quando o usuário ainda não aceitou a LEGAL_VERSION vigente. */
+  needsTermsAcceptance: boolean;
   retryLoadUserData: () => Promise<void>;
 }
 
@@ -54,7 +59,7 @@ const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, m
 async function fetchProfile(userId: string): Promise<{ data: Profile | null; error: string | null }> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, avatar_url, created_at')
+    .select('id, email, full_name, avatar_url, created_at, terms_accepted_at, terms_version')
     .eq('id', userId)
     .returns<Profile[]>();
   if (error) return { data: null, error: error.message };
@@ -221,6 +226,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: null };
   };
 
+  const acceptTerms = async () => {
+    if (!session) return { error: 'Sessão expirada. Entre novamente.' };
+    const acceptedAt = new Date().toISOString();
+    const { error } = await supabase
+      .from('profiles')
+      .update({ terms_accepted_at: acceptedAt, terms_version: LEGAL_VERSION })
+      .eq('id', session.user.id);
+    if (error) return { error: error.message };
+    setProfile(prev => (prev ? { ...prev, terms_accepted_at: acceptedAt, terms_version: LEGAL_VERSION } : prev));
+    return { error: null };
+  };
+
+  const needsTermsAcceptance = Boolean(profile) && (!profile?.terms_accepted_at || profile.terms_version !== LEGAL_VERSION);
+
   const activeTenant = tenantMemberships.find(m => m.tenant.id === activeTenantId)?.tenant ?? null;
   const activeRole = tenantMemberships.find(m => m.tenant.id === activeTenantId)?.role ?? null;
 
@@ -243,6 +262,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithGoogle,
         signOut,
         createTenant,
+        acceptTerms,
+        needsTermsAcceptance,
         retryLoadUserData
       }}
     >

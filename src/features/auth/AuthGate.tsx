@@ -2,9 +2,10 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AuthScreen } from './AuthScreen';
 import { OnboardingScreen } from './OnboardingScreen';
+import { ConsentScreen } from './ConsentScreen';
 
 export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { loading, session, tenantMemberships, userDataLoading, loadError, retryLoadUserData } = useAuth();
+  const { loading, session, tenantMemberships, userDataLoading, loadError, retryLoadUserData, needsTermsAcceptance } = useAuth();
 
   if (loading || (session && userDataLoading)) {
     return (
@@ -35,6 +36,11 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
         </div>
       </div>
     );
+  }
+
+  // LGPD: aceite dos termos vem antes de qualquer dado ser criado (inclusive o tenant).
+  if (needsTermsAcceptance) {
+    return <ConsentScreen />;
   }
 
   if (tenantMemberships.length === 0) {

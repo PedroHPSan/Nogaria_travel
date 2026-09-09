@@ -7,7 +7,6 @@ export interface ParticipantRow {
   id: string;
   full_name: string;
   nickname: string | null;
-  age?: number;
   is_minor: boolean;
   height_cm: number | null;
   whatsapp_phone: string | null;
@@ -107,7 +106,9 @@ export async function fetchTripContext(
   const [participantsRes, itemsRes, tasksRes, flightsRes] = await Promise.all([
     supabase
       .from('participants')
-      .select('id, full_name, nickname, birth_date, is_minor, height_cm, whatsapp_phone')
+      // Minimização (LGPD): o bot só precisa de is_minor + altura; a data de
+      // nascimento exata do menor nunca vai para o prompt do Gemini.
+      .select('id, full_name, nickname, is_minor, height_cm, whatsapp_phone')
       .eq('trip_id', trip.id),
     supabase
       .from('itinerary_items')

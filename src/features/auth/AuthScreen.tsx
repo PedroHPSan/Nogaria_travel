@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plane, Mail, Lock, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { LegalModal } from '../../components/modals/LegalModal';
 
 type Mode = 'login' | 'signup';
 
@@ -8,6 +9,7 @@ export const AuthScreen: React.FC = () => {
   const { signInWithPassword, signUpWithPassword, signInWithMagicLink, signInWithGoogle } = useAuth();
 
   const [mode, setMode] = useState<Mode>('login');
+  const [legalOpen, setLegalOpen] = useState<'privacy' | 'terms' | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,6 +148,15 @@ export const AuthScreen: React.FC = () => {
             </div>
           )}
 
+          {mode === 'signup' && (
+            <p className="text-[11px] text-ink-500">
+              Ao criar a conta você será convidado a ler e aceitar a{' '}
+              <button type="button" onClick={() => setLegalOpen('privacy')} className="text-info-300 underline">Política de Privacidade</button>
+              {' '}e os{' '}
+              <button type="button" onClick={() => setLegalOpen('terms')} className="text-info-300 underline">Termos de Uso</button>.
+            </p>
+          )}
+
           <button
             type="submit"
             disabled={isSubmitting}
@@ -181,7 +192,15 @@ export const AuthScreen: React.FC = () => {
             Continuar com Google
           </button>
         </div>
+
+        <div className="flex justify-center gap-3 text-[10px] text-ink-500">
+          <button type="button" onClick={() => setLegalOpen('privacy')} className="hover:text-ink-300 transition">Privacidade</button>
+          <span>•</span>
+          <button type="button" onClick={() => setLegalOpen('terms')} className="hover:text-ink-300 transition">Termos</button>
+        </div>
       </div>
+
+      <LegalModal isOpen={legalOpen !== null} onClose={() => setLegalOpen(null)} initialDocument={legalOpen ?? 'privacy'} />
     </div>
   );
 };

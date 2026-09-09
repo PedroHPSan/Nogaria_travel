@@ -10,6 +10,9 @@ export interface Profile {
   full_name: string;
   avatar_url?: string;
   created_at: string;
+  /** Aceite dos termos/política (LGPD). null bloqueia o app na ConsentScreen. */
+  terms_accepted_at?: string | null;
+  terms_version?: string | null;
 }
 
 export interface Tenant {
@@ -55,6 +58,10 @@ export interface Participant {
   notes?: string;
   budget_limit_usd: number;
   quota_eligible?: boolean;
+  /** Consentimento do responsável para tratar dados do menor (LGPD art. 14). */
+  guardian_consent_at?: string | null;
+  guardian_consent_by?: string | null;
+  guardian_consent_version?: string | null;
   avatar_preset_id?: string | null;
   avatar_emoji?: string | null;
   avatar_color?: string | null;
