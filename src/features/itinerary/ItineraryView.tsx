@@ -9,6 +9,7 @@ import { ViewHeader } from '../../components/ui/ViewHeader';
 import { Avatar } from '../../components/Avatar';
 import type { ItineraryItem } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
+import { participantsBelowMinHeight, shortestMinorWithHeight } from '../../services/eligibility';
 import {
   CalendarDays,
   Plus,
@@ -86,13 +87,15 @@ export const ItineraryView: React.FC = () => {
       ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR') 
       : 'Geral da Viagem';
 
-    let text = `🇺🇸 *NOGÁRIA USA 2026 - ROTEIRO DO DIA (${dateStr})*\n\n`;
+    let text = `🧳 *${activeTrip.title.toUpperCase()} - ROTEIRO DO DIA (${dateStr})*\n\n`;
 
     targetItems.forEach((item, _idx) => {
       text += `📍 *${item.time_start || 'Horário Livre'}* • ${item.title} (${item.city})\n`;
       text += `   🏷️ Categoria: ${item.category.toUpperCase()}\n`;
       if (item.min_height_cm) {
-        text += `   ⚠️ Altura Mínima: ${item.min_height_cm}cm (Gabi: 100cm)\n`;
+        const blocked = participantsBelowMinHeight(item, tripParticipants);
+        const who = blocked.length > 0 ? ` — não atinge: ${blocked.map(p => `${p.nickname || p.full_name} (${p.height_cm}cm)`).join(', ')}` : '';
+        text += `   ⚠️ Altura Mínima: ${item.min_height_cm}cm${who}\n`;
       }
       if (item.notes) {
         text += `   💡 Estratégia: ${item.notes}\n`;
@@ -100,14 +103,15 @@ export const ItineraryView: React.FC = () => {
       text += `\n`;
     });
 
-    text += `✨ *Dica:* Água gelada gratuita nos balcões de serviço rápido e pausas para a Gabi à tarde!\n`;
+    text += `✨ *Dica:* Água gelada gratuita nos balcões de serviço rápido${shortestMinor ? ` e pausas para ${shortestMinor.nickname || shortestMinor.full_name} à tarde` : ''}!\n`;
 
     navigator.clipboard.writeText(text);
     setCopiedDate(selectedDate);
     setTimeout(() => setCopiedDate(null), 2500);
   };
 
-  const gabi = participants.find(p => p.nickname === 'Gabi' || p.age <= 4);
+  const tripParticipants = participants.filter(p => p.trip_id === activeTrip.id);
+  const shortestMinor = shortestMinorWithHeight(tripParticipants);
 
   // Cronologia / Calendário consideram todos os itens do roteiro (parques, restaurantes, compras etc.)
   const timelineDates = useMemo(
@@ -133,7 +137,9 @@ export const ItineraryView: React.FC = () => {
         subtitle={
           viewMode === 'timeline' && timelineDate
             ? `${new Date(timelineDate + 'T00:00:00').toLocaleDateString('pt-BR')}${dayParkName ? ` • ${dayParkName}` : ''} — Cronologia do Dia`
-            : `Cronograma inteligente com validações de altura mínima para Gabi (4 anos • ${gabi?.height_cm || 100}cm) e Débora (12 anos).`
+            : shortestMinor
+              ? `Cronograma inteligente com validações de altura mínima para ${shortestMinor.nickname || shortestMinor.full_name} (${shortestMinor.age} anos • ${shortestMinor.height_cm}cm).`
+              : 'Cronograma inteligente. Cadastre a altura dos participantes menores para ativar os alertas de altura mínima.'
         }
         actions={
           <>
@@ -252,11 +258,7 @@ export const ItineraryView: React.FC = () => {
           </div>
         ) : (
           filteredItinerary.map(item => {
-            const hasGabiHeightWarning =
-              gabi &&
-              item.min_height_cm &&
-              gabi.height_cm &&
-              gabi.height_cm < item.min_height_cm;
+            const blockedByHeight = participantsBelowMinHeight(item, tripParticipants);
 
             return (
               <div
@@ -309,13 +311,14 @@ export const ItineraryView: React.FC = () => {
                 </div>
 
                 {/* Kid Height Alert Box */}
-                {hasGabiHeightWarning && (
+                {blockedByHeight.length > 0 && (
                   <div className="p-3 rounded-xl bg-warning-500/10 border border-warning-500/30 text-warning-300 text-xs flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 shrink-0 text-warning-400" />
                     <div>
-                      <strong>Alerta de Altura (Gabi 4a):</strong> Altura exigida:{' '}
-                      <span className="font-bold">{item.min_height_cm}cm</span>. Gabi tem{' '}
-                      <span className="font-bold">{gabi.height_cm}cm</span>. Recomendado utilizar <em>Rider Switch / Child Swap</em>.
+                      <strong>Alerta de Altura:</strong> exigido{' '}
+                      <span className="font-bold">{item.min_height_cm}cm</span>.{' '}
+                      {blockedByHeight.map(p => `${p.nickname || p.full_name} tem ${p.height_cm}cm`).join(', ')}.{' '}
+                      Recomendado utilizar <em>Rider Switch / Child Swap</em>.
                     </div>
                   </div>
                 )}

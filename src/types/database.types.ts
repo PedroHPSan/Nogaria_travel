@@ -40,7 +40,9 @@ export interface Participant {
   full_name: string;
   nickname?: string;
   birth_date: string;
+  /** Derivada de `birth_date` em `participantMapper.ts` na leitura — não existe no banco e nunca é gravada. */
   age: number;
+  /** Derivada de `age < 18` na leitura, pelo mesmo motivo. */
   is_minor: boolean;
   relationship: string;
   responsible_participant_id?: string;
