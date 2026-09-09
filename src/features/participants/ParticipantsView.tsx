@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ParticipantModal } from '../../components/modals/ParticipantModal';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { EmptyState } from '../../components/ui/EmptyState';
 import type { Participant } from '../../types/database.types';
 import { Avatar } from '../../components/Avatar';
-import { FileText, DollarSign, Ruler, HeartPulse, Plus, Edit2, Trash2, ShieldAlert } from 'lucide-react';
+import { FileText, DollarSign, Ruler, HeartPulse, Plus, Edit2, Trash2, ShieldAlert, Users } from 'lucide-react';
 
 export const ParticipantsView: React.FC = () => {
   const { participants, activeTrip, addParticipant, updateParticipant, deleteParticipant, formatAmount } = useTrip();
@@ -64,6 +65,9 @@ export const ParticipantsView: React.FC = () => {
         }
       />
 
+      {filtered.length === 0 && (
+        <EmptyState icon={Users} title="Nenhum participante" description="Cadastre quem vai viajar. Data de nascimento e altura alimentam a auditoria de restrições de atrações." />
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map(p => (
           <div key={p.id} className="glass-card p-5 rounded-2xl border border-ink-800 space-y-4 relative group">

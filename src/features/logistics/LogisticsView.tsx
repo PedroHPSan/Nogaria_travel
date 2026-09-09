@@ -6,6 +6,7 @@ import { TransportModal } from '../../components/modals/TransportModal';
 import { DiningRadarModal } from '../../components/modals/DiningRadarModal';
 import { HotelServicesModal } from '../../components/modals/HotelServicesModal';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { SubTabs } from '../../components/ui/SubTabs';
 import type { Flight, Accommodation, TransportReservation } from '../../types/database.types';
 import {
@@ -127,6 +128,9 @@ export const LogisticsView: React.FC = () => {
             </button>
           </div>
 
+          {tripFlights.length === 0 && (
+            <EmptyState icon={Plane} title="Nenhum voo cadastrado" description="Cadastre os voos da viagem para a auditoria cruzar horários com carro alugado e hospedagem." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripFlights.map(f => (
               <div key={f.id} className="glass-card p-5 rounded-2xl border border-ink-800 space-y-4 relative">
@@ -248,6 +252,9 @@ export const LogisticsView: React.FC = () => {
             </div>
           </div>
 
+          {tripAccs.length === 0 && (
+            <EmptyState icon={Building} title="Nenhuma hospedagem cadastrada" description="Sem hospedagem confirmada a auditoria aponta a viagem como sem lugar para dormir." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripAccs.map(a => (
               <div
@@ -359,6 +366,9 @@ export const LogisticsView: React.FC = () => {
             </button>
           </div>
 
+          {tripTransports.length === 0 && (
+            <EmptyState icon={Car} title="Nenhum transporte cadastrado" description="Carro alugado, transfer ou trem: cadastre para o cronograma de deslocamento entrar na auditoria." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripTransports.map(t => (
               <div key={t.id} className="glass-card p-5 rounded-2xl border border-ink-800 space-y-4 relative">

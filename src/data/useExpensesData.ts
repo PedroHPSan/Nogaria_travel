@@ -13,16 +13,14 @@ export interface ExpensesDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackExpenses?: Expense[];
 }
 
 export function useExpensesData({
   client,
   tripId,
   recordFailure,
-  fallbackExpenses = [],
 }: ExpensesDataDeps) {
-  const [expenses, setExpenses] = useState<Expense[]>(fallbackExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,14 +40,7 @@ export function useExpensesData({
       .then(({ data, error }) => {
         if (cancelado) return;
         if (!error && data) {
-          if (data.length > 0) {
-            setExpenses((data as ExpenseRow[]).map(expenseFromRow));
-          } else {
-            const fallbackFiltered = fallbackExpenses.filter(e => e.trip_id === tripId);
-            setExpenses(fallbackFiltered);
-          }
-        } else if (fallbackExpenses.length > 0) {
-          setExpenses(fallbackExpenses.filter(e => e.trip_id === tripId));
+          setExpenses((data as ExpenseRow[]).map(expenseFromRow));
         } else {
           setExpenses([]);
         }
@@ -57,7 +48,7 @@ export function useExpensesData({
       })
       .catch(() => {
         if (!cancelado) {
-          setExpenses(fallbackExpenses.filter(e => e.trip_id === tripId));
+          setExpenses([]);
           setLoading(false);
         }
       });

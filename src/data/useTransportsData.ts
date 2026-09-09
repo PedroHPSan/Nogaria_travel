@@ -9,10 +9,9 @@ export interface TransportsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackTransports?: TransportReservation[];
 }
 
-export function useTransportsData({ client, tripId, recordFailure, fallbackTransports = [] }: TransportsDataDeps) {
+export function useTransportsData({ client, tripId, recordFailure }: TransportsDataDeps) {
   const [transports, setTransports] = useState<TransportReservation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useTransportsData({ client, tripId, recordFailure, fallbackTrans
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setTransports((data as TransportReservationRow[]).map(transportFromRow));
-        } else if (fallbackTransports.length > 0) {
-          setTransports(fallbackTransports.filter(t => t.trip_id === tripId));
         } else {
           setTransports([]);
         }

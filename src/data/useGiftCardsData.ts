@@ -10,10 +10,9 @@ export interface GiftCardsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackGiftCards?: GiftCard[];
 }
 
-export function useGiftCardsData({ client, tripId, recordFailure, fallbackGiftCards = [] }: GiftCardsDataDeps) {
+export function useGiftCardsData({ client, tripId, recordFailure }: GiftCardsDataDeps) {
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,8 +34,6 @@ export function useGiftCardsData({ client, tripId, recordFailure, fallbackGiftCa
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setGiftCards((data as GiftCardRow[]).map(giftCardFromRow));
-        } else if (fallbackGiftCards.length > 0) {
-          setGiftCards(fallbackGiftCards.filter(g => g.trip_id === tripId));
         } else {
           setGiftCards([]);
         }

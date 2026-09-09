@@ -4,6 +4,7 @@ import { GiftCardModal } from '../../components/modals/GiftCardModal';
 import { LoyaltyModal } from '../../components/modals/LoyaltyModal';
 import { calculateGiftCardPortfolioSavings } from '../../services/giftCardCalculator';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { SubTabs } from '../../components/ui/SubTabs';
 import type { GiftCard, LoyaltyAccount } from '../../types/database.types';
 import {
@@ -132,6 +133,9 @@ export const GiftCardsView: React.FC = () => {
             </button>
           </div>
 
+          {tripGiftCards.length === 0 && (
+            <EmptyState icon={CreditCard} title="Nenhum gift card" description="Registre gift cards comprados com desconto ou cashback para acompanhar a economia real." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {tripGiftCards.map(g => {
               const buyer = participants.find(p => p.id === g.purchased_by_id);
@@ -209,6 +213,9 @@ export const GiftCardsView: React.FC = () => {
             </button>
           </div>
 
+          {tripLoyalty.length === 0 && (
+            <EmptyState icon={Award} title="Nenhum programa de milhas" description="Cadastre os saldos de milhas e pontos dos participantes para estimar o valor em dinheiro." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {tripLoyalty.map(l => {
               const holder = participants.find(p => p.id === l.holder_id);

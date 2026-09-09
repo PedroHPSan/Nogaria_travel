@@ -9,10 +9,9 @@ export interface DocumentsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackDocuments?: DocumentFile[];
 }
 
-export function useDocumentsData({ client, tripId, recordFailure, fallbackDocuments = [] }: DocumentsDataDeps) {
+export function useDocumentsData({ client, tripId, recordFailure }: DocumentsDataDeps) {
   const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useDocumentsData({ client, tripId, recordFailure, fallbackDocume
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setDocuments((data as DocumentRow[]).map(documentFromRow));
-        } else if (fallbackDocuments.length > 0) {
-          setDocuments(fallbackDocuments.filter(d => d.trip_id === tripId));
         } else {
           setDocuments([]);
         }

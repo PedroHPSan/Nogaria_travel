@@ -101,8 +101,8 @@ export const AiCopilotView: React.FC = () => {
       addAiLog({
         user_name: 'Usuário SaaS',
         function_name: 'Chat Copiloto Contextual',
-        provider: activeProvider.provider,
-        model: activeProvider.model_name,
+        provider: activeProvider?.provider ?? 'gemini',
+        model: activeProvider?.model_name ?? 'gemini-3.5-flash',
         tokens_input: query.length * 2 + 300,
         tokens_output: responseText.length * 2,
         estimated_cost_usd: 0.0008
@@ -251,7 +251,7 @@ export const AiCopilotView: React.FC = () => {
                 <input
                   type="text"
                   value={activeProvider?.model_name || ''}
-                  onChange={e => updateAiProvider(activeProvider.id, { model_name: e.target.value })}
+                  onChange={e => activeProvider && updateAiProvider(activeProvider.id, { model_name: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100"
                 />
               </div>
@@ -264,7 +264,7 @@ export const AiCopilotView: React.FC = () => {
                   max="1"
                   step="0.1"
                   value={activeProvider?.temperature || 0.2}
-                  onChange={e => updateAiProvider(activeProvider.id, { temperature: Number(e.target.value) })}
+                  onChange={e => activeProvider && updateAiProvider(activeProvider.id, { temperature: Number(e.target.value) })}
                   className="w-full"
                 />
                 <div className="flex justify-between text-[10px] text-ink-400">

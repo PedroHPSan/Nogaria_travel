@@ -11,6 +11,7 @@ import { FreeTierBadge } from '../../components/common/FreeTierBadge';
 import { PurchaseDecisionCard } from './PurchaseDecisionCard';
 import { QuotaAllocationPanel } from './QuotaAllocationPanel';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { SubTabs } from '../../components/ui/SubTabs';
 import type { PurchaseItem, Luggage, PurchaseAssumptions } from '../../types/database.types';
 import {
@@ -167,6 +168,9 @@ export const PurchasesView: React.FC = () => {
 
           <QuotaAllocationPanel decisions={purchaseDecisions} participants={participants} />
 
+          {tripPurchases.length === 0 && (
+            <EmptyState icon={ShoppingBag} title="Nenhuma compra planejada" description="Adicione itens de desejo com preço-alvo para o motor de decisão comparar com o preço no Brasil e a cota da alfândega." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripPurchases.map(p => {
               const decision = purchaseDecisions.find(d => d.purchase_item_id === p.id);
@@ -203,6 +207,9 @@ export const PurchasesView: React.FC = () => {
             </button>
           </div>
 
+          {tripLuggages.length === 0 && (
+            <EmptyState icon={LuggageIcon} title="Nenhuma mala cadastrada" description="Cadastre as malas por participante para controlar peso e espaço das compras." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripLuggages.map(l => {
               const participant = participants.find(p => p.id === l.participant_id);

@@ -9,10 +9,9 @@ export interface AccommodationsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackAccommodations?: Accommodation[];
 }
 
-export function useAccommodationsData({ client, tripId, recordFailure, fallbackAccommodations = [] }: AccommodationsDataDeps) {
+export function useAccommodationsData({ client, tripId, recordFailure }: AccommodationsDataDeps) {
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useAccommodationsData({ client, tripId, recordFailure, fallbackA
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setAccommodations((data as AccommodationRow[]).map(accommodationFromRow));
-        } else if (fallbackAccommodations.length > 0) {
-          setAccommodations(fallbackAccommodations.filter(a => a.trip_id === tripId));
         } else {
           setAccommodations([]);
         }

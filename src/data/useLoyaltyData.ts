@@ -9,10 +9,9 @@ export interface LoyaltyDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackLoyalty?: LoyaltyAccount[];
 }
 
-export function useLoyaltyData({ client, tripId, recordFailure, fallbackLoyalty = [] }: LoyaltyDataDeps) {
+export function useLoyaltyData({ client, tripId, recordFailure }: LoyaltyDataDeps) {
   const [loyaltyAccounts, setLoyaltyAccounts] = useState<LoyaltyAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useLoyaltyData({ client, tripId, recordFailure, fallbackLoyalty 
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setLoyaltyAccounts((data as LoyaltyAccountRow[]).map(loyaltyFromRow));
-        } else if (fallbackLoyalty.length > 0) {
-          setLoyaltyAccounts(fallbackLoyalty.filter(l => l.trip_id === tripId));
         } else {
           setLoyaltyAccounts([]);
         }

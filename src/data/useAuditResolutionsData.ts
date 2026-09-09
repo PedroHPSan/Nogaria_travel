@@ -4,10 +4,9 @@ import type { SupabaseLike } from './useTripsData';
 export interface AuditResolutionsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
-  fallbackResolvedIds?: string[];
 }
 
-export function useAuditResolutionsData({ client, tripId, fallbackResolvedIds = [] }: AuditResolutionsDataDeps) {
+export function useAuditResolutionsData({ client, tripId }: AuditResolutionsDataDeps) {
   const [resolvedAuditIds, setResolvedAuditIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,8 +28,6 @@ export function useAuditResolutionsData({ client, tripId, fallbackResolvedIds = 
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setResolvedAuditIds((data as Array<{ finding_id: string }>).map(r => r.finding_id));
-        } else if (fallbackResolvedIds.length > 0) {
-          setResolvedAuditIds(fallbackResolvedIds);
         } else {
           setResolvedAuditIds([]);
         }

@@ -9,10 +9,9 @@ export interface FlightsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackFlights?: Flight[];
 }
 
-export function useFlightsData({ client, tripId, recordFailure, fallbackFlights = [] }: FlightsDataDeps) {
+export function useFlightsData({ client, tripId, recordFailure }: FlightsDataDeps) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useFlightsData({ client, tripId, recordFailure, fallbackFlights 
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setFlights((data as FlightRow[]).map(flightFromRow));
-        } else if (fallbackFlights.length > 0) {
-          setFlights(fallbackFlights.filter(f => f.trip_id === tripId));
         } else {
           setFlights([]);
         }
