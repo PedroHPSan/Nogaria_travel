@@ -1,3 +1,4 @@
+import { DEFAULT_EXCHANGE_RATE } from './exchangeRateService';
 import type {
   Expense,
   Participant,
@@ -205,7 +206,7 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
     customGoals = {}
   } = params;
 
-  const rate = exchangeRate > 0 ? exchangeRate : 5.62;
+  const rate = exchangeRate > 0 ? exchangeRate : DEFAULT_EXCHANGE_RATE;
   const toUsd = (val: number, curr: Currency) => (curr === 'USD' ? val : val / rate);
   const toBrl = (val: number, curr: Currency) => (curr === 'BRL' ? val : val * rate);
 

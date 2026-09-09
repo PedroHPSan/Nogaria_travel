@@ -9,6 +9,8 @@ interface ExpenseModalProps {
   initialData?: Expense | null;
   participants: Participant[];
   tripId: string;
+  /** Cotação do dia no app (PTAX/mercado). Congelada na despesa ao criar; na edição prevalece a taxa gravada. */
+  defaultExchangeRate: number;
 }
 
 const CATEGORIES: { id: Expense['category']; label: string }[] = [
@@ -28,12 +30,13 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   onSave,
   initialData,
   participants,
-  tripId
+  tripId,
+  defaultExchangeRate
 }) => {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState<number | ''>(100);
   const [currency, setCurrency] = useState<'USD' | 'BRL'>('USD');
-  const [exchangeRate, setExchangeRate] = useState<number>(5.50);
+  const [exchangeRate, setExchangeRate] = useState<number>(defaultExchangeRate);
   const [category, setCategory] = useState<Expense['category']>('food');
   const [paidById, setPaidById] = useState('');
   const [beneficiaryIds, setBeneficiaryIds] = useState<string[]>([]);
@@ -45,7 +48,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setDescription(initialData.description || '');
       setAmount(initialData.amount ?? 100);
       setCurrency(initialData.currency || 'USD');
-      setExchangeRate(initialData.exchange_rate || 5.50);
+      setExchangeRate(initialData.exchange_rate || defaultExchangeRate);
       setCategory(initialData.category || 'food');
       setPaidById(initialData.paid_by_id || '');
       setBeneficiaryIds(initialData.beneficiary_ids || []);
@@ -55,7 +58,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setDescription('');
       setAmount(100);
       setCurrency('USD');
-      setExchangeRate(5.50);
+      setExchangeRate(defaultExchangeRate);
       setCategory('food');
       setPaidById(participants[0]?.id || '');
       setBeneficiaryIds(participants.map(p => p.id));
@@ -84,7 +87,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       currency,
       amount_usd: Number(amountUsd.toFixed(2)),
       amount_brl: Number(amountBrl.toFixed(2)),
-      exchange_rate: Number(exchangeRate) || 5.50,
+      exchange_rate: Number(exchangeRate) || defaultExchangeRate,
       category,
       paid_by_id: paidById,
       beneficiary_ids: beneficiaryIds,

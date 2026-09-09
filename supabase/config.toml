@@ -395,6 +395,10 @@ verify_jwt = false
 [functions.activity-reminders]
 verify_jwt = false
 
+# Sincronização da PTAX (BCB) — pública, gated por x-cron-secret.
+[functions.exchange-rate-sync]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

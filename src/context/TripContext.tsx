@@ -24,7 +24,8 @@ import type {
 import type { PurchaseDecision } from '../types/purchase.types';
 
 import { runFullTripAudit } from '../services/auditEngine';
-import { formatCurrencyValue, convertCurrency, fetchLiveExchangeRate } from '../services/exchangeRateService';
+import { formatCurrencyValue, convertCurrency, fetchLiveExchangeRate, DEFAULT_EXCHANGE_RATE } from '../services/exchangeRateService';
+import type { ExchangeRateClient, ExchangeRateSource } from '../services/exchangeRateService';
 import { useAuth } from './AuthContext';
 import { newId } from '../services/ids';
 import { usePurchasesState } from '../features/purchases/usePurchasesState';
@@ -85,6 +86,8 @@ interface TripContextType {
   setCurrency: (c: Currency) => void;
   exchangeRate: number;
   exchangeRateDate: string;
+  /** De onde veio a taxa exibida: PTAX (tabela), mercado ao vivo, cache, ajuste manual ou default. */
+  exchangeRateSource: ExchangeRateSource;
   setExchangeRate: (rate: number) => void;
   formatAmount: (amountUSD: number) => string;
   convertAmount: (amountUSD: number) => number;
@@ -222,17 +225,21 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [exchangeRate, setExchangeRate] = useState<number>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_exchangeRate`);
     const parsed = saved ? Number(saved) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.62;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_EXCHANGE_RATE;
   });
+  const [exchangeRateSource, setExchangeRateSource] = useState<ExchangeRateSource>('default');
 
   const [exchangeRateDate, setExchangeRateDate] = useState<string>(() =>
     new Date().toLocaleDateString('pt-BR'),
   );
 
   useEffect(() => {
-    fetchLiveExchangeRate(exchangeRate).then(info => {
+    // O supabase-js real satisfaz o shape mínimo de ExchangeRateClient; o cast
+    // existe porque SupabaseLike (dos hooks de dados) não declara order/limit.
+    fetchLiveExchangeRate(exchangeRate, supabase as unknown as ExchangeRateClient).then(info => {
       if (info && Number.isFinite(info.rate) && info.rate > 0) {
         setExchangeRate(info.rate);
+        setExchangeRateSource(info.source);
         const [y, m, d] = info.lastUpdated.split('-');
         if (y && m && d) {
           setExchangeRateDate(`${d}/${m}/${y}`);
@@ -240,6 +247,12 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
   }, []);
+
+  /** Ajuste manual pelo Header: passa a valer até o próximo carregamento. */
+  const setExchangeRateManual = (rate: number) => {
+    setExchangeRate(rate);
+    setExchangeRateSource('manual');
+  };
 
   // Helper formatting & calculation functions
   const formatAmount = (amountUSD: number): string => {
@@ -676,7 +689,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrency,
         exchangeRate,
         exchangeRateDate,
-        setExchangeRate,
+        exchangeRateSource,
+        setExchangeRate: setExchangeRateManual,
         formatAmount,
         convertAmount,
 
