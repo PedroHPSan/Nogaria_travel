@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Plane, ShieldAlert, Sparkles, DollarSign, Plus, ChevronDown, Building2, RefreshCw, Users, LogOut, Sun, Moon, ShieldCheck } from 'lucide-react';
+import { Plane, ShieldAlert, Sparkles, DollarSign, Plus, ChevronDown, Building2, RefreshCw, Users, LogOut, Sun, Moon, ShieldCheck, MessageCircle } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { TripModal } from './modals/TripModal';
 import { TeamModal } from './modals/TeamModal';
 import { DataPrivacyModal } from './modals/DataPrivacyModal';
+import { WhatsAppConfigModal } from './modals/WhatsAppConfigModal';
 
 interface HeaderProps {
   onOpenAudit: () => void;
@@ -38,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   const criticalCount = auditFindings.filter(f => f.severity === 'critical' && !f.resolved).length;
   const warningCount = auditFindings.filter(f => f.severity === 'warning' && !f.resolved).length;
@@ -242,6 +244,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
                   <button
                     onClick={() => {
                       setIsAccountMenuOpen(false);
+                      setIsWhatsAppModalOpen(true);
+                    }}
+                    className="w-full px-3 py-2 rounded-lg text-left text-xs font-semibold text-ink-200 hover:bg-ink-800 transition flex items-center gap-1.5"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Bot do WhatsApp
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsAccountMenuOpen(false);
                       setIsPrivacyModalOpen(true);
                     }}
                     className="w-full px-3 py-2 rounded-lg text-left text-xs font-semibold text-ink-200 hover:bg-ink-800 transition flex items-center gap-1.5"
@@ -275,6 +287,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAudit, onOpenAi }) => {
       />
 
       <DataPrivacyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
+      <WhatsAppConfigModal isOpen={isWhatsAppModalOpen} onClose={() => setIsWhatsAppModalOpen(false)} />
 
       {/* Team Modal */}
       <TeamModal
