@@ -169,6 +169,12 @@ export interface ItineraryItem {
   show_block_end?: string;
   recommended_arrival_min_before?: number;
   last_showtime_of_day?: boolean;
+  /**
+   * Antecedência do aviso de WhatsApp, em minutos. `undefined` deixa o bot usar
+   * a cascata padrão (lead do tenant elevado por `recommended_arrival_min_before`);
+   * `0` desliga o aviso deste item — ver `_shared/reminderScheduler.ts`.
+   */
+  reminder_minutes_before?: number;
 }
 
 export interface GiftCard {
