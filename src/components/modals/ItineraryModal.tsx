@@ -45,6 +45,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
   const [minHeightCm, setMinHeightCm] = useState<number | ''>('');
   const [minAgeYears, setMinAgeYears] = useState<number | ''>('');
   const [childFriendly, setChildFriendly] = useState(true);
+  const [reminderMinutesBefore, setReminderMinutesBefore] = useState<number | ''>('');
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
       setMinHeightCm(initialData.min_height_cm ?? '');
       setMinAgeYears(initialData.min_age_years ?? '');
       setChildFriendly(initialData.child_friendly ?? true);
+      setReminderMinutesBefore(initialData.reminder_minutes_before ?? '');
       setNotes(initialData.notes || '');
     } else {
       setDate('2026-09-03');
@@ -79,6 +81,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
       setMinHeightCm('');
       setMinAgeYears('');
       setChildFriendly(true);
+      setReminderMinutesBefore('');
       setNotes('');
     }
   }, [initialData, isOpen, participants]);
@@ -110,6 +113,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
       min_height_cm: minHeightCm !== '' ? Number(minHeightCm) : undefined,
       min_age_years: minAgeYears !== '' ? Number(minAgeYears) : undefined,
       child_friendly: childFriendly,
+      reminder_minutes_before: reminderMinutesBefore !== '' ? Number(reminderMinutesBefore) : undefined,
       notes: notes.trim() || undefined
     });
     onClose();
@@ -239,7 +243,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <label className="block text-ink-300 font-semibold mb-1">Custo Estimado (US$)</label>
             <input
@@ -274,6 +278,22 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               onChange={e => setMinAgeYears(e.target.value === '' ? '' : Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-ink-300 font-semibold mb-1">Aviso no WhatsApp (min)</label>
+            <input
+              type="number"
+              min="0"
+              max="720"
+              placeholder="Padrão do bot"
+              value={reminderMinutesBefore}
+              onChange={e => setReminderMinutesBefore(e.target.value === '' ? '' : Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
+            />
+            <p className="mt-1 text-[10px] text-ink-500 leading-tight">
+              Vazio = antecedência padrão do bot. <strong>0 = não avisar</strong> este item.
+            </p>
           </div>
         </div>
 

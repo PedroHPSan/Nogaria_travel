@@ -41,6 +41,7 @@ const linhaAtracao: ItineraryItemRow = {
   show_block_end: null,
   recommended_arrival_min_before: null,
   last_showtime_of_day: false,
+  reminder_minutes_before: null,
 };
 
 const linhaShow: ItineraryItemRow = {
@@ -83,6 +84,14 @@ describe('itineraryFromRow', () => {
     expect(item.min_height_cm).toBeUndefined();
     expect(item.lightning_lane_priority_rank).toBeUndefined();
     expect(item.plan_b).toBeUndefined();
+    expect(item.reminder_minutes_before).toBeUndefined();
+  });
+
+  it('distingue aviso desligado (0) de aviso no padrão do bot (null)', () => {
+    // `0` desliga o aviso do item; `null` deixa o bot aplicar a cascata padrão.
+    // Se o mapper tratasse 0 como ausente, todo item silenciado voltaria a falar.
+    expect(itineraryFromRow({ ...linhaAtracao, reminder_minutes_before: 0 }).reminder_minutes_before).toBe(0);
+    expect(itineraryFromRow({ ...linhaAtracao, reminder_minutes_before: 45 }).reminder_minutes_before).toBe(45);
   });
 
   it('preserva os campos que atravessam sem tradução, incluindo os da fatia 1', () => {
@@ -118,6 +127,12 @@ describe('itineraryToInsert', () => {
     expect(insert.estimated_cost).toBeNull();
     expect(insert.show_block_start).toBeNull();
     expect(insert.plan_b).toBeNull();
+    expect(insert.reminder_minutes_before).toBeNull();
+  });
+
+  it('escreve o aviso desligado como 0, não como null', () => {
+    const item = { ...itineraryFromRow(linhaAtracao), reminder_minutes_before: 0 };
+    expect(itineraryToInsert(item).reminder_minutes_before).toBe(0);
   });
 
   it('aplica os defaults not-null de booleanos quando o TS não os define', () => {

@@ -112,3 +112,109 @@ export function buildParkDay(config: ParkDayConfig, rows: RoteiroRow[]): Itinera
     return item;
   });
 }
+
+/**
+ * Linha de um **dia operacional**: ao contrário de `buildParkDay`, que distribui
+ * as atrações uniformemente entre abertura e fechamento, aqui cada bloco tem
+ * horário decidido à mão (fila de rope drop, âncora de reserva, travessia a pé).
+ */
+export interface OperationalRow {
+  order: number;
+  /** Início local, HH:MM. */
+  start: string;
+  /** Fim local, HH:MM. Vira `time_end`. */
+  end?: string;
+  title: string;
+  category: ItineraryItem['category'];
+  area: string;
+  itemType?: RoteiroItemType;
+  priority?: RoteiroPriority;
+  status?: ItineraryItem['status'];
+  description?: string;
+  /** Vai junto no aviso de WhatsApp (`💡 _<notes>_`) — manter curto e acionável. */
+  notes?: string;
+  planB?: string;
+  minHeightCm?: number;
+  childSwitch?: boolean;
+  /**
+   * Antecedência do aviso, em minutos. `0` desliga — é assim que um dia de 30
+   * blocos vira ~9 avisos em vez de 30 mensagens por pessoa.
+   */
+  reminderMinutesBefore?: number;
+  recommendedArrivalMinBefore?: number;
+  recommendedWindow?: string;
+  /** Default `true`; `false` marca horário travado (reserva, abertura, show). */
+  timeIsEstimated?: boolean;
+  countsTowardCompletion?: boolean;
+  lastShowtimeOfDay?: boolean;
+  showDurationMin?: number;
+  /** Sobrepõe a cidade do dia (blocos de hotel/deslocamento fora do parque). */
+  city?: string;
+  location?: string;
+}
+
+export interface OperationalDayConfig {
+  parkKey: string;
+  parkName: string;
+  city: string;
+  date: string;
+}
+
+/**
+ * Monta um dia com horários explícitos. `lightning_lane` sai `'none'` em todos
+ * os itens por construção: um dia operacional só existe porque não há fila
+ * paga para reordenar o roteiro.
+ */
+export function buildOperationalDay(
+  config: OperationalDayConfig,
+  rows: OperationalRow[]
+): ItineraryItem[] {
+  return rows.map(row => {
+    const isShow = row.itemType === 'show';
+    const showBlockEnd = isShow
+      ? minutesToTime(timeToMinutes(row.start) + (row.showDurationMin ?? DEFAULT_SHOW_DURATION_MIN))
+      : undefined;
+
+    const item: ItineraryItem = {
+      id: `${config.parkKey}-${String(row.order).padStart(3, '0')}`,
+      trip_id: ROTEIRO_TRIP_ID,
+      date: config.date,
+      time_start: row.start,
+      time_end: row.end,
+      city: row.city ?? config.city,
+      title: row.title,
+      category: row.category,
+      description: row.description,
+      location: row.location ?? config.parkName,
+      participant_ids: ROTEIRO_ALL_PARTICIPANT_IDS,
+      status: row.status ?? 'planned',
+      min_height_cm: row.minHeightCm,
+      child_friendly: true,
+      notes: row.notes,
+      park: config.parkName,
+      area: row.area,
+      base_order: row.order,
+      item_type: row.itemType,
+      priority_tier: row.priority,
+      lightning_lane: 'none',
+      single_rider: false,
+      child_switch: row.childSwitch ?? false,
+      recommended_window: row.recommendedWindow,
+      early_closure_risk: false,
+      operational_status: 'operating',
+      // Sem `item_type` o bloco é logística (deslocamento, pausa): não entra na
+      // métrica de cobertura do dia.
+      counts_toward_completion: row.countsTowardCompletion ?? row.itemType !== undefined,
+      participant_status: {},
+      plan_b: row.planB,
+      time_is_estimated: row.timeIsEstimated ?? true,
+      show_block_start: isShow ? row.start : undefined,
+      show_block_end: showBlockEnd,
+      recommended_arrival_min_before: row.recommendedArrivalMinBefore,
+      last_showtime_of_day: row.lastShowtimeOfDay ?? false,
+      reminder_minutes_before: row.reminderMinutesBefore,
+    };
+
+    return item;
+  });
+}
