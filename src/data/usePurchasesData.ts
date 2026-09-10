@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { PurchaseItem } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { purchaseItemFromRow, purchaseItemToInsert, type PurchaseItemRow } from './mappers/purchaseMapper';
 
@@ -9,9 +11,10 @@ export interface PurchasesDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function usePurchasesData({ client, tripId, recordFailure }: PurchasesDataDeps) {
+export function usePurchasesData({ client, tripId, recordFailure, realtime }: PurchasesDataDeps) {
   const [purchases, setPurchases] = useState<PurchaseItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function usePurchasesData({ client, tripId, recordFailure }: PurchasesDat
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<PurchaseItemRow>({
+    client: realtime ?? null,
+    table: 'purchase_items',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const item = purchaseItemFromRow(row);
+      setPurchases(prev => (prev.some(x => x.id === item.id) ? prev : [...prev, item]));
+    },
+    onUpdate: row => {
+      const item = purchaseItemFromRow(row);
+      setPurchases(prev => prev.map(x => (x.id === item.id ? item : x)));
+    },
+    onDelete: old => {
+      setPurchases(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addPurchase = useCallback(
     (data: Omit<PurchaseItem, 'id'>) => {

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Accommodation } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { accommodationFromRow, accommodationToInsert, type AccommodationRow } from './mappers/accommodationMapper';
 
@@ -9,9 +11,10 @@ export interface AccommodationsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useAccommodationsData({ client, tripId, recordFailure }: AccommodationsDataDeps) {
+export function useAccommodationsData({ client, tripId, recordFailure, realtime }: AccommodationsDataDeps) {
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function useAccommodationsData({ client, tripId, recordFailure }: Accommo
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<AccommodationRow>({
+    client: realtime ?? null,
+    table: 'accommodations',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const acc = accommodationFromRow(row);
+      setAccommodations(prev => (prev.some(x => x.id === acc.id) ? prev : [...prev, acc]));
+    },
+    onUpdate: row => {
+      const acc = accommodationFromRow(row);
+      setAccommodations(prev => prev.map(x => (x.id === acc.id ? acc : x)));
+    },
+    onDelete: old => {
+      setAccommodations(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addAccommodation = useCallback(
     (data: Omit<Accommodation, 'id'>) => {

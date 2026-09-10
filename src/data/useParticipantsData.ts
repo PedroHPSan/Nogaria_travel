@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Participant } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import {
   deriveAge,
@@ -16,9 +18,10 @@ export interface ParticipantsDataDeps {
   /** Data de hoje em ISO `YYYY-MM-DD`, injetada para o cálculo de idade ser determinístico. */
   today: string;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useParticipantsData({ client, tripId, today, recordFailure }: ParticipantsDataDeps) {
+export function useParticipantsData({ client, tripId, today, recordFailure, realtime }: ParticipantsDataDeps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +49,23 @@ export function useParticipantsData({ client, tripId, today, recordFailure }: Pa
 
     return () => { cancelado = true; };
   }, [client, tripId, today]);
+
+  useRealtimeTable<ParticipantRow>({
+    client: realtime ?? null,
+    table: 'participants',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const p = participantFromRow(row, today);
+      setParticipants(prev => (prev.some(x => x.id === p.id) ? prev : [...prev, p]));
+    },
+    onUpdate: row => {
+      const p = participantFromRow(row, today);
+      setParticipants(prev => prev.map(x => (x.id === p.id ? p : x)));
+    },
+    onDelete: old => {
+      setParticipants(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addParticipant = useCallback(
     (data: Omit<Participant, 'id' | 'age' | 'is_minor'>) => {

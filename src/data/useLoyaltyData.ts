@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { LoyaltyAccount } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { loyaltyFromRow, loyaltyToInsert, type LoyaltyAccountRow } from './mappers/loyaltyMapper';
 
@@ -9,9 +11,10 @@ export interface LoyaltyDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useLoyaltyData({ client, tripId, recordFailure }: LoyaltyDataDeps) {
+export function useLoyaltyData({ client, tripId, recordFailure, realtime }: LoyaltyDataDeps) {
   const [loyaltyAccounts, setLoyaltyAccounts] = useState<LoyaltyAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function useLoyaltyData({ client, tripId, recordFailure }: LoyaltyDataDep
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<LoyaltyAccountRow>({
+    client: realtime ?? null,
+    table: 'loyalty_accounts',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const acc = loyaltyFromRow(row);
+      setLoyaltyAccounts(prev => (prev.some(x => x.id === acc.id) ? prev : [...prev, acc]));
+    },
+    onUpdate: row => {
+      const acc = loyaltyFromRow(row);
+      setLoyaltyAccounts(prev => prev.map(x => (x.id === acc.id ? acc : x)));
+    },
+    onDelete: old => {
+      setLoyaltyAccounts(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addLoyaltyAccount = useCallback(
     (data: Omit<LoyaltyAccount, 'id'>) => {

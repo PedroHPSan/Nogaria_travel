@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Luggage } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { luggageFromRow, luggageToInsert, type LuggageRow } from './mappers/luggageMapper';
 
@@ -9,9 +11,10 @@ export interface LuggagesDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useLuggagesData({ client, tripId, recordFailure }: LuggagesDataDeps) {
+export function useLuggagesData({ client, tripId, recordFailure, realtime }: LuggagesDataDeps) {
   const [luggages, setLuggages] = useState<Luggage[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function useLuggagesData({ client, tripId, recordFailure }: LuggagesDataD
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<LuggageRow>({
+    client: realtime ?? null,
+    table: 'luggages',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const luggage = luggageFromRow(row);
+      setLuggages(prev => (prev.some(x => x.id === luggage.id) ? prev : [...prev, luggage]));
+    },
+    onUpdate: row => {
+      const luggage = luggageFromRow(row);
+      setLuggages(prev => prev.map(x => (x.id === luggage.id ? luggage : x)));
+    },
+    onDelete: old => {
+      setLuggages(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addLuggage = useCallback(
     (data: Omit<Luggage, 'id'>) => {

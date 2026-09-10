@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Expense } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import {
   expenseFromRow,
@@ -13,12 +15,14 @@ export interface ExpensesDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
 export function useExpensesData({
   client,
   tripId,
   recordFailure,
+  realtime,
 }: ExpensesDataDeps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +61,23 @@ export function useExpensesData({
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<ExpenseRow>({
+    client: realtime ?? null,
+    table: 'expenses',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const expense = expenseFromRow(row);
+      setExpenses(prev => (prev.some(x => x.id === expense.id) ? prev : [expense, ...prev]));
+    },
+    onUpdate: row => {
+      const expense = expenseFromRow(row);
+      setExpenses(prev => prev.map(x => (x.id === expense.id ? expense : x)));
+    },
+    onDelete: old => {
+      setExpenses(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addExpense = useCallback(
     (data: Omit<Expense, 'id'>) => {
