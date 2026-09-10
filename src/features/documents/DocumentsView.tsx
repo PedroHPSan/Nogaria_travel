@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { DocumentModal } from '../../components/modals/DocumentModal';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { EmptyState } from '../../components/ui/EmptyState';
 import {
   FileText,
   Plus,
@@ -73,6 +74,9 @@ export const DocumentsView: React.FC = () => {
       </div>
 
       {/* Document Grid */}
+      {filtered.length === 0 && (
+        <EmptyState icon={FileText} title="Nenhum documento" description="Vouchers, passagens e seguros ficam aqui, vinculados a um voo, hotel ou participante." />
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {filtered.map(doc => {
           const linkedParticipant = doc.linked_entity_id

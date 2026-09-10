@@ -26,6 +26,9 @@ const row: ParticipantRow = {
   avatar_preset_id: null,
   avatar_emoji: null,
   avatar_color: 'bg-purple-500',
+  guardian_consent_at: null,
+  guardian_consent_by: null,
+  guardian_consent_version: null,
 };
 
 describe('deriveAge', () => {
@@ -103,5 +106,28 @@ describe('participantToInsert', () => {
     expect(insert.nickname).toBe('Débora');
     expect(insert.passport_number).toBeNull();
     expect(insert.height_cm).toBeNull();
+  });
+});
+
+describe('consentimento do responsável (LGPD, #36)', () => {
+  it('faz round-trip das colunas de consentimento', () => {
+    const consented: ParticipantRow = {
+      ...row,
+      guardian_consent_at: '2026-09-09T12:00:00.000Z',
+      guardian_consent_by: '33333333-3333-4333-8333-333333333333',
+      guardian_consent_version: '2026-09',
+    };
+    const p = participantFromRow(consented, '2026-09-09');
+    expect(p.guardian_consent_at).toBe('2026-09-09T12:00:00.000Z');
+    expect(participantToInsert(p, '2026-09-09')).toMatchObject({
+      guardian_consent_at: '2026-09-09T12:00:00.000Z',
+      guardian_consent_by: '33333333-3333-4333-8333-333333333333',
+      guardian_consent_version: '2026-09',
+    });
+  });
+
+  it('sem consentimento grava null, não undefined', () => {
+    const p = participantFromRow(row, '2026-09-09');
+    expect(participantToInsert(p, '2026-09-09').guardian_consent_at).toBeNull();
   });
 });

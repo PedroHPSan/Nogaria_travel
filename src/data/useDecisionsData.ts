@@ -9,10 +9,9 @@ export interface DecisionsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackDecisions?: Decision[];
 }
 
-export function useDecisionsData({ client, tripId, recordFailure, fallbackDecisions = [] }: DecisionsDataDeps) {
+export function useDecisionsData({ client, tripId, recordFailure }: DecisionsDataDeps) {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useDecisionsData({ client, tripId, recordFailure, fallbackDecisi
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setDecisions((data as DecisionRow[]).map(decisionFromRow));
-        } else if (fallbackDecisions.length > 0) {
-          setDecisions(fallbackDecisions.filter(d => d.trip_id === tripId));
         } else {
           setDecisions([]);
         }

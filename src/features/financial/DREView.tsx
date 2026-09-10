@@ -2,6 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { computeDre } from '../../services/dreEngine';
 import { ExpenseModal } from '../../components/modals/ExpenseModal';
+import { cardEffectiveRate } from '../../services/exchangeRateService';
+import type { ExchangeRateSource } from '../../services/exchangeRateService';
+
+const RATE_SOURCE_LABEL: Record<ExchangeRateSource, string> = {
+  ptax: 'PTAX/BCB',
+  market: 'mercado',
+  cache: 'recente',
+  manual: 'manual',
+  default: 'padrão',
+};
 import { BudgetGoalModal } from '../../components/modals/BudgetGoalModal';
 import { DreCategories } from './dre/DreCategories';
 import { DreParticipants } from './dre/DreParticipants';
@@ -50,7 +60,8 @@ export const DREView: React.FC = () => {
     giftCards,
     currency,
     exchangeRate,
-    exchangeRateDate
+    exchangeRateDate,
+    exchangeRateSource
   } = useTrip();
 
   // Storage key para metas customizadas da DRE
@@ -205,7 +216,7 @@ export const DREView: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-info-500/10 border border-info-500/30 text-info-400 text-xs font-semibold mb-2">
               <FileSpreadsheet className="w-3.5 h-3.5" />
-              DRE Gerencial • Cotação Hoje ({exchangeRateDate}): R$ {exchangeRate.toFixed(2)}
+              DRE Gerencial • Cotação {RATE_SOURCE_LABEL[exchangeRateSource]} ({exchangeRateDate}): R$ {exchangeRate.toFixed(2)} • no cartão ≈ R$ {cardEffectiveRate(exchangeRate).toFixed(2)}
             </div>
             <h2 className="text-2xl lg:text-3xl font-extrabold text-ink-100 tracking-tight">
               DRE da Viagem: Planejado vs. Realizado
@@ -429,6 +440,7 @@ export const DREView: React.FC = () => {
       {/* Modal de Lançamento / Edição de Despesa */}
       <ExpenseModal
         isOpen={isExpenseModalOpen}
+        defaultExchangeRate={exchangeRate}
         onClose={() => setIsExpenseModalOpen(false)}
         onSave={(data) => {
           // `editingExpense` também é usado como "rascunho" ao abrir o modal por

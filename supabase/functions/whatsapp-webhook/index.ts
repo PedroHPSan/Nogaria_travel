@@ -3,6 +3,14 @@ import { chatWithTools, resolveGeminiModel, type ChatMessage } from '../_shared/
 import { sendTextMessage } from '../_shared/whatsappClient.ts';
 import { fetchTripContext, buildSystemPrompt, localDateIso } from '../_shared/tripContext.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
+import {
+  evaluateQuota,
+  formatQuotaExceeded,
+  formatQuotaWarning,
+  monthStartUtcIso,
+  nextMonthStartLocalIso,
+  resolveMonthlyQuota,
+} from '../_shared/quota.ts';
 
 const HISTORY_LIMIT = 10;
 const MAX_BODY_CHARS = 4000;
@@ -181,7 +189,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
   // Idempotência: Meta reenvia webhooks; wa_message_id é unique no banco.
   const { data: config } = await supabase
     .from('whatsapp_configs')
-    .select('tenant_id, timezone, enabled')
+    .select('tenant_id, timezone, enabled, monthly_message_quota, tenants(plan)')
     .eq('phone_number_id', msg.phoneNumberId)
     .maybeSingle();
   if (!config || !config.enabled) return 'ignored:no-config';
@@ -197,7 +205,34 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
   if (insertErr?.code === '23505') return 'ignored:duplicate';
   if (insertErr) throw new Error(`Falha ao registrar mensagem: ${insertErr.message}`);
 
-  const todayIso = localDateIso(new Date(), config.timezone);
+  // Franquia mensal (#27): contada DEPOIS do insert, então `used` já inclui
+  // esta mensagem. Corte suave — avisa uma vez por dia por telefone em vez de
+  // silenciar (silêncio é o modo de falha que a família lê como bug).
+  const now = new Date();
+  const quota = await checkQuota(supabase, config, msg, now);
+  if (quota.kind === 'exceeded') {
+    const noticed = await quotaNoticeSentToday(supabase, config.tenant_id, msg.from, 'exceeded', now);
+    if (!noticed) {
+      const text = formatQuotaExceeded(quota, nextMonthStartLocalIso(now, config.timezone));
+      await sendTextMessage({
+        phoneNumberId: msg.phoneNumberId,
+        accessToken: Deno.env.get('META_WA_TOKEN') ?? '',
+        to: msg.from,
+        text,
+      });
+      await supabase.from('whatsapp_messages').insert({
+        tenant_id: config.tenant_id,
+        direction: 'outbound',
+        sender_phone: msg.from,
+        body: text,
+        kind: 'chat',
+        payload: { quota: 'exceeded' },
+      });
+    }
+    return noticed ? 'ignored:quota-exceeded' : 'replied:quota-exceeded';
+  }
+
+  const todayIso = localDateIso(now, config.timezone);
   const ctx = await fetchTripContext(supabase, config.tenant_id, todayIso);
   if (!ctx.trip) {
     const reply = 'Nenhuma viagem ativa encontrada. Cadastre uma viagem na plataforma para eu poder ajudar! 🧳';
@@ -249,11 +284,18 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
     }),
   });
 
+  let quotaFooter: { quota: 'warning' } | null = null;
+  let outgoing = text;
+  if (quota.kind === 'warning' && !(await quotaNoticeSentToday(supabase, config.tenant_id, msg.from, 'warning', now))) {
+    outgoing = `${text}\n\n${formatQuotaWarning(quota)}`;
+    quotaFooter = { quota: 'warning' };
+  }
+
   const sent = await sendTextMessage({
     phoneNumberId: msg.phoneNumberId,
     accessToken: Deno.env.get('META_WA_TOKEN') ?? '',
     to: msg.from,
-    text,
+    text: outgoing,
   });
 
   // A resposta já saiu. Falha de escrita daqui pra baixo é problema de
@@ -265,8 +307,9 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
       wa_message_id: sent.waMessageId,
       direction: 'outbound',
       sender_phone: msg.from,
-      body: text,
+      body: outgoing,
       kind: 'chat',
+      ...(quotaFooter ? { payload: quotaFooter } : {}),
     });
 
     // Mesmo modelo de custo do price-research (Gemini Flash).
@@ -338,6 +381,55 @@ Deno.serve(async request => {
   }
   return json({ accepted: messages.length, results: await processing });
 });
+
+interface QuotaConfig {
+  tenant_id: string;
+  timezone: string;
+  monthly_message_quota: number | null;
+  // PostgREST devolve o embed de FK como objeto (ou lista, se a relação for ambígua).
+  tenants: { plan: string } | { plan: string }[] | null;
+}
+
+/** Mensagens recebidas (chat) do tenant no mês local corrente vs. franquia efetiva. */
+async function checkQuota(supabase: SupabaseClient, config: QuotaConfig, msg: IncomingTextMessage, now: Date) {
+  const tenant = Array.isArray(config.tenants) ? config.tenants[0] : config.tenants;
+  const quota = resolveMonthlyQuota({ plan: tenant?.plan, override: config.monthly_message_quota });
+  if (quota === null) return evaluateQuota(0, null);
+
+  const { count, error } = await supabase
+    .from('whatsapp_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', config.tenant_id)
+    .eq('direction', 'inbound')
+    .eq('kind', 'chat')
+    .gte('created_at', monthStartUtcIso(now, config.timezone));
+  if (error) {
+    // Falha de contagem não pode bloquear a conversa: trata como dentro da franquia.
+    console.warn(`[whatsapp-webhook] Falha ao contar franquia de ${msg.from}:`, error.message);
+    return evaluateQuota(0, null);
+  }
+  return evaluateQuota(count ?? 0, quota);
+}
+
+/** Já mandamos este aviso (exceeded/warning) para este telefone nas últimas 24h? */
+async function quotaNoticeSentToday(
+  supabase: SupabaseClient,
+  tenantId: string,
+  phone: string,
+  kind: 'exceeded' | 'warning',
+  now: Date,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('whatsapp_messages')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('sender_phone', phone)
+    .eq('direction', 'outbound')
+    .contains('payload', { quota: kind })
+    .gte('created_at', new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString())
+    .limit(1);
+  return (data?.length ?? 0) > 0;
+}
 
 /**
  * O 200 já foi devolvido à Meta, então ela não reenvia: sem esta mensagem, uma

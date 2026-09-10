@@ -8,7 +8,10 @@ interface MonthCalendarProps {
   participants: Participant[];
   selectedDate: string;
   onSelectDate: (date: string) => void;
-  referenceDate: string;
+  /** Ida da viagem (YYYY-MM-DD). Primeiro mês da grade. */
+  startDate: string;
+  /** Volta da viagem (YYYY-MM-DD). Último mês da grade. */
+  endDate: string;
 }
 
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -16,6 +19,44 @@ const MONTH_LABELS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
+
+/** `YYYY-MM` de uma data ISO; `null` para entrada malformada. */
+function monthKey(date: string): string | null {
+  const m = /^(\d{4})-(\d{2})/.exec(date);
+  return m ? `${m[1]}-${m[2]}` : null;
+}
+
+/**
+ * Meses (`YYYY-MM`, em ordem) que a grade precisa cobrir: todo mês entre a ida
+ * e a volta da viagem, mais qualquer mês em que exista item do roteiro fora
+ * desse intervalo (um voo de conexão no dia anterior, por exemplo). Antes da
+ * issue #33 só o mês da ida era renderizado, e uma viagem 28/12–05/01 perdia
+ * os dias de janeiro.
+ */
+export function monthsToRender(startDate: string, endDate: string, itemDates: string[]): string[] {
+  const keys = new Set<string>();
+  const first = monthKey(startDate);
+  const last = monthKey(endDate) ?? first;
+
+  if (first) {
+    let [y, m] = first.split('-').map(Number);
+    const [ly, lm] = (last ?? first).split('-').map(Number);
+    // Guarda contra volta < ida (dados inconsistentes): renderiza só a ida.
+    const limit = ly * 12 + lm >= y * 12 + m ? ly * 12 + lm : y * 12 + m;
+    while (y * 12 + m <= limit) {
+      keys.add(`${y}-${String(m).padStart(2, '0')}`);
+      m += 1;
+      if (m > 12) { m = 1; y += 1; }
+    }
+  }
+
+  for (const date of itemDates) {
+    const key = monthKey(date);
+    if (key) keys.add(key);
+  }
+
+  return Array.from(keys).sort();
+}
 
 function buildMonthGrid(year: number, month: number): (string | null)[] {
   const firstWeekday = new Date(year, month - 1, 1).getDay();
@@ -28,8 +69,16 @@ function buildMonthGrid(year: number, month: number): (string | null)[] {
   return cells;
 }
 
-export const MonthCalendar: React.FC<MonthCalendarProps> = ({ items, participants, selectedDate, onSelectDate, referenceDate }) => {
-  const [year, month] = referenceDate.split('-').map(Number);
+interface MonthBlockProps {
+  monthKey: string;
+  items: ItineraryItem[];
+  participants: Participant[];
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
+}
+
+const MonthBlock: React.FC<MonthBlockProps> = ({ monthKey: key, items, participants, selectedDate, onSelectDate }) => {
+  const [year, month] = key.split('-').map(Number);
   const cells = buildMonthGrid(year, month);
 
   return (
@@ -83,6 +132,25 @@ export const MonthCalendar: React.FC<MonthCalendarProps> = ({ items, participant
           );
         })}
       </div>
+    </div>
+  );
+};
+
+export const MonthCalendar: React.FC<MonthCalendarProps> = ({ items, participants, selectedDate, onSelectDate, startDate, endDate }) => {
+  const months = monthsToRender(startDate, endDate, items.map(i => i.date));
+
+  return (
+    <div className="space-y-8">
+      {months.map(key => (
+        <MonthBlock
+          key={key}
+          monthKey={key}
+          items={items}
+          participants={participants}
+          selectedDate={selectedDate}
+          onSelectDate={onSelectDate}
+        />
+      ))}
     </div>
   );
 };

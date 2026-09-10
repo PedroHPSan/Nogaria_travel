@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
 import type { Participant } from '../../types/database.types';
 import { deriveAge } from '../../data/mappers/participantMapper';
+import { useAuth } from '../../context/AuthContext';
+import { LEGAL_VERSION } from '../../features/legal/legalTexts';
 import { Avatar, DiceBearAvatar } from '../Avatar';
 import {
   randomAvatarSeed,
@@ -60,6 +62,8 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
   const [passportExpiry, setPassportExpiry] = useState('');
   const [visaStatus, setVisaStatus] = useState<'valid' | 'pending' | 'exempt' | 'expired'>('valid');
   const [heightCm, setHeightCm] = useState<number | ''>('');
+  const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [guardianConsent, setGuardianConsent] = useState(false);
   const [dietary, setDietary] = useState('');
   const [notes, setNotes] = useState('');
   const [budgetLimit, setBudgetLimit] = useState<number>(2000);
@@ -112,6 +116,8 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setPassportExpiry(initialData.passport_expiry || '');
       setVisaStatus(initialData.visa_status || 'valid');
       setHeightCm(initialData.height_cm ?? '');
+      setWhatsappPhone(initialData.whatsapp_phone ?? '');
+      setGuardianConsent(Boolean(initialData.guardian_consent_at));
       setDietary(initialData.dietary_restrictions ? initialData.dietary_restrictions.join(', ') : '');
       setNotes(initialData.notes || '');
       setBudgetLimit(initialData.budget_limit_usd || 2000);
@@ -147,6 +153,8 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setPassportExpiry('');
       setVisaStatus('valid');
       setHeightCm('');
+      setWhatsappPhone('');
+      setGuardianConsent(false);
       setDietary('');
       setNotes('');
       setBudgetLimit(2000);
@@ -167,6 +175,9 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
   const hoje = new Date().toISOString().split('T')[0];
   const idadeCalculada = birthDate ? deriveAge(birthDate, hoje) : null;
   const isMinor = idadeCalculada !== null && idadeCalculada < 18;
+  const { profile } = useAuth();
+  // Consentimento já registrado antes (edição): mantém quem/quando consentiu.
+  const previousConsent = initialData?.guardian_consent_at ? initialData : null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,6 +187,27 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setError('Informe a data de nascimento.');
       return;
     }
+
+    if (isMinor && !guardianConsent) {
+      setError('Para cadastrar um menor de idade é preciso o consentimento do responsável (LGPD, art. 14).');
+      return;
+    }
+
+    const phoneDigits = whatsappPhone.replace(/\D/g, '');
+    if (phoneDigits && (phoneDigits.length < 10 || phoneDigits.length > 15)) {
+      setError('Telefone do WhatsApp inválido: use o formato internacional, ex.: 5511998887777.');
+      return;
+    }
+
+    const consent = !isMinor
+      ? { guardian_consent_at: null, guardian_consent_by: null, guardian_consent_version: null }
+      : previousConsent
+        ? {
+            guardian_consent_at: previousConsent.guardian_consent_at,
+            guardian_consent_by: previousConsent.guardian_consent_by,
+            guardian_consent_version: previousConsent.guardian_consent_version,
+          }
+        : { guardian_consent_at: new Date().toISOString(), guardian_consent_by: profile?.id ?? null, guardian_consent_version: LEGAL_VERSION };
 
     const dietaryArray = dietary
       .split(',')
@@ -193,6 +225,8 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       passport_expiry: passportExpiry || undefined,
       visa_status: visaStatus,
       height_cm: heightCm !== '' ? Number(heightCm) : undefined,
+      whatsapp_phone: phoneDigits || undefined,
+      ...consent,
       dietary_restrictions: dietaryArray,
       notes: notes.trim() || undefined,
       budget_limit_usd: Number(budgetLimit) || 0,
@@ -290,6 +324,42 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             />
           </div>
         </div>
+
+        <div>
+          <label className="block text-ink-300 font-semibold mb-1">WhatsApp (formato internacional)</label>
+          <input
+            type="tel"
+            value={whatsappPhone}
+            onChange={e => setWhatsappPhone(e.target.value)}
+            placeholder="Ex: 5511998887777"
+            className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 focus:outline-none focus:border-info-500"
+          />
+          <p className="mt-1 text-[11px] text-ink-500">
+            É por este número que o assistente reconhece quem escreve e envia o roteiro e os avisos.
+          </p>
+        </div>
+
+        {isMinor && (
+          <label className="p-3 rounded-xl bg-warning-500/5 border border-warning-500/30 flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={guardianConsent}
+              disabled={Boolean(previousConsent)}
+              onChange={e => setGuardianConsent(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-warning-500"
+            />
+            <span className="text-xs text-ink-200">
+              <strong className="text-warning-300">Consentimento do responsável (LGPD, art. 14).</strong>{' '}
+              Declaro ser pai, mãe ou responsável legal por este menor e consinto com o tratamento de data de nascimento, altura e telefone
+              para os alertas de restrição de atrações e os avisos da viagem, conforme a Política de Privacidade.
+              {previousConsent?.guardian_consent_at && (
+                <span className="block mt-1 text-[11px] text-ink-500">
+                  Registrado em {new Date(previousConsent.guardian_consent_at).toLocaleString('pt-BR')}.
+                </span>
+              )}
+            </span>
+          </label>
+        )}
 
         {isMinor && (
           <div className="p-3 rounded-xl bg-ink-950/60 border border-ink-800 flex items-center justify-between">

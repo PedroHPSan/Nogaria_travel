@@ -9,11 +9,9 @@ export interface AiDataDeps {
   client: SupabaseLike;
   tenantId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackConfigs?: AiProviderConfig[];
-  fallbackLogs?: AiUsageLog[];
 }
 
-export function useAiData({ client, tenantId, recordFailure, fallbackConfigs = [], fallbackLogs = [] }: AiDataDeps) {
+export function useAiData({ client, tenantId, recordFailure }: AiDataDeps) {
   const [aiConfigs, setAiConfigs] = useState<AiProviderConfig[]>([]);
   const [aiLogs, setAiLogs] = useState<AiUsageLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,16 +35,12 @@ export function useAiData({ client, tenantId, recordFailure, fallbackConfigs = [
 
       if (!configsRes.error && configsRes.data && configsRes.data.length > 0) {
         setAiConfigs((configsRes.data as AiProviderConfigRow[]).map(aiConfigFromRow));
-      } else if (fallbackConfigs.length > 0) {
-        setAiConfigs(fallbackConfigs);
       } else {
         setAiConfigs([]);
       }
 
       if (!logsRes.error && logsRes.data && logsRes.data.length > 0) {
         setAiLogs((logsRes.data as AiUsageLogRow[]).map(aiUsageLogFromRow));
-      } else if (fallbackLogs.length > 0) {
-        setAiLogs(fallbackLogs);
       } else {
         setAiLogs([]);
       }

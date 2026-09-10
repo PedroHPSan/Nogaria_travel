@@ -10,6 +10,9 @@ export interface Profile {
   full_name: string;
   avatar_url?: string;
   created_at: string;
+  /** Aceite dos termos/política (LGPD). null bloqueia o app na ConsentScreen. */
+  terms_accepted_at?: string | null;
+  terms_version?: string | null;
 }
 
 export interface Tenant {
@@ -40,7 +43,9 @@ export interface Participant {
   full_name: string;
   nickname?: string;
   birth_date: string;
+  /** Derivada de `birth_date` em `participantMapper.ts` na leitura — não existe no banco e nunca é gravada. */
   age: number;
+  /** Derivada de `age < 18` na leitura, pelo mesmo motivo. */
   is_minor: boolean;
   relationship: string;
   responsible_participant_id?: string;
@@ -53,6 +58,10 @@ export interface Participant {
   notes?: string;
   budget_limit_usd: number;
   quota_eligible?: boolean;
+  /** Consentimento do responsável para tratar dados do menor (LGPD art. 14). */
+  guardian_consent_at?: string | null;
+  guardian_consent_by?: string | null;
+  guardian_consent_version?: string | null;
   avatar_preset_id?: string | null;
   avatar_emoji?: string | null;
   avatar_color?: string | null;

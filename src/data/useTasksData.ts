@@ -9,10 +9,9 @@ export interface TasksDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackTasks?: Task[];
 }
 
-export function useTasksData({ client, tripId, recordFailure, fallbackTasks = [] }: TasksDataDeps) {
+export function useTasksData({ client, tripId, recordFailure }: TasksDataDeps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useTasksData({ client, tripId, recordFailure, fallbackTasks = []
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setTasks((data as TaskRow[]).map(taskFromRow));
-        } else if (fallbackTasks.length > 0) {
-          setTasks(fallbackTasks.filter(t => t.trip_id === tripId));
         } else {
           setTasks([]);
         }

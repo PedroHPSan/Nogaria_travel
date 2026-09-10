@@ -1,12 +1,12 @@
 import { buildParkDay, type RoteiroRow } from './shared';
 
 const ROWS: RoteiroRow[] = [
-  [1, 'Guardians of the Galaxy: Cosmic Rewind', 'World Discovery', 'attraction', 'S', { lightningLane: 'individual', description: 'Estratégia própria conforme o sistema de acesso disponível na viagem.' }],
-  [2, 'Test Track', 'World Discovery', 'attraction', 'S', { lightningLane: 'genie_plus', lightningLaneRank: 3 }],
-  [3, 'Mission: SPACE – Orange Mission', 'World Discovery', 'attraction', 'A', { lightningLane: 'genie_plus', lightningLaneRank: 6, description: 'Mesma atração-base da versão Green; registradas separadamente só para métrica de cobertura.' }],
-  [4, 'Mission: SPACE – Green Mission', 'World Discovery', 'attraction', 'B'],
+  [1, 'Guardians of the Galaxy: Cosmic Rewind', 'World Discovery', 'attraction', 'S', { minHeightCm: 107, lightningLane: 'individual', description: 'Estratégia própria conforme o sistema de acesso disponível na viagem.' }],
+  [2, 'Test Track', 'World Discovery', 'attraction', 'S', { minHeightCm: 102, lightningLane: 'genie_plus', lightningLaneRank: 3 }],
+  [3, 'Mission: SPACE – Orange Mission', 'World Discovery', 'attraction', 'A', { minHeightCm: 112, lightningLane: 'genie_plus', lightningLaneRank: 6, description: 'Mesma atração-base da versão Green; registradas separadamente só para métrica de cobertura.' }],
+  [4, 'Mission: SPACE – Green Mission', 'World Discovery', 'attraction', 'B', { minHeightCm: 102 }],
   [5, 'Advanced Training Lab', 'World Discovery', 'experience', 'C'],
-  [6, "Soarin' Across America", 'World Nature', 'attraction', 'S', { lightningLane: 'genie_plus', lightningLaneRank: 4, description: 'Versão de verão 2026 válida até 08/09 — confirmar no calendário oficial na data.' }],
+  [6, "Soarin' Across America", 'World Nature', 'attraction', 'S', { minHeightCm: 102, lightningLane: 'genie_plus', lightningLaneRank: 4, description: 'Versão de verão 2026 válida até 08/09 — confirmar no calendário oficial na data.' }],
   [7, 'Living with the Land', 'World Nature', 'attraction', 'A'],
   [8, 'Awesome Planet', 'World Nature', 'show', 'B', { showDurationMin: 10 }],
   [9, 'The Seas with Nemo & Friends', 'World Nature', 'attraction', 'A'],

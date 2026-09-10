@@ -23,20 +23,9 @@ import type {
 } from '../types/database.types';
 import type { PurchaseDecision } from '../types/purchase.types';
 
-import {
-  INITIAL_FLIGHTS,
-  INITIAL_ACCOMMODATIONS,
-  INITIAL_TRANSPORTS,
-  INITIAL_GIFT_CARDS,
-  INITIAL_PURCHASES,
-  INITIAL_TASKS,
-  INITIAL_DECISIONS,
-  INITIAL_AI_CONFIGS,
-  INITIAL_AI_LOGS
-} from '../services/initialMockData';
-
 import { runFullTripAudit } from '../services/auditEngine';
-import { formatCurrencyValue, convertCurrency, fetchLiveExchangeRate } from '../services/exchangeRateService';
+import { formatCurrencyValue, convertCurrency, fetchLiveExchangeRate, DEFAULT_EXCHANGE_RATE } from '../services/exchangeRateService';
+import type { ExchangeRateClient, ExchangeRateSource } from '../services/exchangeRateService';
 import { useAuth } from './AuthContext';
 import { newId } from '../services/ids';
 import { usePurchasesState } from '../features/purchases/usePurchasesState';
@@ -97,6 +86,8 @@ interface TripContextType {
   setCurrency: (c: Currency) => void;
   exchangeRate: number;
   exchangeRateDate: string;
+  /** De onde veio a taxa exibida: PTAX (tabela), mercado ao vivo, cache, ajuste manual ou default. */
+  exchangeRateSource: ExchangeRateSource;
   setExchangeRate: (rate: number) => void;
   formatAmount: (amountUSD: number) => string;
   convertAmount: (amountUSD: number) => number;
@@ -205,152 +196,6 @@ const STORAGE_KEY = 'ANTIGRAVITY_TRAVEL_PLATFORM_V1';
 // (ver src/data/useItineraryData.ts) — nada mais lê ou escreve nela. Inofensiva (limpa no
 // logout junto com o resto do prefixo), pode ser removida futuramente.
 
-const INITIAL_DOCUMENTS: DocumentFile[] = [
-  {
-    id: 'doc-01',
-    trip_id: 'trip-miami-orlando-2026',
-    title: 'Voucher Disney All-Star Movies',
-    category: 'hotel',
-    file_url: 'https://example.com/vouchers/disney-movies.pdf',
-    uploaded_at: '2026-07-20T10:00:00Z',
-    file_size: '1.2 MB',
-    notes: 'Reserva confirmada DSNY-994821'
-  },
-  {
-    id: 'doc-02',
-    trip_id: 'trip-miami-orlando-2026',
-    title: 'Bilhetes Voo AD 8702 Campinas -> Orlando',
-    category: 'flight',
-    file_url: 'https://example.com/vouchers/azul-ad8702.pdf',
-    uploaded_at: '2026-07-22T14:30:00Z',
-    file_size: '850 KB',
-    notes: 'Passagens de Pedro e Gabi'
-  },
-  {
-    id: 'doc-03',
-    trip_id: 'trip-miami-orlando-2026',
-    title: 'Confirmação Aluguel SUV Hertz FLL',
-    category: 'car',
-    file_url: 'https://example.com/vouchers/hertz-suv.pdf',
-    uploaded_at: '2026-07-23T09:15:00Z',
-    file_size: '420 KB',
-    notes: 'Devolução imprenterível em 19/09 às 17h30'
-  }
-];
-
-const INITIAL_LOYALTY: LoyaltyAccount[] = [
-  {
-    id: 'loy-01',
-    trip_id: 'trip-miami-orlando-2026',
-    program_name: 'Azul Fidelidade',
-    holder_id: 'p-pedro',
-    balance_points: 185000,
-    cpm_usd: 3.20,
-    cash_equivalent_usd: 592.00,
-    notes: 'Utilizado para emissão VCP -> MCO'
-  },
-  {
-    id: 'loy-02',
-    trip_id: 'trip-miami-orlando-2026',
-    program_name: 'LATAM Pass',
-    holder_id: 'p-barbara',
-    balance_points: 92000,
-    cpm_usd: 3.50,
-    cash_equivalent_usd: 322.00,
-    notes: 'Passagens GRU -> MIA'
-  },
-  {
-    id: 'loy-03',
-    trip_id: 'trip-miami-orlando-2026',
-    program_name: 'Marriott Bonvoy',
-    holder_id: 'p-barbara',
-    balance_points: 45000,
-    cpm_usd: 7.00,
-    cash_equivalent_usd: 315.00,
-    notes: 'Usado na hospedagem Four Points FLL'
-  }
-];
-
-const INITIAL_LUGGAGE: Luggage[] = [
-  {
-    id: 'lug-barbara-01',
-    trip_id: 'trip-miami-orlando-2026',
-    participant_id: 'p-barbara',
-    type: 'checked',
-    bag_identifier: 'Mala Grande Bárbara #1',
-    max_weight_kg: 23,
-    current_weight_kg: 14,
-    description: 'Roupas pessoais e produtos de higiene',
-    shopping_space_reserved_pct: 40
-  },
-  {
-    id: 'lug-barbara-02',
-    trip_id: 'trip-miami-orlando-2026',
-    participant_id: 'p-barbara',
-    type: 'checked',
-    bag_identifier: 'Mala Grande Bárbara #2 (Vazia para Compras)',
-    max_weight_kg: 23,
-    current_weight_kg: 3,
-    description: 'Mala expansível para compras de roupas e presentes',
-    shopping_space_reserved_pct: 90
-  },
-  {
-    id: 'lug-pedro-01',
-    trip_id: 'trip-miami-orlando-2026',
-    participant_id: 'p-pedro',
-    type: 'checked',
-    bag_identifier: 'Mala Rígida Pedro #1',
-    max_weight_kg: 23,
-    current_weight_kg: 16,
-    description: 'Equipamentos, roupas e itens de Gabi',
-    shopping_space_reserved_pct: 30
-  },
-  {
-    id: 'lug-gabi-01',
-    trip_id: 'trip-miami-orlando-2026',
-    participant_id: 'p-gabriela',
-    type: 'carry_on',
-    bag_identifier: 'Mala Infantil Gabi',
-    max_weight_kg: 10,
-    current_weight_kg: 6,
-    description: 'Brinquedos, troca de roupa e fraldas para o voo',
-    shopping_space_reserved_pct: 10
-  }
-];
-
-const INITIAL_EXPENSES: Expense[] = [
-  {
-    id: 'exp-01',
-    trip_id: 'trip-miami-orlando-2026',
-    description: 'Depósito Reserva Disney All-Star Movies',
-    amount: 500,
-    currency: 'USD',
-    amount_usd: 500,
-    amount_brl: 2810,
-    exchange_rate: 5.62,
-    category: 'accommodation',
-    paid_by_id: 'p-barbara',
-    beneficiary_ids: ['p-barbara', 'p-debora', 'p-pedro', 'p-gabriela'],
-    date: '2026-06-10',
-    status: 'paid'
-  },
-  {
-    id: 'exp-02',
-    trip_id: 'trip-miami-orlando-2026',
-    description: 'Taxas de Embarque Voo Azul (Pedro & Gabi)',
-    amount: 145.50,
-    currency: 'USD',
-    amount_usd: 145.50,
-    amount_brl: 817.71,
-    exchange_rate: 5.62,
-    category: 'flight',
-    paid_by_id: 'p-pedro',
-    beneficiary_ids: ['p-pedro', 'p-gabriela'],
-    date: '2026-07-01',
-    status: 'paid'
-  }
-];
-
 export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { tenantMemberships, activeTenantId, activeTenant: authActiveTenant } = useAuth();
   const tenants = tenantMemberships.map(m => m.tenant);
@@ -380,17 +225,21 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [exchangeRate, setExchangeRate] = useState<number>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_exchangeRate`);
     const parsed = saved ? Number(saved) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.62;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_EXCHANGE_RATE;
   });
+  const [exchangeRateSource, setExchangeRateSource] = useState<ExchangeRateSource>('default');
 
   const [exchangeRateDate, setExchangeRateDate] = useState<string>(() =>
     new Date().toLocaleDateString('pt-BR'),
   );
 
   useEffect(() => {
-    fetchLiveExchangeRate(exchangeRate).then(info => {
+    // O supabase-js real satisfaz o shape mínimo de ExchangeRateClient; o cast
+    // existe porque SupabaseLike (dos hooks de dados) não declara order/limit.
+    fetchLiveExchangeRate(exchangeRate, supabase as unknown as ExchangeRateClient).then(info => {
       if (info && Number.isFinite(info.rate) && info.rate > 0) {
         setExchangeRate(info.rate);
+        setExchangeRateSource(info.source);
         const [y, m, d] = info.lastUpdated.split('-');
         if (y && m && d) {
           setExchangeRateDate(`${d}/${m}/${y}`);
@@ -398,6 +247,12 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
   }, []);
+
+  /** Ajuste manual pelo Header: passa a valer até o próximo carregamento. */
+  const setExchangeRateManual = (rate: number) => {
+    setExchangeRate(rate);
+    setExchangeRateSource('manual');
+  };
 
   // Helper formatting & calculation functions
   const formatAmount = (amountUSD: number): string => {
@@ -468,7 +323,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackFlights: INITIAL_FLIGHTS,
   });
 
   const {
@@ -480,7 +334,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackAccommodations: INITIAL_ACCOMMODATIONS,
   });
 
   const {
@@ -492,7 +345,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackTransports: INITIAL_TRANSPORTS,
   });
 
   const {
@@ -504,7 +356,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackGiftCards: INITIAL_GIFT_CARDS,
   });
 
   const {
@@ -516,7 +367,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackPurchases: INITIAL_PURCHASES,
   });
 
   const {
@@ -528,7 +378,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackLuggages: INITIAL_LUGGAGE,
   });
 
   const {
@@ -541,7 +390,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackExpenses: INITIAL_EXPENSES,
   });
 
   const {
@@ -554,7 +402,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackTasks: INITIAL_TASKS,
   });
 
   const {
@@ -566,7 +413,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackDecisions: INITIAL_DECISIONS,
   });
 
   const {
@@ -577,7 +423,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackDocuments: INITIAL_DOCUMENTS,
   });
 
   const {
@@ -589,7 +434,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
-    fallbackLoyalty: INITIAL_LOYALTY,
   });
 
   const {
@@ -601,8 +445,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tenantId: activeTenantId,
     recordFailure,
-    fallbackConfigs: INITIAL_AI_CONFIGS,
-    fallbackLogs: INITIAL_AI_LOGS,
   });
 
   const {
@@ -847,7 +689,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrency,
         exchangeRate,
         exchangeRateDate,
-        setExchangeRate,
+        exchangeRateSource,
+        setExchangeRate: setExchangeRateManual,
         formatAmount,
         convertAmount,
 

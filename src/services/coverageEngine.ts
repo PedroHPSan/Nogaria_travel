@@ -1,4 +1,5 @@
 import type { ItineraryItem, Participant } from '../types/database.types';
+import { isParticipantEligible } from './eligibility';
 
 export interface CoverageCount {
   done: number;
@@ -18,16 +19,6 @@ const ITEM_TYPES: CoverageItemType[] = ['attraction', 'show', 'experience', 'cha
 
 function emptyCount(): CoverageCount {
   return { done: 0, total: 0 };
-}
-
-function isParticipantEligible(item: ItineraryItem, participant: Participant): boolean {
-  if (item.min_height_cm && participant.height_cm && participant.height_cm < item.min_height_cm) {
-    return false;
-  }
-  if (item.min_age_years && participant.age < item.min_age_years) {
-    return false;
-  }
-  return true;
 }
 
 export function computeCoverage(items: ItineraryItem[], participants: Participant[]): DayCoverage {

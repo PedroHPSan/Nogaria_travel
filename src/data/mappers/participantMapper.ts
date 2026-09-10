@@ -24,6 +24,9 @@ export interface ParticipantRow {
   avatar_preset_id: string | null;
   avatar_emoji: string | null;
   avatar_color: string | null;
+  guardian_consent_at: string | null;
+  guardian_consent_by: string | null;
+  guardian_consent_version: string | null;
 }
 
 /**
@@ -69,6 +72,9 @@ export function participantFromRow(row: ParticipantRow, today: string): Particip
     avatar_preset_id: row.avatar_preset_id,
     avatar_emoji: row.avatar_emoji,
     avatar_color: row.avatar_color,
+    guardian_consent_at: row.guardian_consent_at,
+    guardian_consent_by: row.guardian_consent_by,
+    guardian_consent_version: row.guardian_consent_version,
   };
 }
 
@@ -93,5 +99,8 @@ export function participantToInsert(p: Participant, today: string): ParticipantR
     avatar_preset_id: p.avatar_preset_id ?? null,
     avatar_emoji: p.avatar_emoji ?? null,
     avatar_color: p.avatar_color ?? null,
+    guardian_consent_at: p.guardian_consent_at ?? null,
+    guardian_consent_by: p.guardian_consent_by ?? null,
+    guardian_consent_version: p.guardian_consent_version ?? null,
   };
 }

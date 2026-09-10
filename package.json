@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
+    "test:isolation": "vitest run --config vitest.isolation.config.ts",
     "preview": "vite preview",
     "mcp:travel": "tsx mcp-travel/index.ts"
   },

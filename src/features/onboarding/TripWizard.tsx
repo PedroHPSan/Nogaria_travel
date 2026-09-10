@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Plane, Users, Check, Plus, Trash2 } from 'lucide-react';
 import { useTrip } from '../../context/TripContext';
 import { useAuth } from '../../context/AuthContext';
+import { deriveAge } from '../../data/mappers/participantMapper';
+import { LEGAL_VERSION } from '../legal/legalTexts';
 
 interface RascunhoParticipante {
   full_name: string;
@@ -35,6 +37,11 @@ export const TripWizard: React.FC = () => {
   const [volta, setVolta] = useState('');
 
   const [pessoas, setPessoas] = useState<RascunhoParticipante[]>([participanteVazio()]);
+  const [consentimentoMenores, setConsentimentoMenores] = useState(false);
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const ehMenor = (p: RascunhoParticipante) => Boolean(p.birth_date) && deriveAge(p.birth_date, hoje) < 18;
+  const temMenor = pessoas.some(ehMenor);
 
   const alterarPessoa = (i: number, campo: keyof RascunhoParticipante, valor: string) => {
     setPessoas(prev => prev.map((p, idx) => (idx === i ? { ...p, [campo]: valor } : p)));
@@ -55,6 +62,7 @@ export const TripWizard: React.FC = () => {
       if (!p.full_name.trim()) return 'Todo participante precisa de nome.';
       if (!p.birth_date) return `Informe a data de nascimento de ${p.full_name.trim()}.`;
     }
+    if (temMenor && !consentimentoMenores) return 'Para cadastrar um menor de idade é preciso o consentimento do responsável (LGPD, art. 14).';
     return '';
   };
 
@@ -99,6 +107,9 @@ export const TripWizard: React.FC = () => {
         relationship: p.relationship.trim() || 'Membro do Grupo',
         budget_limit_usd: Number(p.budget_limit_usd) || 0,
         avatar_color: CORES[i % CORES.length],
+        ...(ehMenor(p)
+          ? { guardian_consent_at: new Date().toISOString(), guardian_consent_by: profile?.id ?? null, guardian_consent_version: LEGAL_VERSION }
+          : {}),
       });
     });
 
@@ -199,6 +210,22 @@ export const TripWizard: React.FC = () => {
             <button onClick={() => setPessoas(prev => [...prev, participanteVazio()])} className="flex items-center gap-1.5 text-sm font-semibold text-info-400 hover:text-info-300">
               <Plus size={14} /> Adicionar pessoa
             </button>
+
+            {temMenor && (
+              <label className="p-3 rounded-xl bg-warning-500/5 border border-warning-500/30 flex items-start gap-3 cursor-pointer text-xs text-ink-200">
+                <input
+                  type="checkbox"
+                  checked={consentimentoMenores}
+                  onChange={e => setConsentimentoMenores(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-warning-500"
+                />
+                <span>
+                  <strong className="text-warning-300">Consentimento do responsável (LGPD, art. 14).</strong>{' '}
+                  Declaro ser pai, mãe ou responsável legal pelos menores acima e consinto com o tratamento de data de nascimento, altura e telefone
+                  para os alertas de restrição de atrações e os avisos da viagem, conforme a Política de Privacidade.
+                </span>
+              </label>
+            )}
           </div>
         )}
 

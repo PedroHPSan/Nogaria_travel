@@ -1,7 +1,7 @@
 import { buildParkDay, type RoteiroRow } from './shared';
 
 const ROWS: RoteiroRow[] = [
-  [1, 'Avatar Flight of Passage', 'Pandora', 'attraction', 'S', { description: 'Estratégia própria conforme o acesso disponível.' }],
+  [1, 'Avatar Flight of Passage', 'Pandora', 'attraction', 'S', { minHeightCm: 112, description: 'Estratégia própria conforme o acesso disponível.' }],
   [2, "Na'vi River Journey", 'Pandora', 'attraction', 'S', { lightningLane: 'genie_plus', lightningLaneRank: 1 }],
   [3, "Exploração de Pandora e Valley of Mo'ara", 'Pandora', 'experience', 'B'],
   [4, 'Kilimanjaro Safaris', 'Africa', 'attraction', 'S', { lightningLane: 'genie_plus', lightningLaneRank: 2 }],
@@ -11,9 +11,9 @@ const ROWS: RoteiroRow[] = [
   [8, 'Affection Section', "Rafiki's Planet Watch", 'experience', 'B'],
   [9, 'Conservation Station', "Rafiki's Planet Watch", 'experience', 'B'],
   [10, 'Animation Experience at Conservation Station', "Rafiki's Planet Watch", 'experience', 'A'],
-  [11, 'Expedition Everest – Legend of the Forbidden Mountain', 'Asia', 'attraction', 'S', { lightningLane: 'genie_plus', lightningLaneRank: 3 }],
+  [11, 'Expedition Everest – Legend of the Forbidden Mountain', 'Asia', 'attraction', 'S', { minHeightCm: 112, lightningLane: 'genie_plus', lightningLaneRank: 3 }],
   [12, 'Maharajah Jungle Trek', 'Asia', 'experience', 'A'],
-  [13, 'Kali River Rapids', 'Asia', 'attraction', 'A', { lightningLane: 'genie_plus', lightningLaneRank: 4 }],
+  [13, 'Kali River Rapids', 'Asia', 'attraction', 'A', { minHeightCm: 97, lightningLane: 'genie_plus', lightningLaneRank: 4 }],
   [14, 'Feathered Friends in Flight!', 'Asia', 'show', 'A'],
   [15, 'Zootopia: Better Zoogether!', 'Discovery Island', 'show', 'A'],
   [16, 'Discovery Island Trails', 'Discovery Island', 'experience', 'B'],

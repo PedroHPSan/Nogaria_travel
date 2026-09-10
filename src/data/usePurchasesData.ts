@@ -9,10 +9,9 @@ export interface PurchasesDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackPurchases?: PurchaseItem[];
 }
 
-export function usePurchasesData({ client, tripId, recordFailure, fallbackPurchases = [] }: PurchasesDataDeps) {
+export function usePurchasesData({ client, tripId, recordFailure }: PurchasesDataDeps) {
   const [purchases, setPurchases] = useState<PurchaseItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function usePurchasesData({ client, tripId, recordFailure, fallbackPurcha
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setPurchases((data as PurchaseItemRow[]).map(purchaseItemFromRow));
-        } else if (fallbackPurchases.length > 0) {
-          setPurchases(fallbackPurchases.filter(p => p.trip_id === tripId));
         } else {
           setPurchases([]);
         }

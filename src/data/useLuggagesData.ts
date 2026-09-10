@@ -9,10 +9,9 @@ export interface LuggagesDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
-  fallbackLuggages?: Luggage[];
 }
 
-export function useLuggagesData({ client, tripId, recordFailure, fallbackLuggages = [] }: LuggagesDataDeps) {
+export function useLuggagesData({ client, tripId, recordFailure }: LuggagesDataDeps) {
   const [luggages, setLuggages] = useState<Luggage[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,8 +33,6 @@ export function useLuggagesData({ client, tripId, recordFailure, fallbackLuggage
         if (cancelado) return;
         if (!error && data && data.length > 0) {
           setLuggages((data as LuggageRow[]).map(luggageFromRow));
-        } else if (fallbackLuggages.length > 0) {
-          setLuggages(fallbackLuggages.filter(l => l.trip_id === tripId));
         } else {
           setLuggages([]);
         }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { TaskDecisionModal } from '../../components/modals/TaskDecisionModal';
 import { ViewHeader } from '../../components/ui/ViewHeader';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { SubTabs } from '../../components/ui/SubTabs';
 import { Avatar } from '../../components/Avatar';
 import type { Task, Decision } from '../../types/database.types';
@@ -95,6 +96,9 @@ export const TasksDecisionsView: React.FC = () => {
             </button>
           </div>
 
+          {tripTasks.length === 0 && (
+            <EmptyState icon={CheckSquare} title="Nenhuma pendência" description="Tudo em dia. Pendências com prazo em até 48h também chegam pelo bot do WhatsApp." />
+          )}
           <div className="space-y-3">
             {tripTasks.map(t => {
               const assigned = participants.find(p => p.id === t.assigned_to_id);
@@ -183,6 +187,9 @@ export const TasksDecisionsView: React.FC = () => {
             </button>
           </div>
 
+          {tripDecisions.length === 0 && (
+            <EmptyState icon={History} title="Nenhuma decisão registrada" description="Registre trocas de hotel, escolhas de parque e outras decisões com o motivo, para o histórico da viagem." />
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tripDecisions.map(d => {
               const decidedBy = participants.find(p => p.id === d.decided_by_id);
