@@ -249,6 +249,26 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
     },
   },
   {
+    name: 'create_flight_from_document',
+    description:
+      'Grava no roteiro o voo que o bot extraiu de uma foto/PDF de confirmação enviada pela família. O bot já mostrou o resumo do voo na mensagem anterior; chame com confirm=true SOMENTE quando a família confirmar explicitamente esse resumo ("sim", "pode gravar", "isso"). Se pedirem correção, não chame — peça pra mandar o documento de novo ou ajustar no app. Sem documento prévio não há o que gravar.',
+    parameters: {
+      type: 'object',
+      properties: { confirm: { type: 'boolean', description: CONFIRM_DESCRIPTION } },
+      required: ['confirm'],
+    },
+  },
+  {
+    name: 'create_accommodation_from_document',
+    description:
+      'Grava a hospedagem que o bot extraiu de uma foto/PDF de voucher enviada pela família. Mesma regra do voo: só com confirm=true depois da família confirmar explicitamente o resumo mostrado na mensagem anterior.',
+    parameters: {
+      type: 'object',
+      properties: { confirm: { type: 'boolean', description: CONFIRM_DESCRIPTION } },
+      required: ['confirm'],
+    },
+  },
+  {
     name: 'save_trip_idea',
     description:
       'Salva uma ideia de negócio ou de viagem que o participante compartilhou, para a sessão de brainstorming da família. ' +
@@ -1044,6 +1064,53 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
             return { cancelled: true, title: payload.itemTitle };
           },
         );
+      }
+
+      // Segunda fase da ingestão de voucher (#28). A primeira fase não é uma
+      // tool: é o webhook, ao receber a foto/PDF, que extrai e deixa a
+      // pendência em pending_writes com o preview. Aqui só se consome.
+      case 'create_flight_from_document':
+      case 'create_accommodation_from_document': {
+        if (args.confirm !== true) {
+          return { created: false, message: 'Só cadastro a partir de uma foto ou PDF da confirmação — manda o documento que eu leio e mostro o resumo pra confirmar.' };
+        }
+        const payload = await consumePendingWrite(supabase, { senderPhone, toolName: name });
+        if (!payload) {
+          return { created: false, message: 'Não achei nenhum documento pendente de confirmação (a pendência dura 10 minutos). Manda a foto de novo?' };
+        }
+
+        if (name === 'create_flight_from_document') {
+          const { error } = await supabase.from('flights').insert({
+            trip_id: tripId,
+            airline: payload.airline,
+            flight_number: payload.flight_number,
+            origin_airport: payload.origin_airport,
+            destination_airport: payload.destination_airport,
+            departure_time: payload.departure_time,
+            arrival_time: payload.arrival_time,
+            booking_code: payload.booking_code,
+            passenger_ids: payload.passenger_ids,
+            status: 'confirmed',
+            notes: 'Cadastrado pelo bot a partir de documento enviado no WhatsApp.',
+          });
+          if (error) throw new Error(`Erro ao gravar voo: ${error.message}`);
+          return { created: true, kind: 'flight', summary: payload.summary };
+        }
+
+        const { error } = await supabase.from('accommodations').insert({
+          trip_id: tripId,
+          name: payload.name,
+          address: payload.address || 'Endereço não informado no voucher',
+          city: payload.city || 'A confirmar',
+          check_in: payload.check_in,
+          check_out: payload.check_out,
+          confirmation_code: payload.confirmation_code,
+          guest_ids: payload.guest_ids,
+          status: 'confirmed',
+          notes: 'Cadastrado pelo bot a partir de documento enviado no WhatsApp.',
+        });
+        if (error) throw new Error(`Erro ao gravar hospedagem: ${error.message}`);
+        return { created: true, kind: 'hotel', summary: payload.summary };
       }
 
       case 'save_trip_idea': {

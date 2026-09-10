@@ -1,8 +1,17 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
-import { chatWithTools, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
-import { sendTextMessage } from '../_shared/whatsappClient.ts';
+import { chatWithTools, extractJsonFromDocument, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
+import { downloadMedia, sendTextMessage } from '../_shared/whatsappClient.ts';
 import { fetchTripContext, buildSystemPrompt, localDateIso } from '../_shared/tripContext.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
+import { stagePendingWrite } from '../_shared/pendingWrites.ts';
+import {
+  VOUCHER_PROMPT,
+  airportTimeZone,
+  buildVoucherPreview,
+  matchParticipants,
+  parseVoucherExtraction,
+  zonedLocalToUtcIso,
+} from '../_shared/voucherExtract.ts';
 import {
   evaluateQuota,
   formatQuotaExceeded,
@@ -40,12 +49,25 @@ interface IncomingLocationMessage {
   phoneNumberId: string;
 }
 
-type IncomingMessage = IncomingTextMessage | IncomingLocationMessage;
+interface IncomingMediaMessage {
+  kind: 'media';
+  waMessageId: string;
+  from: string;
+  mediaId: string;
+  mimeType: string;
+  phoneNumberId: string;
+}
 
-// Extrai mensagens de texto e localização do payload do webhook da Meta.
-// Qualquer outro tipo (status de entrega, mídia, reações) é ignorado
-// propositalmente. Localização entra aqui porque get_directions depende dela
-// como origem — antes disso o webhook descartava esse tipo de mensagem.
+type IncomingMessage = IncomingTextMessage | IncomingLocationMessage | IncomingMediaMessage;
+
+// Só o que o Gemini lê como documento: foto (e-ticket na tela, voucher
+// impresso) ou PDF. Áudio/vídeo/sticker continuam ignorados.
+const VOUCHER_MIME_RE = /^(image\/(jpeg|png|webp)|application\/pdf)$/i;
+
+// Extrai mensagens de texto, localização e mídia (imagem/PDF) do payload do
+// webhook da Meta. Status de entrega, reações, áudio e vídeo são ignorados
+// propositalmente. Localização entra porque get_directions depende dela como
+// origem; mídia entra pela ingestão de voucher (#28).
 function extractIncomingMessages(payload: unknown): IncomingMessage[] {
   const messages: IncomingMessage[] = [];
   if (typeof payload !== 'object' || payload === null) return messages;
@@ -77,6 +99,12 @@ function extractIncomingMessages(payload: unknown): IncomingMessage[] {
         const location = m.location as Record<string, unknown> | undefined;
         if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
           messages.push({ kind: 'location', waMessageId: m.id, from: m.from, lat: location.latitude, lng: location.longitude, phoneNumberId });
+          continue;
+        }
+
+        const media = (m.image ?? m.document) as Record<string, unknown> | undefined;
+        if (media && typeof media.id === 'string' && typeof media.mime_type === 'string' && VOUCHER_MIME_RE.test(media.mime_type)) {
+          messages.push({ kind: 'media', waMessageId: m.id, from: m.from, mediaId: media.id, mimeType: media.mime_type, phoneNumberId });
         }
       }
     }
@@ -181,6 +209,138 @@ async function handleLocationMessage(supabase: SupabaseClient, msg: IncomingLoca
   });
 
   return 'replied:location';
+}
+
+/**
+ * Foto/PDF de confirmação (#28): baixa da Meta, o Gemini extrai o voo ou a
+ * hospedagem em JSON, e o resultado vira uma pendência de confirmação em duas
+ * fases (pending_writes) — a mesma mecânica de reschedule/mark_done. A família
+ * confirma na mensagem seguinte e a tool create_*_from_document grava. Nada é
+ * gravado sem o "sim": extração de documento erra, e um voo com horário
+ * errado no roteiro é pior que pedir pra confirmar.
+ */
+async function handleMediaMessage(supabase: SupabaseClient, msg: IncomingMediaMessage): Promise<string> {
+  const startedAt = Date.now();
+  const { data: config } = await supabase
+    .from('whatsapp_configs')
+    .select('tenant_id, timezone, enabled')
+    .eq('phone_number_id', msg.phoneNumberId)
+    .maybeSingle();
+  if (!config || !config.enabled) return 'ignored:no-config';
+
+  const { error: insertErr } = await supabase.from('whatsapp_messages').insert({
+    tenant_id: config.tenant_id,
+    wa_message_id: msg.waMessageId,
+    direction: 'inbound',
+    sender_phone: msg.from,
+    body: '[documento enviado]',
+    kind: 'chat',
+  });
+  if (insertErr?.code === '23505') return 'ignored:duplicate';
+  if (insertErr) throw new Error(`Falha ao registrar mensagem: ${insertErr.message}`);
+
+  const metaToken = Deno.env.get('META_WA_TOKEN') ?? '';
+  const reply = async (text: string) => {
+    const sent = await sendTextMessage({ phoneNumberId: msg.phoneNumberId, accessToken: metaToken, to: msg.from, text });
+    await supabase.from('whatsapp_messages').insert({
+      tenant_id: config.tenant_id,
+      wa_message_id: sent.waMessageId,
+      direction: 'outbound',
+      sender_phone: msg.from,
+      body: text,
+      kind: 'chat',
+    });
+  };
+
+  const todayIso = localDateIso(new Date(), config.timezone);
+  const ctx = await fetchTripContext(supabase, config.tenant_id, todayIso);
+  if (!ctx.trip) {
+    await reply('Recebi o documento, mas não achei uma viagem ativa pra cadastrar. Cria a viagem no app primeiro! 🧳');
+    return 'replied:no-trip';
+  }
+
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) throw new Error('GEMINI_API_KEY não configurada nas secrets do Supabase.');
+  const { data: aiConfig } = await supabase
+    .from('ai_provider_configs')
+    .select('model_name')
+    .eq('tenant_id', config.tenant_id)
+    .eq('provider', 'gemini')
+    .eq('is_active', true)
+    .order('is_default', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const model = resolveGeminiModel(aiConfig?.model_name);
+
+  const media = await downloadMedia({ mediaId: msg.mediaId, accessToken: metaToken });
+  const { json, usage } = await extractJsonFromDocument({ apiKey, model, mimeType: media.mimeType, base64: media.base64, prompt: VOUCHER_PROMPT });
+  const extraction = parseVoucherExtraction(json);
+
+  try {
+    const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
+    await supabase.from('ai_usage_logs').insert({
+      tenant_id: config.tenant_id,
+      user_name: msg.from,
+      function_name: 'voucher_ingest',
+      provider: 'gemini',
+      model,
+      tokens_input: usage.tokensIn,
+      tokens_output: usage.tokensOut,
+      estimated_cost_usd: Number(cost.toFixed(6)),
+      timestamp: new Date().toISOString(),
+      latency_ms: Date.now() - startedAt,
+      tool_rounds: 0,
+      tools_called: '',
+    });
+  } catch (err) {
+    console.error(`[whatsapp-webhook] Falha ao registrar telemetria do voucher ${msg.waMessageId}:`, err);
+  }
+
+  if (!extraction) {
+    await reply('Recebi o arquivo, mas não consegui identificar um voo ou hospedagem nele. 🤔 Manda uma foto mais nítida da confirmação (com número do voo/localizador ou nome do hotel e datas) que eu tento de novo.');
+    return 'replied:voucher-unreadable';
+  }
+
+  const names = extraction.kind === 'flight' ? extraction.passengers : extraction.guests;
+  const participantIds = matchParticipants(names, ctx.participants);
+  const participantNames = ctx.participants.filter(p => participantIds.includes(p.id)).map(p => p.nickname ?? p.full_name);
+  const preview = buildVoucherPreview(extraction, participantNames);
+
+  const payload =
+    extraction.kind === 'flight'
+      ? {
+          airline: extraction.airline,
+          flight_number: extraction.flight_number,
+          origin_airport: extraction.origin_airport,
+          destination_airport: extraction.destination_airport,
+          departure_time: zonedLocalToUtcIso(extraction.departure_local, airportTimeZone(extraction.origin_airport, config.timezone)),
+          arrival_time: zonedLocalToUtcIso(extraction.arrival_local, airportTimeZone(extraction.destination_airport, config.timezone)),
+          booking_code: extraction.booking_code,
+          passenger_ids: participantIds,
+          summary: preview,
+        }
+      : {
+          name: extraction.name,
+          address: extraction.address,
+          city: extraction.city,
+          check_in: extraction.check_in,
+          check_out: extraction.check_out,
+          confirmation_code: extraction.confirmation_code,
+          guest_ids: participantIds,
+          summary: preview,
+        };
+
+  await stagePendingWrite(supabase, {
+    tenantId: config.tenant_id,
+    tripId: ctx.trip.id,
+    senderPhone: msg.from,
+    toolName: extraction.kind === 'flight' ? 'create_flight_from_document' : 'create_accommodation_from_document',
+    payload,
+    preview,
+  });
+
+  await reply(`${preview}\n\nResponde *sim* que eu gravo, ou me diz o que está errado.`);
+  return `replied:voucher-${extraction.kind}`;
 }
 
 async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage): Promise<string> {
@@ -436,7 +596,7 @@ async function quotaNoticeSentToday(
  * falha do Gemini ou do banco vira silêncio absoluto do lado da família — o
  * pior modo de falha possível, porque é indistinguível de "o bot ignorou".
  */
-async function sendFallback(msg: IncomingTextMessage): Promise<boolean> {
+async function sendFallback(msg: Pick<IncomingTextMessage, 'from' | 'phoneNumberId'>): Promise<boolean> {
   try {
     await sendTextMessage({
       phoneNumberId: msg.phoneNumberId,
@@ -455,11 +615,16 @@ async function processMessages(supabase: SupabaseClient, messages: IncomingMessa
   const results: Record<string, string> = {};
   for (const msg of messages) {
     try {
-      results[msg.waMessageId] = msg.kind === 'location' ? await handleLocationMessage(supabase, msg) : await handleMessage(supabase, msg);
+      results[msg.waMessageId] =
+        msg.kind === 'location'
+          ? await handleLocationMessage(supabase, msg)
+          : msg.kind === 'media'
+            ? await handleMediaMessage(supabase, msg)
+            : await handleMessage(supabase, msg);
     } catch (error) {
       // Falhas individuais ficam no log da function (Dashboard → Edge Functions → Logs).
       console.error(`[whatsapp-webhook] Falha ao processar ${msg.waMessageId}:`, error);
-      results[msg.waMessageId] = msg.kind === 'text' && (await sendFallback(msg)) ? 'error:fallback-enviado' : 'error';
+      results[msg.waMessageId] = msg.kind !== 'location' && (await sendFallback(msg)) ? 'error:fallback-enviado' : 'error';
     }
     console.log(`[whatsapp-webhook] ${msg.waMessageId}: ${results[msg.waMessageId]}`);
   }

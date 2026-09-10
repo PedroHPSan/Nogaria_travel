@@ -167,6 +167,32 @@ async function generateContent(
 }
 
 /**
+ * Extração estruturada de uma imagem/PDF (voucher, e-ticket): manda o arquivo
+ * inline + instrução e força resposta JSON. Sem tools, sem histórico —
+ * é uma chamada só, temperatura zero. Devolve o JSON já parseado (ou null
+ * se o modelo não devolveu JSON válido) e o uso de tokens.
+ */
+export async function extractJsonFromDocument(input: {
+  apiKey: string;
+  model: string;
+  mimeType: string;
+  base64: string;
+  prompt: string;
+}): Promise<{ json: unknown; usage: Pick<GeminiUsage, 'tokensIn' | 'tokensOut'> }> {
+  const data = await generateContent(input.model, input.apiKey, 0, {
+    contents: [{ role: 'user', parts: [{ inlineData: { mimeType: input.mimeType, data: input.base64 } }, { text: input.prompt }] }],
+    generationConfig: { temperature: 0, responseMimeType: 'application/json' },
+  });
+  const usage = { tokensIn: data.usageMetadata?.promptTokenCount ?? 0, tokensOut: data.usageMetadata?.candidatesTokenCount ?? 0 };
+  const text = (data.candidates?.[0]?.content?.parts ?? []).map(p => p.text ?? '').join('').trim();
+  try {
+    return { json: text ? JSON.parse(text) : null, usage };
+  } catch {
+    return { json: null, usage };
+  }
+}
+
+/**
  * Conversa com o Gemini executando function calling em loop:
  * cada functionCall do modelo é executada via `executeTool` e o resultado
  * volta ao modelo até ele responder com texto (ou estourar MAX_TOOL_ROUNDS).
