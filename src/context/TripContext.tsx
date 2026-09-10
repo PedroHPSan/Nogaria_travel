@@ -52,6 +52,7 @@ import { useAuditResolutionsData } from '../data/useAuditResolutionsData';
 import { useDocumentsData } from '../data/useDocumentsData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
+import type { RealtimeClientLike } from '../data/useRealtimeTable';
 
 export interface DocumentFile {
   id: string;
@@ -207,6 +208,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { failures, recordFailure, dismissFailure, retryFailure } = useWriteFailures();
 
   const client = supabase as unknown as SupabaseLike;
+  // Realtime é melhoria, não pré-requisito: o mesmo client real do supabase-js
+  // satisfaz RealtimeClientLike (channel/on/subscribe/removeChannel), então o
+  // cast segue o mesmo padrão de SupabaseLike acima.
+  const realtime = supabase as unknown as RealtimeClientLike;
   const hoje = new Date().toISOString().split('T')[0];
 
   const { trips, loading: tripsLoading, createTrip } = useTripsData({
@@ -214,6 +219,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tenantId: activeTenantId,
     nowIso: () => new Date().toISOString(),
     recordFailure,
+    realtime,
   });
 
   // Currency & Live Exchange Rate State
@@ -289,6 +295,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tripId: activeTripIdResolvido,
     today: hoje,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -301,6 +308,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -312,6 +320,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -323,6 +332,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -334,6 +344,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -345,6 +356,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -356,6 +368,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -367,6 +380,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -378,6 +392,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -390,6 +405,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -402,6 +418,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -413,6 +430,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -423,6 +441,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {
@@ -434,6 +453,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
   });
 
   const {

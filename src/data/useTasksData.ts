@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Task } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { taskFromRow, taskToInsert, type TaskRow } from './mappers/taskMapper';
 
@@ -9,9 +11,10 @@ export interface TasksDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useTasksData({ client, tripId, recordFailure }: TasksDataDeps) {
+export function useTasksData({ client, tripId, recordFailure, realtime }: TasksDataDeps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function useTasksData({ client, tripId, recordFailure }: TasksDataDeps) {
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<TaskRow>({
+    client: realtime ?? null,
+    table: 'tasks',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const task = taskFromRow(row);
+      setTasks(prev => (prev.some(x => x.id === task.id) ? prev : [...prev, task]));
+    },
+    onUpdate: row => {
+      const task = taskFromRow(row);
+      setTasks(prev => prev.map(x => (x.id === task.id ? task : x)));
+    },
+    onDelete: old => {
+      setTasks(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addTask = useCallback(
     (data: Omit<Task, 'id' | 'created_at'>) => {

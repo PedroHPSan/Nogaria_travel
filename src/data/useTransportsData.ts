@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { TransportReservation } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { transportFromRow, transportToInsert, type TransportReservationRow } from './mappers/transportMapper';
 
@@ -9,9 +11,10 @@ export interface TransportsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useTransportsData({ client, tripId, recordFailure }: TransportsDataDeps) {
+export function useTransportsData({ client, tripId, recordFailure, realtime }: TransportsDataDeps) {
   const [transports, setTransports] = useState<TransportReservation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function useTransportsData({ client, tripId, recordFailure }: TransportsD
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<TransportReservationRow>({
+    client: realtime ?? null,
+    table: 'transport_reservations',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const transport = transportFromRow(row);
+      setTransports(prev => (prev.some(x => x.id === transport.id) ? prev : [...prev, transport]));
+    },
+    onUpdate: row => {
+      const transport = transportFromRow(row);
+      setTransports(prev => prev.map(x => (x.id === transport.id ? transport : x)));
+    },
+    onDelete: old => {
+      setTransports(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addTransport = useCallback(
     (data: Omit<TransportReservation, 'id'>) => {

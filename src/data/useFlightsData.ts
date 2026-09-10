@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Flight } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { flightFromRow, flightToInsert, type FlightRow } from './mappers/flightMapper';
 
@@ -9,9 +11,10 @@ export interface FlightsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useFlightsData({ client, tripId, recordFailure }: FlightsDataDeps) {
+export function useFlightsData({ client, tripId, recordFailure, realtime }: FlightsDataDeps) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function useFlightsData({ client, tripId, recordFailure }: FlightsDataDep
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<FlightRow>({
+    client: realtime ?? null,
+    table: 'flights',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const flight = flightFromRow(row);
+      setFlights(prev => (prev.some(x => x.id === flight.id) ? prev : [...prev, flight]));
+    },
+    onUpdate: row => {
+      const flight = flightFromRow(row);
+      setFlights(prev => prev.map(x => (x.id === flight.id ? flight : x)));
+    },
+    onDelete: old => {
+      setFlights(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addFlight = useCallback(
     (data: Omit<Flight, 'id'>) => {

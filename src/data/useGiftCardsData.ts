@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { GiftCard } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { giftCardFromRow, giftCardToInsert, type GiftCardRow } from './mappers/giftCardMapper';
 import { calculateGiftCardFinancials } from '../services/giftCardCalculator';
@@ -10,9 +12,10 @@ export interface GiftCardsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useGiftCardsData({ client, tripId, recordFailure }: GiftCardsDataDeps) {
+export function useGiftCardsData({ client, tripId, recordFailure, realtime }: GiftCardsDataDeps) {
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,6 +47,23 @@ export function useGiftCardsData({ client, tripId, recordFailure }: GiftCardsDat
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<GiftCardRow>({
+    client: realtime ?? null,
+    table: 'gift_cards',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const card = giftCardFromRow(row);
+      setGiftCards(prev => (prev.some(x => x.id === card.id) ? prev : [...prev, card]));
+    },
+    onUpdate: row => {
+      const card = giftCardFromRow(row);
+      setGiftCards(prev => prev.map(x => (x.id === card.id ? card : x)));
+    },
+    onDelete: old => {
+      setGiftCards(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addGiftCard = useCallback(
     (data: Omit<GiftCard, 'id' | 'cashback_amount' | 'net_cost' | 'effective_savings' | 'effective_savings_pct'>) => {

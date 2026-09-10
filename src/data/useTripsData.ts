@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Trip } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { tripFromRow, tripToInsert, type TripRow } from './mappers/tripMapper';
 
@@ -29,9 +31,10 @@ export interface TripsDataDeps {
   /** Injetado para o teste controlar o tempo. */
   nowIso: () => string;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useTripsData({ client, tenantId, nowIso, recordFailure }: TripsDataDeps) {
+export function useTripsData({ client, tenantId, nowIso, recordFailure, realtime }: TripsDataDeps) {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +60,23 @@ export function useTripsData({ client, tenantId, nowIso, recordFailure }: TripsD
 
     return () => { cancelado = true; };
   }, [client, tenantId]);
+
+  useRealtimeTable<TripRow>({
+    client: realtime ?? null,
+    table: 'trips',
+    filter: tenantId ? `tenant_id=eq.${tenantId}` : null,
+    onInsert: row => {
+      const trip = tripFromRow(row);
+      setTrips(prev => (prev.some(x => x.id === trip.id) ? prev : [...prev, trip]));
+    },
+    onUpdate: row => {
+      const trip = tripFromRow(row);
+      setTrips(prev => prev.map(x => (x.id === trip.id ? trip : x)));
+    },
+    onDelete: old => {
+      setTrips(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const createTrip = useCallback(
     (data: Omit<Trip, 'id' | 'created_at' | 'updated_at'>): Promise<string> => {

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Decision } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { decisionFromRow, decisionToInsert, type DecisionRow } from './mappers/decisionMapper';
 
@@ -9,9 +11,10 @@ export interface DecisionsDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useDecisionsData({ client, tripId, recordFailure }: DecisionsDataDeps) {
+export function useDecisionsData({ client, tripId, recordFailure, realtime }: DecisionsDataDeps) {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,23 @@ export function useDecisionsData({ client, tripId, recordFailure }: DecisionsDat
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<DecisionRow>({
+    client: realtime ?? null,
+    table: 'decisions',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const decision = decisionFromRow(row);
+      setDecisions(prev => (prev.some(x => x.id === decision.id) ? prev : [...prev, decision]));
+    },
+    onUpdate: row => {
+      const decision = decisionFromRow(row);
+      setDecisions(prev => prev.map(x => (x.id === decision.id ? decision : x)));
+    },
+    onDelete: old => {
+      setDecisions(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addDecision = useCallback(
     (data: Omit<Decision, 'id'>) => {

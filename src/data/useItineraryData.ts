@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ItineraryItem } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { itineraryFromRow, itineraryToInsert, type ItineraryItemRow } from './mappers/itineraryMapper';
 import { sortItineraryChronologically } from '../services/itinerarySort';
@@ -10,9 +12,10 @@ export interface ItineraryDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useItineraryData({ client, tripId, recordFailure }: ItineraryDataDeps) {
+export function useItineraryData({ client, tripId, recordFailure, realtime }: ItineraryDataDeps) {
   const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,6 +43,25 @@ export function useItineraryData({ client, tripId, recordFailure }: ItineraryDat
 
     return () => { cancelado = true; };
   }, [client, tripId]);
+
+  useRealtimeTable<ItineraryItemRow>({
+    client: realtime ?? null,
+    table: 'itinerary_items',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const item = itineraryFromRow(row);
+      setItinerary(prev =>
+        prev.some(x => x.id === item.id) ? prev : sortItineraryChronologically([...prev, item]),
+      );
+    },
+    onUpdate: row => {
+      const item = itineraryFromRow(row);
+      setItinerary(prev => sortItineraryChronologically(prev.map(x => (x.id === item.id ? item : x))));
+    },
+    onDelete: old => {
+      setItinerary(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addItineraryItem = useCallback(
     (data: Omit<ItineraryItem, 'id'>) => {

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { TripIdea } from '../types/database.types';
 import type { WriteFailure } from './useWriteFailures';
 import type { SupabaseLike } from './useTripsData';
+import type { RealtimeClientLike } from './useRealtimeTable';
+import { useRealtimeTable } from './useRealtimeTable';
 import { newId } from '../services/ids';
 import { tripIdeaFromRow, tripIdeaToInsert, type TripIdeaRow } from './mappers/tripIdeaMapper';
 
@@ -9,9 +11,10 @@ export interface TripIdeasDataDeps {
   client: SupabaseLike;
   tripId: string | null;
   recordFailure: (f: Omit<WriteFailure, 'id'>) => void;
+  realtime?: RealtimeClientLike | null;
 }
 
-export function useTripIdeasData({ client, tripId, recordFailure }: TripIdeasDataDeps) {
+export function useTripIdeasData({ client, tripId, recordFailure, realtime }: TripIdeasDataDeps) {
   const [ideas, setIdeas] = useState<TripIdea[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +44,23 @@ export function useTripIdeasData({ client, tripId, recordFailure }: TripIdeasDat
       cancelado = true;
     };
   }, [client, tripId]);
+
+  useRealtimeTable<TripIdeaRow>({
+    client: realtime ?? null,
+    table: 'trip_ideas',
+    filter: tripId ? `trip_id=eq.${tripId}` : null,
+    onInsert: row => {
+      const idea = tripIdeaFromRow(row);
+      setIdeas(prev => (prev.some(x => x.id === idea.id) ? prev : [idea, ...prev]));
+    },
+    onUpdate: row => {
+      const idea = tripIdeaFromRow(row);
+      setIdeas(prev => prev.map(x => (x.id === idea.id ? idea : x)));
+    },
+    onDelete: old => {
+      setIdeas(prev => prev.filter(x => x.id !== old.id));
+    },
+  });
 
   const addIdea = useCallback(
     (data: Omit<TripIdea, 'id' | 'created_at'>) => {
