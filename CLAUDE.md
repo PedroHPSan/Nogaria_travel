@@ -28,17 +28,14 @@ Adding a new entity type touches five places in order:
 
 1. `src/types/database.types.ts` — the interface
 2. `src/services/initialMockData.ts` — the `INITIAL_*` seed export (some seeds instead live inline at the top of `TripContext.tsx`, e.g. `INITIAL_LUGGAGE`, `INITIAL_EXPENSES`, `INITIAL_DOCUMENTS`, `INITIAL_LOYALTY`)
-3. `TripContext.tsx` — a `useState` initialized from `localStorage`, a `useEffect` that persists it, and the add/update/delete functions
-4. `TripContextType` — declare the new state and functions or they aren't reachable
-5. The feature view + its modal
+3. `src/data/use<X>Data.ts` — the hook: fetches from Supabase scoped by `trip_id`/`tenant_id`, falls back to the `INITIAL_*` seed when the read comes back empty, and exposes add/update/delete that write through to Supabase (optimistic, with rollback + `recordFailure` retry on error) — plus a `src/data/mappers/<x>Mapper.ts` for DB-row ↔ TS-type conversion when the shapes differ
+4. `TripContext.tsx` — call the hook and re-export what it returns
+5. `TripContextType` — declare the new state and functions or they aren't reachable
+6. The feature view + its modal
 
-### Persistence is localStorage, one key per collection
+**Consequence:** seed data is only visible when the Supabase table is empty for that trip/tenant (no active tenant, or a fresh one) — editing `initialMockData.ts` has no effect once real rows exist. `currency`, `exchangeRate`, and `activeTripId` are the only remaining UI-only `localStorage` keys (see `STORAGE_KEY` in `TripContext.tsx`); no entity data lives there anymore.
 
-Keys are `ANTIGRAVITY_TRAVEL_PLATFORM_V1_<collection>` (see `STORAGE_KEY`). Each collection gets its own `useState(() => JSON.parse(localStorage.getItem(...)) ?? INITIAL_X)` plus a matching `useEffect` writer.
-
-**Consequence:** seed data is read only when a key is absent. Editing `initialMockData.ts` has no visible effect in a browser that already has state — clear localStorage to see seed changes.
-
-### Supabase: Auth and tenants/memberships are wired; trip data is not
+### Supabase: everything is wired
 
 The Supabase project is **`Nogaria_travel`** (ref `bkrqhividgljticgjrem`, region `us-west-2`, Postgres 17), in a *different* Supabase account/org than the one `.mcp.json` and the Supabase MCP server are authenticated as — the MCP tools cannot see this project. Use the **Supabase CLI** instead: it's linked (`supabase link --project-ref bkrqhividgljticgjrem`), and `.env` (git-ignored, not committed) holds `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY`. Useful commands: `supabase db query --linked "<sql>"`, `supabase db push --linked`, `supabase db advisors --linked --type security`.
 

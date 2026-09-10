@@ -487,48 +487,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_exchangeRate`, exchangeRate.toString());
   }, [exchangeRate]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_flights`, JSON.stringify(flights));
-  }, [flights]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_accommodations`, JSON.stringify(accommodations));
-  }, [accommodations]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_transports`, JSON.stringify(transports));
-  }, [transports]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_giftCards`, JSON.stringify(giftCards));
-  }, [giftCards]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_purchases`, JSON.stringify(purchases));
-  }, [purchases]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_luggages`, JSON.stringify(luggages));
-  }, [luggages]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_expenses`, JSON.stringify(expenses));
-  }, [expenses]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify(tasks));
-  }, [tasks]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_decisions`, JSON.stringify(decisions));
-  }, [decisions]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_documents`, JSON.stringify(documents));
-  }, [documents]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_loyalty`, JSON.stringify(loyaltyAccounts));
-  }, [loyaltyAccounts]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_aiProviders`, JSON.stringify(aiProviders));
-  }, [aiProviders]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_aiLogs`, JSON.stringify(aiLogs));
-  }, [aiLogs]);
-  useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_resolvedAudits`, JSON.stringify(resolvedAuditIds));
-  }, [resolvedAuditIds]);
+  // flights/accommodations/transports/giftCards/purchases/luggages/expenses/
+  // tasks/decisions/documents/loyaltyAccounts/aiProviders/aiLogs/
+  // resolvedAuditIds não têm mais espelho em localStorage aqui: todos já vêm
+  // de useXData (Supabase), e nada nesta base os lê de volta — issue #30.
 
   // Audit recalculation
   const auditFindings = useMemo(() => {
