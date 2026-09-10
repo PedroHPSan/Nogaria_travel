@@ -20,13 +20,18 @@ export function toOlindaDate(isoDate: string): string {
   return `${m}-${d}-${y}`;
 }
 
-/** URL do OData para o intervalo [start, end] (datas ISO), ordenado do mais recente. */
+/**
+ * URL do OData para o intervalo [start, end] (datas ISO), ordenado do mais recente.
+ * `CotacaoDolarPeriodo` só devolve o boletim de fechamento e NÃO expõe
+ * `tipoBoletim` — pedir esse campo no `$select` faz o Olinda responder HTTP 400
+ * (bug real em produção na primeira sincronização).
+ */
 export function buildPtaxUrl(startIso: string, endIso: string): string {
   const base = 'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/';
   const path =
     `CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)` +
     `?@dataInicial='${toOlindaDate(startIso)}'&@dataFinalCotacao='${toOlindaDate(endIso)}'` +
-    `&$format=json&$select=cotacaoCompra,cotacaoVenda,dataHoraCotacao,tipoBoletim&$orderby=dataHoraCotacao%20desc`;
+    `&$format=json&$select=cotacaoCompra,cotacaoVenda,dataHoraCotacao&$orderby=dataHoraCotacao%20desc`;
   return base + path;
 }
 
