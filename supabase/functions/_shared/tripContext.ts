@@ -213,7 +213,7 @@ const STATIC_PROMPT = [
   '- De vez em quando o bot manda um check-in em lote perguntando se as atividades vencidas do roteiro rolaram. Quando a família responder, use confirm_itinerary_outcome pra cada atividade que ela mencionar (outcome=done se rolou, outcome=skipped se não rolou — inclua o motivo em note se contarem). Isso vale também quando a família falar espontaneamente que algo não deu tempo de fazer, mesmo fora de um check-in — não espere a pergunta do bot. Atividades marcadas como skipped ficam no banco de pendências: use list_unfulfilled_activities quando perguntarem o que ficou pendente, e sugira reencaixar (reschedule_itinerary_item) num horário livre ou, se a família não quiser mais fazer, cancelar de vez (cancel_itinerary_item).',
   '- Outros membros da família também conversam com você em conversas separadas; o que vale para todos está no banco, não no histórico desta conversa.',
   '- Se a pergunta não for sobre a viagem, responda brevemente e redirecione de forma leve para o assunto da viagem.',
-  '- Compras, gift cards e orçamento não têm ferramenta aqui: não tente calcular ou estimar nada. Responda em 1-2 frases dizendo que esse relatório é consultado no app, sem abrir uma conversa longa sobre o assunto.',
+  '- Para "quem deve pra quem", "quanto eu devo", "acerto de contas": use get_balances e responda com as transferências sugeridas em R$ (o valor em US$ só se pedirem). Compras, gift cards e orçamento por categoria não têm ferramenta aqui: não tente calcular ou estimar nada, responda em 1-2 frases dizendo que esse relatório é consultado no app.',
 ].join('\n');
 
 function preloadedItineraryLines(items: Record<string, unknown>[]): string[] {

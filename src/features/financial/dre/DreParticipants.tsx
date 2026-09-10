@@ -47,7 +47,7 @@ export const DreParticipants: React.FC<DreParticipantsProps> = ({ dreResult, for
                       <strong className="text-success-400">{s.to_name}</strong>
                     </div>
                     <div className="text-[11px] text-ink-400 mt-0.5">
-                      Para quitar rateio de hospedagem, ingressos e passagens
+                      Só despesas pagas, em R$ do dia de cada uma
                     </div>
                   </div>
                 </div>

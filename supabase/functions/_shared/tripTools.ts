@@ -17,6 +17,7 @@ import {
 import { detectConflicts, suggestFreeSlot, type ScheduleSlot } from './scheduleConflicts.ts';
 import { consumePendingWrite, stagePendingWrite } from './pendingWrites.ts';
 import { sendTextMessage } from './whatsappClient.ts';
+import { computeBalances } from './balances.ts';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
@@ -126,6 +127,12 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
         status: { type: 'string', enum: ['pending', 'in_progress', 'completed'], description: 'Status da tarefa (opcional).' },
       },
     },
+  },
+  {
+    name: 'get_balances',
+    description:
+      'Acerto de contas da viagem (estilo Splitwise): quanto cada participante pagou, quanto consumiu e as transferências mínimas para zerar as dívidas, em R$ (valor congelado no dia de cada despesa) e US$. Use para "quem deve pra quem", "quanto eu devo", "fecha as contas".',
+    parameters: { type: 'object', properties: {} },
   },
   {
     name: 'get_flight_info',
@@ -514,6 +521,26 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
         const { data, error } = await query;
         if (error) throw new Error(`Erro ao consultar tarefas: ${error.message}`);
         return { tasks: data ?? [] };
+      }
+
+      case 'get_balances': {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('amount_usd, amount_brl, paid_by_id, beneficiary_ids, status')
+          .eq('trip_id', tripId)
+          .eq('status', 'paid')
+          .limit(500);
+        if (error) throw new Error(`Erro ao consultar despesas: ${error.message}`);
+
+        const result = computeBalances(
+          (data ?? []).map(e => ({ ...e, amount_usd: Number(e.amount_usd), amount_brl: Number(e.amount_brl) })),
+          participants.map(p => ({ id: p.id, name: p.nickname ?? p.full_name })),
+        );
+        return {
+          balances: result.balances.map(b => ({ name: b.name, paid_brl: b.paid_brl, share_brl: b.share_brl, net_brl: b.net_brl, net_usd: b.net_usd, status: b.status })),
+          settlements: result.settlements.map(s => ({ from: s.from_name, to: s.to_name, amount_brl: s.amount_brl, amount_usd: s.amount_usd })),
+          note: 'Só despesas pagas com pagador definido entram; R$ é o valor congelado no dia de cada despesa.',
+        };
       }
 
       case 'get_flight_info': {
