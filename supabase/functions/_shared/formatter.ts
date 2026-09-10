@@ -172,7 +172,12 @@ export function formatActivityReminder(input: {
   const { item, minutesUntil, child } = input;
   const lines: string[] = [];
 
-  lines.push(`⏰ *Daqui a ${formatLeadTime(minutesUntil)}!* ${categoryEmoji(item.category)}`);
+  // Arredondado pra 5 min: o valor exato (57, 58, 56...) é sempre um pouco
+  // menor que a antecedência configurada — inerente a detectar a janela num
+  // cron periódico, não um erro — mas soa "sempre errado" pra família porque
+  // nunca bate com o número redondo que ela configurou.
+  const roundedMinutesUntil = Math.max(5, Math.round(minutesUntil / 5) * 5);
+  lines.push(`⏰ *Daqui a ${formatLeadTime(roundedMinutesUntil)}!* ${categoryEmoji(item.category)}`);
   lines.push(`*${item.time_start.slice(0, 5)}* • ${item.title}`);
 
   const place = item.park ?? item.city;

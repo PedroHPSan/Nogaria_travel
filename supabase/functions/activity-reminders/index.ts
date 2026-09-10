@@ -24,6 +24,7 @@ interface ConfigRow {
   phone_number_id: string;
   timezone: string;
   reminder_lead_minutes: number;
+  reminder_cooldown_minutes: number;
   quiet_hours_start: string;
   quiet_hours_end: string;
 }
@@ -54,7 +55,7 @@ Deno.serve(async request => {
 
   const { data: configs, error } = await supabase
     .from('whatsapp_configs')
-    .select('tenant_id, phone_number_id, timezone, reminder_lead_minutes, quiet_hours_start, quiet_hours_end')
+    .select('tenant_id, phone_number_id, timezone, reminder_lead_minutes, reminder_cooldown_minutes, quiet_hours_start, quiet_hours_end')
     .eq('enabled', true)
     .eq('reminders_enabled', true);
   if (error) return json({ error: `Erro ao carregar configs: ${error.message}` }, 500);
@@ -95,21 +96,40 @@ async function processTenant(
   if (todayIso < trip.start_date || todayIso > trip.end_date) return 'skipped:fora-da-viagem';
 
   const tomorrowIso = addDaysIso(todayIso, 1);
-  const { data: rawItems, error: itemsErr } = await supabase
-    .from('itinerary_items')
-    .select(ITINERARY_COLUMNS)
-    .eq('trip_id', trip.id)
-    .in('date', [todayIso, tomorrowIso])
-    .order('time_start', { ascending: true });
-  if (itemsErr) throw new Error(`Erro ao consultar roteiro: ${itemsErr.message}`);
+  const [itemsRes, lastReminderRes] = await Promise.all([
+    supabase
+      .from('itinerary_items')
+      .select(ITINERARY_COLUMNS)
+      .eq('trip_id', trip.id)
+      .in('date', [todayIso, tomorrowIso])
+      .order('time_start', { ascending: true }),
+    // Base do cooldown: quanto tempo faz desde o último aviso "lead" desta
+    // viagem, pra não despejar um aviso novo em cima de um que acabou de sair.
+    supabase
+      .from('activity_reminders')
+      .select('sent_at')
+      .eq('trip_id', trip.id)
+      .eq('kind', 'lead')
+      .order('sent_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  if (itemsRes.error) throw new Error(`Erro ao consultar roteiro: ${itemsRes.error.message}`);
+  if (lastReminderRes.error) throw new Error(`Erro ao consultar último aviso: ${lastReminderRes.error.message}`);
+
+  const minutesSinceLastReminder = lastReminderRes.data
+    ? Math.floor((now.getTime() - new Date(lastReminderRes.data.sent_at).getTime()) / 60_000)
+    : null;
 
   const due = selectDueReminders({
-    items: (rawItems ?? []) as unknown as ReminderCandidate[],
+    items: (itemsRes.data ?? []) as unknown as ReminderCandidate[],
     nowLocalDateIso: todayIso,
     nowLocalMinutes,
     defaultLeadMinutes: config.reminder_lead_minutes,
+    minutesSinceLastReminder,
+    cooldownMinutes: config.reminder_cooldown_minutes,
   });
-  if (due.length === 0) return 'skipped:nada-na-janela';
+  if (due.length === 0) return 'skipped:nada-na-janela-ou-cooldown';
 
   const { data: participants, error: partErr } = await supabase
     .from('participants')

@@ -98,7 +98,13 @@ describe('isWithinQuietHours', () => {
 });
 
 describe('selectDueReminders', () => {
-  const base = { nowLocalDateIso: '2026-09-10', defaultLeadMinutes: 60 };
+  const base = {
+    nowLocalDateIso: '2026-09-10',
+    defaultLeadMinutes: 60,
+    // Sem cooldown por padrão nestes testes — o cooldown em si tem describe próprio.
+    minutesSinceLastReminder: null as number | null,
+    cooldownMinutes: 0,
+  };
 
   it('seleciona o item cujo início entrou na janela de antecedência', () => {
     const due = selectDueReminders({
@@ -178,13 +184,13 @@ describe('selectDueReminders', () => {
     expect(due).toEqual([]);
   });
 
-  it('ordena pelo mais próximo primeiro', () => {
+  it('entre vários itens na janela, só dispara o mais próximo — evita rajada de avisos', () => {
     const items = [
       item({ id: 'depois', time_start: '14:00' }),
       item({ id: 'agora', time_start: '13:15' }),
     ];
     const due = selectDueReminders({ ...base, items, nowLocalMinutes: 13 * 60 });
-    expect(due.map(d => d.item.id)).toEqual(['agora', 'depois']);
+    expect(due.map(d => d.item.id)).toEqual(['agora']);
   });
 
   it('descarta item com horário ilegível em vez de quebrar', () => {
@@ -194,6 +200,71 @@ describe('selectDueReminders', () => {
       nowLocalMinutes: 13 * 60,
     });
     expect(due).toEqual([]);
+  });
+});
+
+describe('selectDueReminders — cooldown entre avisos (roteiro "touring plan" excessivo)', () => {
+  const base = { nowLocalDateIso: '2026-09-10', defaultLeadMinutes: 60, cooldownMinutes: 40 };
+
+  it('suprime um aviso normal enquanto o cooldown não estourou', () => {
+    const due = selectDueReminders({
+      ...base,
+      items: [item({ time_start: '14:00' })],
+      nowLocalMinutes: 13 * 60 + 30, // faltam 30 min, dentro da janela
+      minutesSinceLastReminder: 10, // último aviso há 10 min, cooldown é 40
+    });
+    expect(due).toEqual([]);
+  });
+
+  it('libera o aviso assim que o cooldown estoura', () => {
+    const due = selectDueReminders({
+      ...base,
+      items: [item({ time_start: '14:00' })],
+      nowLocalMinutes: 13 * 60 + 30,
+      minutesSinceLastReminder: 41,
+    });
+    expect(due).toHaveLength(1);
+  });
+
+  it('nunca suprime quando nunca houve aviso anterior', () => {
+    const due = selectDueReminders({
+      ...base,
+      items: [item({ time_start: '14:00' })],
+      nowLocalMinutes: 13 * 60 + 30,
+      minutesSinceLastReminder: null,
+    });
+    expect(due).toHaveLength(1);
+  });
+
+  it('override explícito do item fura o cooldown', () => {
+    const due = selectDueReminders({
+      ...base,
+      items: [item({ time_start: '14:00', reminder_minutes_before: 30 })],
+      nowLocalMinutes: 13 * 60 + 30,
+      minutesSinceLastReminder: 5,
+    });
+    expect(due).toHaveLength(1);
+  });
+
+  it('atividade a <=10min do início sempre fura o cooldown — nunca esconde um aviso iminente', () => {
+    const due = selectDueReminders({
+      ...base,
+      items: [item({ time_start: '14:00' })],
+      nowLocalMinutes: 13 * 60 + 51, // faltam 9 min
+      minutesSinceLastReminder: 2,
+    });
+    expect(due).toHaveLength(1);
+  });
+
+  it('cooldownMinutes <= 0 desliga o cooldown', () => {
+    const due = selectDueReminders({
+      ...base,
+      cooldownMinutes: 0,
+      items: [item({ time_start: '14:00' })],
+      nowLocalMinutes: 13 * 60 + 30,
+      minutesSinceLastReminder: 1,
+    });
+    expect(due).toHaveLength(1);
   });
 });
 
@@ -281,6 +352,12 @@ describe('formatActivityReminder', () => {
       child: { nickname: 'Débora', height_cm: 150 },
     });
     expect(text).not.toContain('Rider Switch');
+  });
+
+  it('arredonda a antecedência pra múltiplo de 5 — o número exato do cron não é o que soa "certo" pra família', () => {
+    expect(formatActivityReminder({ item: reminderItem, minutesUntil: 57, child: null })).toContain('*Daqui a 55 min!*');
+    expect(formatActivityReminder({ item: reminderItem, minutesUntil: 58, child: null })).toContain('*Daqui a 1h!*');
+    expect(formatActivityReminder({ item: reminderItem, minutesUntil: 3, child: null })).toContain('*Daqui a 5 min!*');
   });
 
   it('cai para a cidade quando não há parque', () => {
