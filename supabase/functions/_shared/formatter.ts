@@ -193,3 +193,22 @@ export function formatActivityReminder(input: {
 
   return lines.join('\n');
 }
+
+export interface CheckinItem {
+  time_start: string;
+  title: string;
+}
+
+/**
+ * Check-in em lote dos itens que já passaram do horário sem confirmação.
+ * Sempre em lote (nunca item a item) — ver checkinScheduler.ts pro porquê.
+ */
+export function formatItineraryCheckin(items: CheckinItem[]): string {
+  const lines = ['👋 *Só conferindo o roteiro!* Essas atividades já passaram do horário:'];
+  for (const item of items) {
+    lines.push(`🔸 *${item.time_start.slice(0, 5)}* • ${item.title}`);
+  }
+  lines.push('');
+  lines.push('Rolou tudo? Me conta o que aconteceu (ex: "sim, tudo certo", "só o primeiro, o resto não deu tempo") que eu já ajusto o roteiro.');
+  return lines.join('\n');
+}

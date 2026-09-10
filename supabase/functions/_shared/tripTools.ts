@@ -207,6 +207,41 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
     },
   },
   {
+    name: 'confirm_itinerary_outcome',
+    description:
+      'Registra se uma atividade do roteiro realmente aconteceu ou não. Use ao responder um check-in do bot ("essas atividades já passaram do horário — rolou?") ou quando a família mencionar espontaneamente que algo não rolou. outcome="done" marca como concluída (equivale a mark_itinerary_item_done); outcome="skipped" guarda no banco de atividades não realizadas, pra reencaixar depois com reschedule_itinerary_item ou tirar de vez com cancel_itinerary_item. Não precisa de confirmação em duas etapas — a família já está respondendo a uma pergunta direta.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Título (exato ou aproximado) da atividade.' },
+        date: { type: 'string', description: 'Data AAAA-MM-DD (opcional, default hoje).' },
+        outcome: { type: 'string', enum: ['done', 'skipped'], description: 'O que de fato aconteceu com a atividade.' },
+        note: { type: 'string', description: 'Motivo ou observação, se a família contar (ex: "fila enorme", "atração fechada"). Opcional.' },
+      },
+      required: ['title', 'outcome'],
+    },
+  },
+  {
+    name: 'list_unfulfilled_activities',
+    description:
+      'Lista as atividades do roteiro que a família confirmou que não rolaram (banco de atividades não realizadas), aguardando reencaixe ou cancelamento. Use quando perguntarem "o que ficou pendente" ou pra sugerir o que reencaixar num horário livre.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'cancel_itinerary_item',
+    description:
+      'Cancela definitivamente uma atividade do roteiro — a família decidiu não fazer, não vai reencaixar. Diferente de reschedule_itinerary_item: a atividade sai do banco de pendências pra sempre, não fica esperando um novo horário. SEMPRE chame primeiro sem confirm — a tool devolve um resumo pra você mostrar à família antes de aplicar. Só chame de novo com confirm=true depois que a família confirmar explicitamente numa mensagem seguinte.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Título (exato ou aproximado) da atividade.' },
+        date: { type: 'string', description: 'Data AAAA-MM-DD (opcional, default hoje).' },
+        confirm: { type: 'boolean', description: CONFIRM_DESCRIPTION },
+      },
+      required: ['title'],
+    },
+  },
+  {
     name: 'save_trip_idea',
     description:
       'Salva uma ideia de negócio ou de viagem que o participante compartilhou, para a sessão de brainstorming da família. ' +
@@ -627,6 +662,10 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
             const { error } = await supabase.from('itinerary_items').update({ participant_status: next }).eq('id', itemId);
             if (error) throw new Error(`Erro ao atualizar atividade: ${error.message}`);
 
+            // Se um check-in já tinha marcado isso como pendente/pulado, o
+            // marcado-concluído manual resolve — a linha não faz mais sentido.
+            await supabase.from('itinerary_item_outcomes').delete().eq('itinerary_item_id', itemId);
+
             const markedFor = (payload.targetIds as string[]).map(id => {
               const p = participants.find(x => x.id === id);
               return p?.nickname ?? p?.full_name ?? id;
@@ -779,6 +818,10 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
             // do horário novo de sair se essa linha continuasse aqui.
             await supabase.from('activity_reminders').delete().eq('itinerary_item_id', itemId).eq('kind', 'lead');
 
+            // O item voltou pro roteiro num novo horário — sai do banco de
+            // pendências (se estava lá) e para de aguardar check-in.
+            await supabase.from('itinerary_item_outcomes').delete().eq('itinerary_item_id', itemId);
+
             // Fan-out best-effort: são conversas 1:1 (sem grupo), então quem não
             // falou com o bot nas últimas 24h não recebe texto livre — a falha é
             // reportada de volta pra quem reagendou, não escondida.
@@ -846,6 +889,134 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           minutes_before: minutes,
           disabled: minutes === 0,
         };
+      }
+
+      case 'confirm_itinerary_outcome': {
+        const title = requireString(args, 'title');
+        const date = optionalDate(args, 'date') ?? todayIso;
+        const outcome = args.outcome;
+        if (outcome !== 'done' && outcome !== 'skipped') {
+          throw new Error('Argumento inválido: outcome deve ser done ou skipped.');
+        }
+        const note = optionalString(args, 'note');
+
+        const matches = await searchItinerary(supabase, tripId, title, date);
+        const resolution = resolveMatch(matches);
+        if (resolution.kind === 'none') {
+          return { found: false, message: `Nenhuma atividade encontrada com "${title}" em ${date}.` };
+        }
+        if (resolution.kind === 'ambiguous') {
+          return {
+            found: true,
+            ambiguous: true,
+            matches: resolution.rows.map(i => ({ title: i.title, time: i.time_start, score: i.score })),
+          };
+        }
+
+        const item = resolution.row;
+
+        if (outcome === 'done') {
+          const { data: current } = await supabase
+            .from('itinerary_items')
+            .select('title, participant_status')
+            .eq('id', item.id)
+            .maybeSingle();
+          if (!current) return { found: false, message: 'Essa atividade não existe mais no roteiro.' };
+
+          const next = { ...((current.participant_status as Record<string, string> | null) ?? {}) };
+          for (const p of participants) next[p.id] = 'done';
+          const { error } = await supabase.from('itinerary_items').update({ participant_status: next }).eq('id', item.id);
+          if (error) throw new Error(`Erro ao atualizar atividade: ${error.message}`);
+
+          await supabase.from('itinerary_item_outcomes').delete().eq('itinerary_item_id', item.id);
+          return { found: true, outcome: 'done', title: current.title };
+        }
+
+        const sender = findParticipantByPhone(participants, senderPhone);
+        const { error: upsertErr } = await supabase.from('itinerary_item_outcomes').upsert(
+          {
+            tenant_id: tenantId,
+            trip_id: tripId,
+            itinerary_item_id: item.id,
+            status: 'skipped',
+            note,
+            resolved_by_participant_id: sender?.id ?? null,
+            resolved_at: new Date().toISOString(),
+          },
+          { onConflict: 'itinerary_item_id' },
+        );
+        if (upsertErr) throw new Error(`Erro ao registrar pendência: ${upsertErr.message}`);
+        return { found: true, outcome: 'skipped', title: item.title, saved_for_later: true };
+      }
+
+      case 'list_unfulfilled_activities': {
+        const { data, error } = await supabase
+          .from('itinerary_item_outcomes')
+          .select('note, resolved_at, itinerary_items(title, date, time_start)')
+          .eq('trip_id', tripId)
+          .eq('status', 'skipped')
+          .order('resolved_at', { ascending: false })
+          .limit(MAX_ROWS);
+        if (error) throw new Error(`Erro ao consultar pendências: ${error.message}`);
+
+        const pending = (data ?? []).map(row => {
+          const activity = row.itinerary_items as unknown as { title: string; date: string; time_start: string } | null;
+          return {
+            title: activity?.title ?? null,
+            original_date: activity?.date ?? null,
+            original_time: activity?.time_start ?? null,
+            note: row.note,
+          };
+        });
+        return { pending };
+      }
+
+      case 'cancel_itinerary_item': {
+        const confirm = args.confirm === true;
+        return withConfirmation(
+          { supabase, tenantId, tripId, senderPhone },
+          'cancel_itinerary_item',
+          confirm,
+          async (): Promise<PrepareOutcome> => {
+            const title = requireString(args, 'title');
+            const date = optionalDate(args, 'date') ?? todayIso;
+
+            const items = await searchItinerary(supabase, tripId, title, date);
+            const resolution = resolveMatch(items);
+            if (resolution.kind === 'none') {
+              return { kind: 'resolved', response: { found: false, message: `Nenhuma atividade encontrada com "${title}" em ${date}.` } };
+            }
+            if (resolution.kind === 'ambiguous') {
+              return {
+                kind: 'resolved',
+                response: {
+                  found: true,
+                  ambiguous: true,
+                  matches: resolution.rows.map(i => ({ title: i.title, time: i.time_start, score: i.score })),
+                },
+              };
+            }
+
+            const item = resolution.row;
+            const preview = `Cancelar de vez "${item.title}" (${date}${item.time_start ? ` ${item.time_start.slice(0, 5)}` : ''})? Ela sai do roteiro pra sempre e não entra na lista de reencaixe.`;
+            return { kind: 'stage', preview, payload: { itemId: item.id, itemTitle: item.title } };
+          },
+          async payload => {
+            const itemId = payload.itemId as string;
+            const { error } = await supabase.from('itinerary_item_outcomes').upsert(
+              {
+                tenant_id: tenantId,
+                trip_id: tripId,
+                itinerary_item_id: itemId,
+                status: 'cancelled',
+                resolved_at: new Date().toISOString(),
+              },
+              { onConflict: 'itinerary_item_id' },
+            );
+            if (error) throw new Error(`Erro ao cancelar atividade: ${error.message}`);
+            return { cancelled: true, title: payload.itemTitle };
+          },
+        );
       }
 
       case 'save_trip_idea': {
