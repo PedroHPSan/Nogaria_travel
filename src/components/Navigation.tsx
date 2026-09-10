@@ -103,7 +103,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* Desktop Top Sub-nav Bar */}
-      <div className="hidden md:block glass-panel border-b border-ink-800 px-4 py-2 mb-6 sticky top-[61px] z-30">
+      <div className="hidden md:block print:hidden glass-panel border-b border-ink-800 px-4 py-2 mb-6 sticky top-[61px] z-30">
         <div className="max-w-7xl mx-auto flex items-center gap-1 overflow-x-auto no-scrollbar">
           {groupOrder.map((group, groupIdx) => (
             <React.Fragment key={group}>
@@ -138,7 +138,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       {/* Mobile Bottom Floating Navigation Bar */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-ink-800 px-1 pt-1.5 flex items-stretch justify-around shadow-2xl"
+        className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-ink-800 px-1 pt-1.5 flex items-stretch justify-around shadow-2xl"
         style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
       >
         {groupOrder.map(group => {

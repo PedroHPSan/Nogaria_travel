@@ -10,6 +10,7 @@ import { Avatar } from '../../components/Avatar';
 import type { ItineraryItem } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
 import { participantsBelowMinHeight, shortestMinorWithHeight } from '../../services/eligibility';
+import { buildIcs, buildItineraryJson, inferTripTimeZone } from '../../services/itineraryExport';
 import {
   CalendarDays,
   Plus,
@@ -22,8 +23,21 @@ import {
   Check,
   List,
   Clock,
-  Calendar
+  Calendar,
+  Download
 } from 'lucide-react';
+
+function downloadBlob(content: string, filename: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
 
 type ViewMode = 'list' | 'timeline' | 'calendar';
 
@@ -43,6 +57,8 @@ export const ItineraryView: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [timelineDate, setTimelineDate] = useState<string>('');
+
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
   const tripItinerary = useMemo(
     () => itinerary.filter(i => i.trip_id === activeTrip.id),
@@ -113,6 +129,23 @@ export const ItineraryView: React.FC = () => {
   const tripParticipants = participants.filter(p => p.trip_id === activeTrip.id);
   const shortestMinor = shortestMinorWithHeight(tripParticipants);
 
+  const handleExportIcs = () => {
+    const ics = buildIcs(activeTrip, filteredItinerary, { timeZone: inferTripTimeZone(activeTrip) });
+    downloadBlob(ics, `${activeTrip.title}-roteiro.ics`, 'text/calendar;charset=utf-8');
+    setIsExportMenuOpen(false);
+  };
+
+  const handleExportJson = () => {
+    const json = buildItineraryJson(activeTrip, filteredItinerary, tripParticipants);
+    downloadBlob(JSON.stringify(json, null, 2), `${activeTrip.title}-roteiro.json`, 'application/json;charset=utf-8');
+    setIsExportMenuOpen(false);
+  };
+
+  const handlePrint = () => {
+    setIsExportMenuOpen(false);
+    window.print();
+  };
+
   // Cronologia / Calendário consideram todos os itens do roteiro (parques, restaurantes, compras etc.)
   const timelineDates = useMemo(
     () => Array.from(new Set(tripItinerary.map(i => i.date).filter(Boolean))).sort(),
@@ -152,6 +185,46 @@ export const ItineraryView: React.FC = () => {
               Comer Barato ($)
             </button>
 
+            <div className="relative print:hidden">
+              <button
+                type="button"
+                onClick={() => setIsExportMenuOpen(open => !open)}
+                className="px-3.5 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 border border-ink-700 text-ink-200 font-bold text-xs transition flex items-center gap-1.5 shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5 text-ink-300" />
+                Exportar ({filteredItinerary.length} {filteredItinerary.length === 1 ? 'item' : 'itens'})
+              </button>
+
+              {isExportMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsExportMenuOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 z-20 w-52 rounded-xl bg-ink-900 border border-ink-800 shadow-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={handleExportIcs}
+                      className="w-full text-left px-3.5 py-2.5 text-xs font-semibold text-ink-200 hover:bg-ink-800 transition"
+                    >
+                      Calendário (.ics)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExportJson}
+                      className="w-full text-left px-3.5 py-2.5 text-xs font-semibold text-ink-200 hover:bg-ink-800 transition"
+                    >
+                      JSON
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePrint}
+                      className="w-full text-left px-3.5 py-2.5 text-xs font-semibold text-ink-200 hover:bg-ink-800 transition"
+                    >
+                      Imprimir / PDF
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             <button
               onClick={handleOpenAdd}
               className="px-4 py-2 rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs shadow-lg shadow-accent-600/30 transition flex items-center gap-1.5"
@@ -164,7 +237,7 @@ export const ItineraryView: React.FC = () => {
       />
 
       {/* View Mode Toggle */}
-      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-ink-900 border border-ink-800 self-start w-fit">
+      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-ink-900 border border-ink-800 self-start w-fit print:hidden">
         <button
           onClick={() => setViewMode('list')}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
@@ -197,7 +270,7 @@ export const ItineraryView: React.FC = () => {
       {viewMode === 'list' && (
         <>
           {/* Filter Bar */}
-          <div className="p-3 rounded-2xl glass-panel border border-ink-800 flex flex-wrap items-center gap-3 text-xs">
+          <div className="p-3 rounded-2xl glass-panel border border-ink-800 flex flex-wrap items-center gap-3 text-xs print:hidden">
             <div className="flex items-center gap-1.5">
               <CalendarDays className="w-4 h-4 text-accent-400" />
               <span className="font-semibold text-ink-300">Filtrar Data:</span>
@@ -283,7 +356,7 @@ export const ItineraryView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 print:hidden">
                     <button
                       type="button"
                       onClick={() => handleOpenGuide(item)}
