@@ -1,4 +1,6 @@
 import { DEFAULT_EXCHANGE_RATE } from './exchangeRateService';
+// Mesmo motor que o bot usa em get_balances — ver o cabeçalho de balances.ts.
+import { computeBalances } from '../../supabase/functions/_shared/balances';
 import type {
   Expense,
   Participant,
@@ -458,6 +460,11 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
   const isGlobalOverBudget = totalActualUsd > totalPlannedUsd;
 
   // 3. DRE por Participante & Rateio
+  const realBalances = computeBalances(
+    expenses,
+    participants.map(p => ({ id: p.id, name: p.nickname || p.full_name.split(' ')[0] })),
+  );
+
   const participantSummaries: ParticipantDreSummary[] = participants.map(p => {
     // Despesas pagas por este participante (apenas itens com paid_by_id)
     const paidByThisPerson = unifiedItems.filter(e => e.paid_by_id === p.id && e.status === 'paid');
@@ -486,12 +493,15 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
     });
 
     const totalConsumedBrl = totalConsumedUsd * rate;
-    const netBalanceUsd = totalPaidUsd - totalConsumedUsd;
-    const netBalanceBrl = netBalanceUsd * rate;
 
-    let status: 'creditor' | 'debtor' | 'balanced' = 'balanced';
-    if (netBalanceUsd > 1) status = 'creditor';
-    else if (netBalanceUsd < -1) status = 'debtor';
+    // "Quem deve pra quem" só olha desembolso real (despesa paga com pagador),
+    // com o BRL congelado na despesa. total_consumed acima continua sendo o
+    // consumo previsto (inclui voo/hotel planejados) — são números diferentes
+    // de propósito: um é orçamento, o outro é acerto de contas.
+    const balance = realBalances.balances.find(b => b.participant_id === p.id);
+    const netBalanceUsd = balance?.net_usd ?? 0;
+    const netBalanceBrl = balance?.net_brl ?? 0;
+    const status = balance?.status ?? 'balanced';
 
     return {
       participant_id: p.id,
@@ -515,40 +525,8 @@ export function computeDre(params: DreEngineParams): DreGlobalResult {
     };
   });
 
-  // 4. Algoritmo de Acerto de Contas (Debt Settlement)
-  const settlements: DebtSettlement[] = [];
-  const creditors = participantSummaries
-    .filter(p => p.net_balance_usd > 0.5)
-    .map(p => ({ ...p, remaining: p.net_balance_usd }));
-  const debtors = participantSummaries
-    .filter(p => p.net_balance_usd < -0.5)
-    .map(p => ({ ...p, remaining: Math.abs(p.net_balance_usd) }));
-
-  let cIdx = 0;
-  let dIdx = 0;
-
-  while (cIdx < creditors.length && dIdx < debtors.length) {
-    const cred = creditors[cIdx];
-    const deb = debtors[dIdx];
-    const amount = Math.min(cred.remaining, deb.remaining);
-
-    if (amount > 0.05) {
-      settlements.push({
-        from_id: deb.participant_id,
-        from_name: deb.nickname || deb.full_name.split(' ')[0],
-        to_id: cred.participant_id,
-        to_name: cred.nickname || cred.full_name.split(' ')[0],
-        amount_usd: Number(amount.toFixed(2)),
-        amount_brl: Number((amount * rate).toFixed(2))
-      });
-    }
-
-    cred.remaining -= amount;
-    deb.remaining -= amount;
-
-    if (cred.remaining <= 0.05) cIdx++;
-    if (deb.remaining <= 0.05) dIdx++;
-  }
+  // 4. Acerto de Contas (Debt Settlement) — liquidação mínima em BRL congelado.
+  const settlements: DebtSettlement[] = realBalances.settlements;
 
   // 5. Fluxo Pré-Viagem vs Durante a Viagem
   const preTripCategories = ['flight', 'accommodation', 'tickets', 'services'];

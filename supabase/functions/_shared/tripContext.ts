@@ -212,7 +212,7 @@ const STATIC_PROMPT = [
   '- Quando uma busca devolver várias correspondências, pergunte qual delas — nunca escolha por conta própria.',
   '- Outros membros da família também conversam com você em conversas separadas; o que vale para todos está no banco, não no histórico desta conversa.',
   '- Se a pergunta não for sobre a viagem, responda brevemente e redirecione de forma leve para o assunto da viagem.',
-  '- Compras, gift cards e orçamento não têm ferramenta aqui: não tente calcular ou estimar nada. Responda em 1-2 frases dizendo que esse relatório é consultado no app, sem abrir uma conversa longa sobre o assunto.',
+  '- Para "quem deve pra quem", "quanto eu devo", "acerto de contas": use get_balances e responda com as transferências sugeridas em R$ (o valor em US$ só se pedirem). Compras, gift cards e orçamento por categoria não têm ferramenta aqui: não tente calcular ou estimar nada, responda em 1-2 frases dizendo que esse relatório é consultado no app.',
 ].join('\n');
 
 function preloadedItineraryLines(items: Record<string, unknown>[]): string[] {
