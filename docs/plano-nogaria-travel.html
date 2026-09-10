@@ -1,0 +1,661 @@
+<title>Plano Nogaria Travel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --plane: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #eceef2;
+    --ink: #14171c;
+    --ink-2: #4b515c;
+    --muted: #7d838f;
+    --line: #dcdfe5;
+    --grid: #e6e8ec;
+    --accent: #1f3a5f;
+    --accent-ink: #ffffff;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s7: #4a3aa7;
+    --good: #0ca30c; --good-text: #006300;
+    --warn: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --shadow: 0 1px 2px rgba(20,23,28,.06), 0 8px 24px -12px rgba(20,23,28,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --plane: #0f1114; --surface: #171a1f; --surface-2: #1f232a;
+      --ink: #f3f4f6; --ink-2: #b8bcc6; --muted: #858b96; --line: #2a2e36; --grid: #23272e;
+      --accent: #9db8de; --accent-ink: #0f1114;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s7: #9085e9;
+      --good-text: #0ca30c;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --plane: #0f1114; --surface: #171a1f; --surface-2: #1f232a;
+    --ink: #f3f4f6; --ink-2: #b8bcc6; --muted: #858b96; --line: #2a2e36; --grid: #23272e;
+    --accent: #9db8de; --accent-ink: #0f1114;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s7: #9085e9;
+    --good-text: #0ca30c;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--plane); color: var(--ink);
+    font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    font-size: 17px; line-height: 1.55;
+    padding-inline: 20px; padding-block: 0 80px;
+  }
+  h1, h2, h3, .display { font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif; font-weight: 700; line-height: 1.12; text-wrap: balance; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(34px, 5vw, 52px); margin: 0; }
+  h2 { font-size: clamp(24px, 3vw, 30px); margin: 0 0 6px; }
+  h3 { font-size: 19px; margin: 0 0 8px; }
+  p { margin: 0 0 12px; max-width: 68ch; }
+  a { color: var(--accent); }
+  .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+  .num { font-variant-numeric: tabular-nums; }
+  .eyebrow { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+
+  header.top { padding-block: 44px 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+  header.top .meta { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 18px; color: var(--ink-2); font-size: 15px; }
+  header.top .lede { font-size: 20px; color: var(--ink-2); max-width: 62ch; margin-top: 14px; }
+
+  .layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 40px; align-items: start; }
+  nav.toc { position: sticky; top: 20px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+  nav.toc a { color: var(--ink-2); text-decoration: none; padding: 5px 8px; border-left: 2px solid transparent; }
+  nav.toc a:hover, nav.toc a:focus-visible { border-left-color: var(--accent); color: var(--ink); outline: none; }
+  nav.toc .eyebrow { padding: 6px 8px 4px; }
+  @media (max-width: 880px) { .layout { grid-template-columns: 1fr; gap: 0; } nav.toc { position: static; flex-direction: row; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px; } nav.toc .eyebrow { width: 100%; } }
+
+  section { padding-block: 40px; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: 0; }
+  .sec-head { display: grid; gap: 4px; margin-bottom: 20px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-block: 18px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 4px; }
+  .tile .v { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 30px; line-height: 1.05; }
+  .tile .l { font-size: 14px; color: var(--ink-2); }
+  .tile .src { font-size: 12px; color: var(--muted); }
+
+  .verdicts { display: grid; gap: 10px; margin-top: 8px; }
+  .verdict { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .verdict .ic { width: 22px; height: 22px; border-radius: 6px; margin-top: 2px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; }
+  .verdict p { margin: 0; max-width: none; }
+  .verdict strong { font-weight: 600; }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-2); white-space: nowrap; line-height: 1.6; }
+  .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .chip.ok::before { background: var(--good); } .chip.ok { color: var(--good-text); }
+  .chip.warn::before { background: var(--warn); }
+  .chip.bad::before { background: var(--critical); } .chip.bad { color: var(--critical); }
+  .chip.info::before { background: var(--s1); }
+  .tag { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
+  .tag.v { color: var(--good-text); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); }
+  .tag.p { color: var(--s2); border-color: color-mix(in srgb, var(--s2) 40%, var(--line)); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .tbl { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+  figure { margin: 18px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px 12px; }
+  figure figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; margin-bottom: 10px; }
+  figure figcaption .t { font-weight: 600; }
+  figure figcaption .s { font-size: 13px; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  svg.chart { width: 100%; height: auto; display: block; font-family: "Source Sans 3", system-ui, sans-serif; }
+  svg.chart text { fill: var(--ink-2); font-size: 12px; }
+  svg.chart .grid line { stroke: var(--grid); }
+  svg.chart .axis line { stroke: var(--line); }
+  svg.chart .lbl { fill: var(--ink); font-weight: 600; }
+  svg.chart .muted { fill: var(--muted); }
+  details.tv { margin-top: 8px; font-size: 14px; }
+  details.tv summary { cursor: pointer; color: var(--muted); }
+  .tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--plane); font-size: 13px; padding: 6px 9px; border-radius: 6px; box-shadow: var(--shadow); opacity: 0; transition: opacity .12s; z-index: 10; white-space: nowrap; }
+  .tip.on { opacity: 1; }
+
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+  .note { border-left: 3px solid var(--s2); padding: 8px 14px; background: var(--surface); border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 15px; }
+  .note.good { border-left-color: var(--good); }
+  ul.clean { padding-left: 20px; margin: 0 0 12px; max-width: 68ch; } ul.clean li { margin-bottom: 6px; }
+
+  /* Roadmap */
+  .rm { display: grid; gap: 8px; }
+  .rm-row { display: grid; grid-template-columns: 64px minmax(0,1fr) 220px; gap: 12px; align-items: center; font-size: 15px; }
+  .rm-row .bar { height: 14px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .rm-row .bar i { display: block; height: 100%; background: var(--s1); border-radius: 4px; }
+  .rm-row .w { color: var(--muted); font-size: 13px; }
+  @media (max-width: 640px) { .rm-row { grid-template-columns: 56px 1fr; } .rm-row .desc { grid-column: 1 / -1; margin-top: -4px; } }
+
+  /* ROI */
+  .roi { display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 22px; align-items: start; }
+  @media (max-width: 900px) { .roi { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
+  .panel h3 { margin: 0; }
+  .field { display: grid; gap: 4px; font-size: 14px; }
+  .field label { color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+  .field input[type=number] { font: inherit; font-family: "JetBrains Mono", monospace; font-size: 14px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--plane); color: var(--ink); width: 100%; }
+  .field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .presets button { font: inherit; font-size: 13px; font-weight: 600; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-2); cursor: pointer; }
+  .presets button:hover { border-color: var(--accent); color: var(--ink); }
+  .presets button:focus-visible { outline: 2px solid var(--accent); }
+  .presets button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .kpi .v { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; }
+  .kpi .v.neg { color: var(--critical); } .kpi .v.pos { color: var(--good-text); }
+  .kpi .l { font-size: 13px; color: var(--ink-2); }
+
+  .risk { display: grid; grid-template-columns: 90px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .risk:last-child { border-bottom: 0; }
+  .risk .sev { display: flex; align-items: flex-start; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+  .risk .sev i { width: 10px; height: 10px; border-radius: 2px; margin-top: 5px; flex: none; }
+  .risk p { margin: 0; max-width: none; }
+  .src-list { font-size: 14px; columns: 1; } .src-list li { margin-bottom: 6px; overflow-wrap: anywhere; }
+  @media (prefers-reduced-motion: reduce) { .tip { transition: none; } }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Revisão de produto · 10 set 2026 · branch claude/travel-platform-business-plan</div>
+  <h1 style="margin-top:10px">Nogaria Travel como serviço de turismo</h1>
+  <p class="lede">Plano de negócios, go-to-market e retorno do investimento para transformar a plataforma da família num serviço vendido com o pacote de viagem. Cada número carrega uma marca: <span class="tag v">verificado</span> tem fonte no código ou na seção de fontes; <span class="tag p">premissa</span> é hipótese editável, nunca fato.</p>
+  <div class="meta">
+    <span><strong>Escopo</strong> · famílias brasileiras em Orlando</span>
+    <span><strong>Base</strong> · 12 telas · 19 entidades · bot WhatsApp · 397 testes</span>
+    <span><strong>Documento completo</strong> · <code class="mono" style="font-size:13px">docs/PLANO_DE_NEGOCIOS_GO_TO_MARKET.md</code></span>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Seções">
+  <span class="eyebrow">Sumário</span>
+  <a href="#resumo">1 · Veredito</a>
+  <a href="#sistema">2 · O que existe</a>
+  <a href="#mercado">3 · Mercado</a>
+  <a href="#suprimento">4 · Suprimento</a>
+  <a href="#monetizacao">5 · Monetização</a>
+  <a href="#custos">6 · Custos</a>
+  <a href="#roadmap">7 · Roadmap</a>
+  <a href="#gtm">8 · Go-to-market</a>
+  <a href="#roi">9 · ROI</a>
+  <a href="#riscos">10 · Riscos</a>
+  <a href="#fontes">11 · Fontes</a>
+</nav>
+
+<main>
+
+<section id="resumo">
+  <div class="sec-head"><span class="eyebrow">1 · Veredito</span><h2>Cinco conclusões que mudam o plano</h2></div>
+  <div class="verdicts">
+    <div class="verdict"><span class="ic" style="background:var(--critical)">!</span><p><strong>Hospedagem via RCI não pode ser revendida.</strong> Os termos do RCI proíbem uso comercial (aluguel ou venda) de trocas confirmadas e Guest Certificates, com cancelamento da associação. Só semanas reservadas com pontos <em>próprios</em> no resort de origem são alugáveis, e mesmo isso os desenvolvedores policiam. <span class="tag v">verificado</span></p></div>
+    <div class="verdict"><span class="ic" style="background:var(--serious)">!</span><p><strong>Passagem com pontos de terceiros está em zona cinzenta.</strong> O PL 3083/2026 foi aprovado na Câmara em 13/08/2026 e ainda passa pelo Senado. Até virar lei, os regulamentos dos programas proíbem a comercialização. Fica fora do CNPJ principal. <span class="tag v">verificado</span></p></div>
+    <div class="verdict"><span class="ic" style="background:var(--s1)">→</span><p><strong>O modelo que fecha a conta é B2B2C.</strong> Família vai a Orlando a cada anos; assinatura mensal tem churn estrutural. A plataforma vai <em>incluída no pacote</em>; assinatura só para outras agências (issue #45).</p></div>
+    <div class="verdict"><span class="ic" style="background:var(--good)">✓</span><p><strong>A base técnica está mais pronta do que parece.</strong> Multi-tenant com RLS, planos e franquia por plano no schema, LGPD, bot com function calling. Mas <em>zero</em> linhas de billing, catálogo ou pedido. Isso é o P0: ~12 semanas de dev. <span class="tag v">verificado</span></p></div>
+    <div class="verdict"><span class="ic" style="background:var(--good)">✓</span><p><strong>Infra é irrelevante no custo.</strong> Fixo ≈ US$ 45/mês; variável ≈ US$ 5–8 por família por viagem. O que custa é gente e advogado. <span class="tag v">verificado</span></p></div>
+  </div>
+</section>
+
+<section id="sistema">
+  <div class="sec-head"><span class="eyebrow">2 · O que existe</span><h2>Auditoria do sistema no commit atual</h2></div>
+  <p>Tudo aqui foi conferido no repositório. A coluna de status diz se a capacidade está pronta para um cliente externo pagante.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Capacidade</th><th>Estado real</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Planejamento e controle da viagem</td><td>12 abas: roteiro (lista/cronologia/calendário), logística, grupo, DRE com câmbio PTAX, gift cards, compras com decisão US×BR, pendências, auditoria, documentos, brainstorm</td><td><span class="chip ok">Pronto</span></td></tr>
+      <tr><td>Multi-tenant e isolamento</td><td>tenants → memberships → trips, RLS em todas as tabelas, sem acesso anônimo, teste E2E de isolamento no CI</td><td><span class="chip ok">Pronto</span></td></tr>
+      <tr><td>Planos e franquia</td><td><code class="mono" style="font-size:13px">tenants.plan</code> free/family/pro/enterprise com cota de 50/300/1500/∞ mensagens do bot</td><td><span class="chip ok">Schema pronto</span></td></tr>
+      <tr><td>Bot WhatsApp (Meta Cloud API + Gemini 3.5 Flash)</td><td>Roteiro, tarefas, voo, concluir item, lembrete, mapas/ETA, reagendar; digest manhã/noite; avisos por horário; horário de silêncio; retenção LGPD. Só 1:1, sem grupos</td><td><span class="chip ok">Pronto</span></td></tr>
+      <tr><td>Copiloto de IA no app</td><td>Ainda simulado por palavras-chave; PR #47 aberto troca por edge function real</td><td><span class="chip warn">Parcial</span></td></tr>
+      <tr><td>LGPD e consentimento</td><td>Consentimento de responsável para menores, aceite de termos versionado, exclusão em cascata. Textos jurídicos em rascunho (<code class="mono" style="font-size:13px">LEGAL_IS_DRAFT = true</code>)</td><td><span class="chip warn">Parcial</span></td></tr>
+      <tr><td>Templates Meta aprovados</td><td>Necessários para mensagem iniciada pela empresa fora da janela de 24 h (issue #43)</td><td><span class="chip bad">Ausente</span></td></tr>
+      <tr><td>Cobrança e assinatura</td><td>Nenhuma referência a gateway, checkout ou subscription no código</td><td><span class="chip bad">Ausente</span></td></tr>
+      <tr><td>Catálogo de ofertas e pedidos</td><td>As tabelas de reserva registram o que a família já comprou; não há oferta, cotação, pedido ou comissão</td><td><span class="chip bad">Ausente</span></td></tr>
+      <tr><td>Painel do operador (várias famílias)</td><td>RLS isola por tenant; operador precisaria ser membro de cada tenant. Sem visão consolidada</td><td><span class="chip bad">Ausente</span></td></tr>
+      <tr><td>Observabilidade</td><td>Sem Sentry nem eventos de produto</td><td><span class="chip bad">Ausente</span></td></tr>
+      <tr><td>Domínio</td><td><code class="mono" style="font-size:13px">nogaria.store</code> quebrado no registrar; produção em nogaria-travel.vercel.app</td><td><span class="chip warn">Operacional</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">Trabalho em voo: PRs #47, #48, #49 e #50 abertos. Fechar os quatro antes de qualquer feature nova, senão o P0 nasce em cima de conflito.</div>
+</section>
+
+<section id="mercado">
+  <div class="sec-head"><span class="eyebrow">3 · Mercado</span><h2>Orlando cresce e o Brasil é o terceiro mercado</h2></div>
+  <div class="tiles">
+    <div class="tile"><span class="v num">76,7 mi</span><span class="l">visitantes em Orlando, 2025 (recorde)</span><span class="src">Visit Orlando <span class="tag v">verificado</span></span></div>
+    <div class="tile"><span class="v num">736.300</span><span class="l">brasileiros em Orlando, 2025</span><span class="src">3º mercado internacional <span class="tag v">verificado</span></span></div>
+    <div class="tile"><span class="v num">+5,6%</span><span class="l">crescimento do Brasil vs. 2024, com o total internacional caindo 2,4%</span><span class="src">Visit Orlando <span class="tag v">verificado</span></span></div>
+    <div class="tile"><span class="v num">R$ 25–55 mil</span><span class="l">viagem de família de 4 (econômica a intermediária)</span><span class="src">blogs de nicho, ordem de grandeza <span class="tag v">verificado</span></span></div>
+  </div>
+  <figure>
+    <figcaption><span class="t">Maiores mercados internacionais de Orlando em 2025</span><span class="s">visitantes · Visit Orlando</span></figcaption>
+    <div id="ch-market"></div>
+    <details class="tv"><summary>Ver tabela</summary><table><thead><tr><th>Mercado</th><th class="r">Visitantes</th></tr></thead><tbody><tr><td>Canadá</td><td class="r">1.100.000</td></tr><tr><td>Reino Unido</td><td class="r">933.500</td></tr><tr><td>Brasil</td><td class="r">736.300</td></tr></tbody></table></details>
+  </figure>
+  <p>O que <strong>não</strong> foi encontrado em fonte confiável e por isso não entra: tamanho do mercado de agências brasileiras especializadas em Orlando, ticket médio de comissão e taxa de recompra. Vira pesquisa nas entrevistas da fase 1.</p>
+  <p><strong>Leitura:</strong> demanda existe. O problema é suprimento legal de hospedagem e diferenciação frente a centenas de agências que já vendem "pacote Orlando". A diferenciação candidata é o que nenhuma delas tem: DRE em real com câmbio real, decisão de compra US×BR, auditoria de segurança de menores e bot que responde no WhatsApp durante a viagem.</p>
+</section>
+
+<section id="suprimento">
+  <div class="sec-head"><span class="eyebrow">4 · Suprimento</span><h2>De onde vem cada produto vendido</h2></div>
+  <h3>Hospedagem via RCI / timeshare</h3>
+  <p>A frase "compramos o RCI resorts de Orlando" precisa ser traduzida no contrato real. Três cenários possíveis:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Cenário</th><th>O que foi comprado</th><th>Pode vender a clientes?</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A</strong></td><td>Semanas ou pontos deeded em resort específico de Orlando</td><td><span class="chip warn">Com risco</span> Aluguel de semana reservada com pontos próprios é em geral permitido, sujeito às regras do desenvolvedor sobre "uso comercial" (Wyndham emite cartas de violação). Exige parecer na Flórida.</td></tr>
+      <tr><td><strong>B</strong></td><td>Assinatura RCI (Weeks/Points) para trocar por outros resorts</td><td><span class="chip bad">Não</span> Troca confirmada e Guest Certificate não podem ser alugados nem vendidos. Cancelamento da associação.</td></tr>
+      <tr><td><strong>C</strong></td><td>Pacotes promocionais / Extra Vacations do RCI</td><td><span class="chip bad">Não</span> Uso do membro e convidados; sem revenda.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note good"><strong>Recomendação.</strong> Inventário próprio (cenário A) vira produto de margem alta e volume limitado, nunca base do negócio. A base vem de canal B2B legítimo: o Expedia TAAP paga comissão tipicamente de <strong>10–12% em hotéis</strong> sobre o valor com impostos <span class="tag v">verificado</span>. Cotar também bed banks e casas de temporada em Kissimmee <span class="tag p">premissa</span>.</div>
+
+  <h3 style="margin-top:22px">Passagens com pontos de cartão</h3>
+  <div class="two">
+    <div class="panel"><h3 style="font-size:16px">Seguro hoje</h3><p style="margin:0"><strong>Emissão assistida</strong> com pontos do próprio cliente, cobrando taxa fixa por bilhete. A empresa não compra nem vende pontos.</p><span class="chip ok">Recomendado</span></div>
+    <div class="panel"><h3 style="font-size:16px">Intermediário</h3><p style="margin:0">Passagem em dinheiro via consolidador ou site da companhia, com fee. Margem baixa, risco baixo.</p><span class="chip info">Complementar</span></div>
+    <div class="panel"><h3 style="font-size:16px">Modelo atual (pontos de terceiros)</h3><p style="margin:0">Risco de bilhete cancelado para o cliente e responsabilidade solidária da agência pelo CDC. Fora do CNPJ até o PL 3083 ser sancionado.</p><span class="chip bad">Adiar para 2027</span></div>
+  </div>
+
+  <h3 style="margin-top:22px">Carro, ingressos, seguro</h3>
+  <ul class="clean">
+    <li><strong>Carro:</strong> afiliação a locadoras/agregadores. Comissões não verificadas; cotar. O sistema já modela <code class="mono" style="font-size:13px">rental_car</code>.</li>
+    <li><strong>Ingressos Disney/Universal:</strong> revenda exige credenciamento; margens não verificadas. Alternativa: afiliado de revendedor autorizado.</li>
+    <li><strong>Seguro-viagem:</strong> intermediação é atividade de corretor registrado na SUSEP. Não vender direto; parceria ou afiliado.</li>
+    <li><strong>Afiliados em geral:</strong> a comissão de hotel via Booking é fração da comissão do Booking, não do valor da reserva <span class="tag v">verificado</span>. Vale mais como preenchimento automático de dados do que como receita (issue #44).</li>
+  </ul>
+</section>
+
+<section id="monetizacao">
+  <div class="sec-head"><span class="eyebrow">5 · Monetização</span><h2>Três linhas de receita, uma delas paga a conta</h2></div>
+  <figure>
+    <figcaption><span class="t">Margem estimada por família num pacote de R$ 40 mil</span><span class="s">R$ · todas as parcelas são premissas, exceto a taxa TAAP</span></figcaption>
+    <div id="ch-revenue"></div>
+    <div class="legend" id="lg-revenue"></div>
+    <details class="tv"><summary>Ver tabela e cálculo</summary><table><thead><tr><th>Parcela</th><th>Cálculo</th><th class="r">R$</th></tr></thead><tbody>
+      <tr><td>Comissão de hospedagem</td><td>R$ 12.000 × 11% (TAAP 10–12%)</td><td class="r">1.320</td></tr>
+      <tr><td>Taxa de planejamento e concierge</td><td>fixa por pacote <span class="tag p">premissa</span></td><td class="r">500</td></tr>
+      <tr><td>Carro</td><td>R$ 3.000 × 8% <span class="tag p">premissa</span></td><td class="r">240</td></tr>
+      <tr><td>Ingressos</td><td>R$ 8.000 × 3% <span class="tag p">premissa</span></td><td class="r">240</td></tr>
+      <tr><td>Afiliados</td><td>deep links do roteiro <span class="tag p">premissa</span></td><td class="r">60</td></tr>
+      <tr><td><strong>Total</strong></td><td>≈ 5,9% do pacote</td><td class="r"><strong>2.360</strong></td></tr>
+    </tbody></table></details>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>#</th><th>Linha</th><th>Mecanismo</th><th>Peso</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><strong>Serviço de viagem</strong> (agência/concierge)</td><td>Comissão de hospedagem B2B, fee em carro/ingresso/transfer, taxa de planejamento</td><td><span class="chip ok">Principal</span></td></tr>
+      <tr><td>2</td><td><strong>Plataforma</strong></td><td>Incluída no pacote para a família (retenção). Assinatura mensal só para agentes e agências (issue #45 sugere a partir de R$ 249/mês <span class="tag p">premissa</span>)</td><td><span class="chip info">B2B</span></td></tr>
+      <tr><td>3</td><td><strong>Afiliados</strong></td><td>Deep links de reserva a partir do roteiro</td><td><span class="chip">Marginal</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3 style="margin-top:22px">Tiers mapeados no schema existente</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Plano</th><th>Quem</th><th>Inclui</th><th class="r">Bot / mês</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">free</td><td>Lead / trial</td><td>Planejamento, DRE, auditoria; sem WhatsApp</td><td class="r">50 → propor 0</td></tr>
+      <tr><td class="mono">family</td><td>Cliente do pacote ou licença por viagem</td><td>Tudo + bot + digest + avisos</td><td class="r">300</td></tr>
+      <tr><td class="mono">pro</td><td>Agente individual (B2B)</td><td>Painel de operador, N famílias, branding leve</td><td class="r">1.500</td></tr>
+      <tr><td class="mono">enterprise</td><td>Agência com equipe</td><td>White-label, SLA, cotas custom</td><td class="r">ilimitado</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">Por que não cobrar mensalidade da família: a recompra é episódica. Se for vender sem pacote, cobrar <strong>por viagem</strong> (licença de 12 meses), nunca por mês. O schema atual comporta isso sem mudança.</div>
+</section>
+
+<section id="custos">
+  <div class="sec-head"><span class="eyebrow">6 · Custos</span><h2>Infra fixa de US$ 45; variável de poucos dólares</h2></div>
+  <div class="tiles">
+    <div class="tile"><span class="v num">US$ 25</span><span class="l">Supabase Pro / mês, com crédito de compute que cobre a instância Micro</span><span class="src"><span class="tag v">verificado</span></span></div>
+    <div class="tile"><span class="v num">US$ 20</span><span class="l">Vercel Pro por seat / mês, com US$ 20 de crédito de uso</span><span class="src"><span class="tag v">verificado</span></span></div>
+    <div class="tile"><span class="v num">US$ 0</span><span class="l">Meta Cloud API e Gemini: sem fixo, só por mensagem e por token</span><span class="src"><span class="tag v">verificado</span></span></div>
+    <div class="tile"><span class="v num">R$ 0</span><span class="l">CADASTUR (obrigatório para agência, validade 2 anos)</span><span class="src"><span class="tag v">verificado</span></span></div>
+  </div>
+  <figure>
+    <figcaption><span class="t">Custo variável por família: viagem de 15 dias, 4 participantes</span><span class="s">US$ · preços unitários verificados, quantidades derivadas do comportamento do bot</span></figcaption>
+    <div id="ch-varcost"></div>
+    <div class="legend" id="lg-varcost"></div>
+    <details class="tv"><summary>Ver tabela e preços unitários</summary><table><thead><tr><th>Componente</th><th>Quantidade</th><th class="r">US$</th></tr></thead><tbody>
+      <tr><td>Digest manhã e noite (template de utilidade, US$ 0,0068)</td><td>2 × 4 × 15 = 120</td><td class="r">0,82</td></tr>
+      <tr><td>Avisos por horário (≈ 9/dia)</td><td>9 × 4 × 15 = 540</td><td class="r">3,67</td></tr>
+      <tr><td>Respostas do bot dentro da janela de 24 h</td><td>grátis</td><td class="r">0,00</td></tr>
+      <tr><td>Gemini 3.5 Flash, 300 msg/mês (US$ 1,50 / US$ 9,00 por 1M tokens)</td><td>~4k in + 300 out por msg</td><td class="r">2,60</td></tr>
+      <tr><td><strong>Total (Flash)</strong></td><td></td><td class="r"><strong>7,09</strong></td></tr>
+      <tr><td>Alternativa: Gemini 3.5 Flash-Lite (US$ 0,30 / US$ 2,50)</td><td>mesmo volume</td><td class="r">0,60</td></tr>
+    </tbody></table></details>
+  </figure>
+  <div class="two">
+    <div class="panel"><h3 style="font-size:16px">Desenvolvimento <span class="tag p">premissa</span></h3><p style="margin:0">P0 ≈ 12 semanas de um dev sênior. O custo em reais depende de quem faz: o autor (custo de oportunidade) ou contratação PJ. Não há valor verificado; cotar 2–3 profissionais. O simulador de ROI abaixo deixa isso editável.</p></div>
+    <div class="panel"><h3 style="font-size:16px">Jurídico e pagamentos</h3><p style="margin:0">Parecer sobre timeshare (Flórida), revisão LGPD e contrato de turismo (Brasil), contador para estrutura societária: <strong>a orçar, sem número</strong>. Stripe no Brasil: 3,99% nacional, 0,4% em recorrência, e Pix é invite-only <span class="tag v">verificado, secundária</span>. Cotar gateways nacionais.</p></div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="sec-head"><span class="eyebrow">7 · Roadmap</span><h2>P0: o que falta para vender ao primeiro cliente externo</h2></div>
+  <p>Esforço em semanas de um dev sênior dedicado, sem contar paralelismo, revisão e aprovações externas (Meta, gateway).</p>
+  <figure>
+    <figcaption><span class="t">Esforço do P0 por item</span><span class="s">semanas · total ≈ 12</span></figcaption>
+    <div class="rm" id="rm-p0"></div>
+  </figure>
+  <div class="two">
+    <div class="panel"><h3 style="font-size:16px">P1 · primeiros 90 dias</h3><ul class="clean" style="margin:0;font-size:15px">
+      <li>Tools do bot para pedidos e finanças (<code class="mono" style="font-size:13px">request_quote</code>, <code class="mono" style="font-size:13px">get_budget_summary</code>) · 1,5 sem</li>
+      <li>Handoff bot → humano dentro da janela de 24 h · 2 sem</li>
+      <li>PWA + push (#38, #39) · 2 sem</li>
+      <li>Exportação PDF/.ics (#40) · 1 sem</li>
+      <li>Ingestão de voucher por foto (#28) · 2 sem</li>
+      <li>Divisão de despesas (#37) · 1,5 sem</li>
+    </ul></div>
+    <div class="panel"><h3 style="font-size:16px">P2 · escala B2B</h3><ul class="clean" style="margin:0;font-size:15px">
+      <li>White-label e plano Agência (#45), número de WhatsApp por agência · 4 sem</li>
+      <li>Afiliados (#44) · 2 sem</li>
+      <li>Realtime colaborativo (#41) · 2 sem</li>
+      <li>Sugestões de roteiro com LLM + Places (#29) · 3 sem</li>
+      <li>Grupos de WhatsApp (#46): a Meta Cloud API não suporta. Não fazer.</li>
+    </ul></div>
+  </div>
+  <h3 style="margin-top:22px">Mudanças em features existentes</h3>
+  <ul class="clean">
+    <li><strong>Copiloto no app:</strong> trocar simulação por edge function (PR #47). Sem isso a demo mente.</li>
+    <li><strong>Gift Cards &amp; Milhas:</strong> campo "emissão assistida" e fee no voo; não transacionar pontos de terceiros na plataforma.</li>
+    <li><strong>DRE:</strong> visão de margem da empresa por viagem (soma das comissões dos pedidos), separada da DRE da família.</li>
+    <li><strong>Auditoria:</strong> regras "dia sem hospedagem", "sem carro do aeroporto", "sem seguro". Cada finding vira botão "pedir cotação".</li>
+    <li><strong>Telefone do participante:</strong> validar E.164 e registrar opt-in com data e versão, exigência da Meta para templates.</li>
+  </ul>
+</section>
+
+<section id="gtm">
+  <div class="sec-head"><span class="eyebrow">8 · Go-to-market</span><h2>Quatro fases, cada uma com critério de corte</h2></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Fase</th><th>Quando</th><th>O que acontece</th><th>Critério para avançar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>0 · Piloto próprio</strong></td><td>05–20 set 2026 (em curso)</td><td>A viagem da família é o piloto. Medir mensagens/dia, falhas do bot, custo real, perguntas sem resposta. Sai um estudo de caso com números.</td><td>Estudo de caso escrito</td></tr>
+      <tr><td><strong>1 · Beta fechado</strong></td><td>out–dez 2026</td><td>5–10 famílias da carteira da Bárbara, viagem entre dez/26 e mar/27. Pacote com plataforma incluída; pedidos à mão enquanto o P0-4 não existe.</td><td>NPS ≥ 50 · ≥ 1 msg/dia/família · zero incidente com dado de menor · margem medida <span class="tag p">premissa</span></td></tr>
+      <tr><td><strong>2 · Lançamento</strong></td><td>Q1 2027</td><td>CNPJ com CNAE de agência, CADASTUR, contador, contrato revisado. P0 completo. Landing com o estudo de caso; canal Instagram/YouTube de nicho e indicação com crédito.</td><td>30–60 famílias ativas · margem &gt; custo de aquisição</td></tr>
+      <tr><td><strong>3 · B2B</strong></td><td>Q2–Q3 2027</td><td>Planos pro/enterprise para agentes de Orlando (issue #45). Pré-requisito: white-label e número de WhatsApp por agência.</td><td>10+ agências pagantes</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="roi">
+  <div class="sec-head"><span class="eyebrow">9 · ROI</span><h2>Simulador de retorno em 24 meses</h2></div>
+  <p>Nenhum valor abaixo é previsão. São premissas editáveis; os três cenários trocam o conjunto inteiro. O gráfico mostra o caixa acumulado mês a mês: o ponto onde a linha cruza o zero é o payback. A receita começa na fase 1 (meses 1–3), sobe na fase 2 (4–9) e de novo na fase 3 (10+), quando entram as agências B2B.</p>
+  <div class="roi">
+    <div class="panel">
+      <h3 style="font-size:16px">Premissas <span class="tag p">editáveis</span></h3>
+      <div class="presets" id="presets">
+        <button type="button" data-p="cons">Conservador</button>
+        <button type="button" data-p="base" class="on">Base</button>
+        <button type="button" data-p="otim">Otimista</button>
+      </div>
+      <div class="field"><label for="in-dev">Custo do dev / mês (R$)<span class="muted" id="o-dev"></span></label><input id="in-dev" type="number" min="0" step="500"></div>
+      <div class="field"><label for="in-weeks">Semanas de P0</label><input id="in-weeks" type="number" min="1" step="1"></div>
+      <div class="field"><label for="in-legal">Jurídico e contador, uma vez (R$)</label><input id="in-legal" type="number" min="0" step="500"></div>
+      <div class="field"><label for="in-ops">Operação / mês: pró-labore, atendimento (R$)</label><input id="in-ops" type="number" min="0" step="500"></div>
+      <div class="field"><label for="in-margin">Margem por família (R$)</label><input id="in-margin" type="number" min="0" step="100"></div>
+      <div class="field"><label for="in-f1">Famílias / mês · fase 1</label><input id="in-f1" type="number" min="0" step="1"></div>
+      <div class="field"><label for="in-f2">Famílias / mês · fase 2</label><input id="in-f2" type="number" min="0" step="1"></div>
+      <div class="field"><label for="in-f3">Famílias / mês · fase 3</label><input id="in-f3" type="number" min="0" step="1"></div>
+      <div class="field"><label for="in-ag">Agências B2B a partir do mês 13</label><input id="in-ag" type="number" min="0" step="1"></div>
+      <div class="field"><label for="in-agp">Assinatura por agência / mês (R$)</label><input id="in-agp" type="number" min="0" step="10"></div>
+      <div class="field"><label for="in-fx">Câmbio USD/BRL</label><input id="in-fx" type="number" min="1" step="0.01"></div>
+      <p style="font-size:13px;color:var(--muted);margin:0">Fixos embutidos: infra US$ 45/mês (verificado); ferramentas R$ 300/mês; custo variável US$ 7,09/família; taxa de pagamento 4% sobre a margem.</p>
+    </div>
+    <div style="display:grid;gap:14px;min-width:0">
+      <div class="kpis">
+        <div class="kpi"><div class="v num" id="k-inv"></div><div class="l">Investimento inicial</div></div>
+        <div class="kpi"><div class="v num" id="k-pay"></div><div class="l">Payback</div></div>
+        <div class="kpi"><div class="v num" id="k-cum"></div><div class="l">Caixa acumulado no mês 24</div></div>
+        <div class="kpi"><div class="v num" id="k-roi"></div><div class="l">ROI em 24 meses</div></div>
+      </div>
+      <figure style="margin:0">
+        <figcaption><span class="t">Caixa acumulado por mês</span><span class="s">R$ mil · linha cheia = premissas atuais; tracejadas = três cenários de referência</span></figcaption>
+        <div id="ch-roi"></div>
+        <div class="legend" id="lg-roi"></div>
+        <details class="tv"><summary>Ver tabela mensal das premissas atuais</summary><div class="tbl" style="border:0"><table id="t-roi"></table></div></details>
+      </figure>
+      <div class="kpis">
+        <div class="kpi"><div class="v num" id="k-mrev"></div><div class="l">Margem bruta / mês na fase 3</div></div>
+        <div class="kpi"><div class="v num" id="k-mcost"></div><div class="l">Custo fixo / mês</div></div>
+        <div class="kpi"><div class="v num" id="k-be"></div><div class="l">Famílias / mês para empatar o fixo</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="note">Leitura honesta: com operação de R$ 6 mil/mês e margem de R$ 2 mil por família, o negócio empata com <strong>3 a 4 famílias por mês</strong>. Abaixo disso a plataforma não paga o pró-labore, e o que sustenta é o serviço de agência sem software. Isso reforça a fase 1: medir margem real antes de contratar dev.</div>
+</section>
+
+<section id="riscos">
+  <div class="sec-head"><span class="eyebrow">10 · Riscos</span><h2>Fraquezas da ideia, sem suavizar</h2></div>
+  <div>
+    <div class="risk"><div class="sev"><i style="background:var(--critical)"></i>Crítico</div><p><strong>Inventário RCI não é revendável.</strong> Se o plano de hospedagem depende disso, o plano não fecha. Obter contrato e parecer antes de qualquer promessa comercial.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--critical)"></i>Crítico</div><p><strong>Milhas de terceiros:</strong> bilhete cancelado + responsabilidade solidária da agência. Fora do CNPJ até a lei.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--serious)"></i>Sério</div><p><strong>Textos jurídicos em rascunho.</strong> Vender antes de finalizar política e termos é infração da LGPD, agravada por dados de menores.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--serious)"></i>Sério</div><p><strong>Separar as empresas.</strong> Agência (responde por fornecedor) e plataforma (ativo de software) em CNPJs distintos, com contrato de licença. Validar com contador e advogado.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--serious)"></i>Sério</div><p><strong>Bus factor 1.</strong> Um único desenvolvedor conhece o sistema. Runbooks de incidente (bot mudo, token da Meta rotacionado, Gemini fora) e um segundo par de mãos antes do primeiro pagante.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--warn)"></i>Atenção</div><p><strong>Dependência de fornecedores.</strong> A Meta passou a cobrar por mensagem; o Flash-Lite 3.5 ficou mais caro que a geração anterior. Manter a abstração do provedor de LLM.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--warn)"></i>Atenção</div><p><strong>Produto sobreajustado a Orlando e parques.</strong> Bom para o nicho, ruim para diversificar. Não prometer outros destinos no lançamento.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--warn)"></i>Atenção</div><p><strong>Adoção do bot é incerta.</strong> Se a família não usa, o diferencial vira slide. Métrica de corte na fase 1: ≥ 1 mensagem/dia/família.</p></div>
+    <div class="risk"><div class="sev"><i style="background:var(--warn)"></i>Atenção</div><p><strong>Concorrência é de canal, não de software.</strong> O cliente compra pela confiança na pessoa. Se a carteira da Bárbara for menor do que se supõe, a fase 1 não tem cliente.</p></div>
+  </div>
+  <h3 style="margin-top:26px">Ideias adicionais</h3>
+  <ul class="clean">
+    <li><strong>Auditoria como gatilho de oferta:</strong> cada "falta X" vira botão "pedir cotação".</li>
+    <li><strong>Handoff para humano na janela de 24 h:</strong> o operador responde grátis pelo painel, não pelo celular pessoal.</li>
+    <li><strong>Relatório de fim de viagem:</strong> economia com gift cards, câmbio médio pago, o que deu certo. Material de indicação.</li>
+    <li><strong>Indicação com crédito no próximo pacote</strong>, registrada no tenant.</li>
+    <li><strong>Dados agregados e anônimos de preços</strong> viram conteúdo de marketing com custo zero.</li>
+    <li><strong>Licença por viagem</strong> para quem já comprou tudo por fora: preço baixo, lead da agência no próximo ano.</li>
+  </ul>
+</section>
+
+<section id="fontes">
+  <div class="sec-head"><span class="eyebrow">11 · Fontes</span><h2>Onde cada fato verificado foi conferido</h2></div>
+  <p style="font-size:14px;color:var(--muted)">Acessadas em 10/09/2026. As páginas oficiais de preços da Meta e do Google estavam bloqueadas pelo proxy desta sessão; para elas foram usadas fontes secundárias, indicadas.</p>
+  <ul class="src-list">
+    <li>RCI, uso comercial proibido: <a href="https://www.rci.com/static/docs/namer/en_US/rci-points-disclosure-guide.pdf">Disclosure Guide RCI Points</a> · <a href="https://www.rci.com/RCIW_TermsEnglish2004.pdf">Termos RCI Weeks</a> · <a href="https://www.rci.com/static-pages/eu-all-terms/rental-terms">Rental terms</a> · <a href="https://www.redweek.com/forums/messages?thread_id=18104">RedWeek</a></li>
+    <li>Wyndham, aluguel e uso comercial: <a href="https://clubwyndham.wyndhamdestinations.com/us/en/owner-guide/resources/renting-points-standard-booking">Club Wyndham</a> · <a href="https://tugbbs.com/forums/threads/wyndham-violation-letter-re-commercial-use.322010/">TUG</a></li>
+    <li>PL 3083/2026 (milhas): <a href="https://movimentoeconomico.com.br/turismo-3/2026/08/13/passagens-aereas-programas-de-fidelidade-terao-novas-regras-para-venda-de-milhas/">Movimento Econômico</a> · <a href="https://aeroportos.org/nova-regra-das-milhas-avanca-na-camara-e-pode-garantir-conversao-de-pontos-em-dinheiro-veja-como-funcionara/">Aeroportos do Brasil</a> · <a href="https://www.maismilhas.com.br/blog/compra-e-venda-de-milhas-e-legal-o-que-diz-a-lei">Mais Milhas</a></li>
+    <li>CADASTUR / Lei 11.771/2008: <a href="https://www.gov.br/pt-br/servicos/cadastrar-prestadora-de-servico-turistico">gov.br</a> · <a href="https://www.airland.com.br/blog/cadastur-agencia-turismo">Airland</a></li>
+    <li>Visit Orlando 2025: <a href="https://www.visitorlando.org/media/press-releases/post/orlando-welcomed-record-767-million-visitors-in-2025-remaining-most-visited-destination-in-the-us/">press release</a> · <a href="https://brasilturis.com.br/2026/05/08/orlando-atinge-767-milhoes-de-visitantes-e-brasil-cresce-56/">Brasilturis</a></li>
+    <li>Custo de viagem de família: <a href="https://viajandoparaorlando.com/quanto-custa-viajar-para-orlando-orcamento-para-casal-e-familia-em-2026/">Viajando para Orlando</a> · <a href="https://orlandoparabrasileiros.com/quanto-custa-viajar-para-orlando/">Orlando para Brasileiros</a> · <a href="https://www.cnnbrasil.com.br/viagemegastronomia/viagem/quanto-custa-viajar-para-orlando-do-visto-aos-ingressos-dos-parques/">CNN Brasil</a></li>
+    <li>Expedia TAAP: <a href="https://partner.expediagroup.com/en-us/resources/blog/travel-agent-commission-what-you-should-know">Expedia Group</a> · <a href="https://mainstreetagencytravel.com/news/expedia-taap-the-smart-complete-guide-for-travel-agents-in-2026">MainStreet</a> · Booking afiliados: <a href="https://track360.io/blog/booking-com-affiliate-partner-program-operator-teardown-2026">track360</a></li>
+    <li>WhatsApp Business Platform, Brasil 2026 (secundárias): <a href="https://www.messagecentral.com/blog/whatsapp-business-api-pricing-brazil">Message Central</a> · <a href="https://whautomate.com/whatsapp-business-api-pricing-brazil">Whautomate</a> · <a href="https://www.engagelab.com/blog/whatsapp-business-api-pricing">EngageLab</a></li>
+    <li>Gemini 3.5 Flash / Flash-Lite (secundárias): <a href="https://pricepertoken.com/pricing-page/model/google-gemini-3.5-flash">pricepertoken</a> · <a href="https://artificialanalysis.ai/models/gemini-3-5-flash-lite">Artificial Analysis</a> · <a href="https://tokencost.app/blog/gemini-3-5-flash-lite-price-increase">TokenCost</a></li>
+    <li>Supabase Pro: <a href="https://makerkit.dev/blog/saas/supabase-pricing">Makerkit</a> · Vercel Pro: <a href="https://costbench.com/software/developer-tools/vercel/">Costbench</a> · Stripe Brasil: <a href="https://stripe.com/br/payment-method/pix">Stripe Pix</a> · <a href="https://www.socialhub.pro/blog/cobranca-whatsapp-pagar-me-stripe-brasil-subscription-recorrencia-internacional-pme-2026/">SocialHub</a></li>
+    <li>Internas: CLAUDE.md, src/types/database.types.ts, src/components/Navigation.tsx, supabase/migrations, supabase/functions/_shared/quota.ts, issues #37–#46 e PRs #47–#50.</li>
+  </ul>
+</section>
+
+</main>
+</div>
+</div>
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, a, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+  const tip = document.getElementById('tip');
+  const showTip = (ev, html) => { tip.innerHTML = html; tip.classList.add('on'); const x = ev.clientX + 14, y = ev.clientY + 14; tip.style.left = Math.min(x, window.innerWidth - tip.offsetWidth - 12) + 'px'; tip.style.top = y + 'px'; };
+  const hideTip = () => tip.classList.remove('on');
+  const fmtBR = (n, d = 0) => n.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const cssVar = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  /* --- Market: horizontal bars --- */
+  (function () {
+    const data = [['Canadá', 1100000], ['Reino Unido', 933500], ['Brasil', 736300]];
+    const W = 720, rowH = 34, padL = 100, padR = 90, H = data.length * rowH + 30;
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart', role: 'img', 'aria-label': 'Mercados internacionais de Orlando em 2025' });
+    const max = 1200000, sx = (W - padL - padR) / max;
+    const grid = el('g', { class: 'grid' }, svg);
+    [0, 400000, 800000, 1200000].forEach(v => { const x = padL + v * sx; el('line', { x1: x, y1: 6, x2: x, y2: H - 22 }, grid); const t = el('text', { x, y: H - 6, 'text-anchor': 'middle', class: 'muted' }, svg); t.textContent = v === 0 ? '0' : (v / 1e6).toLocaleString('pt-BR') + ' mi'; });
+    data.forEach(([name, v], i) => {
+      const y = 8 + i * rowH; const w = v * sx;
+      const r = el('rect', { x: padL, y, width: w, height: 22, rx: 4, fill: name === 'Brasil' ? 'var(--s3)' : 'var(--s1)' }, svg);
+      const t = el('text', { x: padL - 8, y: y + 15, 'text-anchor': 'end', class: 'lbl' }, svg); t.textContent = name;
+      const vt = el('text', { x: padL + w + 8, y: y + 15, class: 'num' }, svg); vt.textContent = fmtBR(v);
+      r.addEventListener('mousemove', e => showTip(e, `<b>${name}</b> · ${fmtBR(v)} visitantes`)); r.addEventListener('mouseleave', hideTip);
+    });
+    document.getElementById('ch-market').appendChild(svg);
+  })();
+
+  /* --- Stacked single bars (revenue, variable cost) --- */
+  function stacked(mount, legendMount, parts, opts) {
+    const total = parts.reduce((s, p) => s + p.v, 0);
+    const W = 720, H = 120, padL = 8, padR = 8, barY = 34, barH = 34, gap = 2;
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart', role: 'img', 'aria-label': opts.label }, mount);
+    const sx = (W - padL - padR - gap * (parts.length - 1)) / total;
+    let x = padL;
+    parts.forEach((p, i) => {
+      const w = p.v * sx;
+      const r = el('rect', { x, y: barY, width: Math.max(w, 0), height: barH, rx: i === 0 || i === parts.length - 1 ? 4 : 0, fill: p.c }, svg);
+      r.addEventListener('mousemove', e => showTip(e, `<b>${p.n}</b> · ${opts.fmt(p.v)} · ${Math.round(p.v / total * 100)}%`)); r.addEventListener('mouseleave', hideTip);
+      if (w > 70) { const t = el('text', { x: x + w / 2, y: barY + barH + 18, 'text-anchor': 'middle', class: 'num' }, svg); t.textContent = opts.fmt(p.v); }
+      x += w + gap;
+    });
+    const tt = el('text', { x: padL, y: 20, class: 'lbl' }, svg); tt.textContent = `Total ${opts.fmt(total)}`;
+    const sub = el('text', { x: W - padR, y: 20, 'text-anchor': 'end', class: 'muted' }, svg); sub.textContent = opts.sub || '';
+    legendMount.innerHTML = parts.map(p => `<span><i style="background:${p.c}"></i>${p.n}</span>`).join('');
+  }
+  stacked(document.getElementById('ch-revenue'), document.getElementById('lg-revenue'), [
+    { n: 'Comissão de hospedagem (TAAP 11%)', v: 1320, c: 'var(--s1)' },
+    { n: 'Taxa de planejamento e concierge', v: 500, c: 'var(--s2)' },
+    { n: 'Carro', v: 240, c: 'var(--s3)' },
+    { n: 'Ingressos', v: 240, c: 'var(--s4)' },
+    { n: 'Afiliados', v: 60, c: 'var(--s7)' },
+  ], { label: 'Margem por família', fmt: v => 'R$ ' + fmtBR(v), sub: '≈ 5,9% de um pacote de R$ 40 mil' });
+  stacked(document.getElementById('ch-varcost'), document.getElementById('lg-varcost'), [
+    { n: 'Avisos por horário (540 templates)', v: 3.67, c: 'var(--s1)' },
+    { n: 'Gemini 3.5 Flash (300 msg)', v: 2.60, c: 'var(--s2)' },
+    { n: 'Digest manhã e noite (120 templates)', v: 0.82, c: 'var(--s3)' },
+  ], { label: 'Custo variável por família', fmt: v => 'US$ ' + fmtBR(v, 2), sub: '≈ R$ 40 a 5,62 · respostas do bot na janela de 24 h são grátis' });
+
+  /* --- Roadmap bars --- */
+  (function () {
+    const items = [
+      ['P0-1', 1, 'Fechar PRs #47, #48, #49, #50'],
+      ['P0-2', 0.5, 'Textos jurídicos finais, LEGAL_IS_DRAFT = false'],
+      ['P0-3', 2, 'Papel de operador e painel "Minhas famílias"'],
+      ['P0-4', 3, 'Catálogo de ofertas e fluxo de pedidos'],
+      ['P0-5', 2, 'Billing: gateway com Pix, subscriptions, gates de feature'],
+      ['P0-6', 1, 'Templates Meta aprovados (+ prazo da Meta)'],
+      ['P0-7', 1, 'Onboarding do cliente feito pelo operador'],
+      ['P0-8', 1, 'Sentry, eventos de produto, admin de custos por tenant'],
+    ];
+    const max = 3, m = document.getElementById('rm-p0');
+    items.forEach(([id, w, d]) => {
+      const row = document.createElement('div'); row.className = 'rm-row';
+      row.innerHTML = `<span class="mono" style="font-size:13px">${id}</span><div class="bar" title="${w} sem"><i style="width:${w / max * 100}%"></i></div><span class="desc"><span class="w">${fmtBR(w, w % 1 ? 1 : 0)} sem</span> · ${d}</span>`;
+      m.appendChild(row);
+    });
+  })();
+
+  /* --- ROI simulator --- */
+  const PRESETS = {
+    cons: { dev: 18000, weeks: 14, legal: 15000, ops: 6000, margin: 1500, f1: 2, f2: 5, f3: 8, ag: 2, agp: 249, fx: 5.62 },
+    base: { dev: 18000, weeks: 12, legal: 12000, ops: 6000, margin: 2000, f1: 3, f2: 8, f3: 15, ag: 5, agp: 249, fx: 5.62 },
+    otim: { dev: 18000, weeks: 12, legal: 12000, ops: 6000, margin: 2500, f1: 5, f2: 12, f3: 25, ag: 10, agp: 249, fx: 5.62 },
+  };
+  const KEYS = ['dev', 'weeks', 'legal', 'ops', 'margin', 'f1', 'f2', 'f3', 'ag', 'agp', 'fx'];
+  const inp = k => document.getElementById('in-' + k);
+  const INFRA_USD = 45, TOOLS_BRL = 300, VAR_USD = 7.09, PAY_FEE = 0.04, MONTHS = 24;
+
+  function simulate(p) {
+    const invest = p.dev / 4.33 * p.weeks + p.legal;
+    const fixed = INFRA_USD * p.fx + TOOLS_BRL + p.ops;
+    const rows = [{ m: 0, fam: 0, rev: 0, cost: 0, net: -invest, cum: -invest }];
+    let cum = -invest, payback = null;
+    for (let m = 1; m <= MONTHS; m++) {
+      const fam = m <= 3 ? p.f1 : m <= 9 ? p.f2 : p.f3;
+      const agencies = m >= 13 ? p.ag : 0;
+      const rev = fam * p.margin + agencies * p.agp;
+      const cost = fixed + fam * VAR_USD * p.fx + rev * PAY_FEE;
+      const net = rev - cost; cum += net;
+      if (payback === null && cum >= 0) payback = m;
+      rows.push({ m, fam, rev, cost, net, cum });
+    }
+    const revPhase3 = p.f3 * p.margin + p.ag * p.agp;
+    const breakEven = p.margin > 0 ? fixed / (p.margin * (1 - PAY_FEE) - VAR_USD * p.fx) : Infinity;
+    return { invest, fixed, rows, payback, cum, roi: invest > 0 ? (cum + invest) / invest : 0, revPhase3, breakEven };
+  }
+
+  function read() { const p = {}; KEYS.forEach(k => p[k] = parseFloat(inp(k).value) || 0); return p; }
+  function write(p) { KEYS.forEach(k => inp(k).value = p[k]); }
+
+  function drawRoi(current, refs) {
+    const mount = document.getElementById('ch-roi'); mount.innerHTML = '';
+    const W = 720, H = 300, padL = 64, padR = 16, padT = 14, padB = 34;
+    const all = [current, ...refs.map(r => r.sim)];
+    let min = Math.min(...all.flatMap(s => s.rows.map(r => r.cum))), max = Math.max(...all.flatMap(s => s.rows.map(r => r.cum)));
+    min = Math.min(min, 0); max = Math.max(max, 0);
+    const span = max - min || 1; min -= span * 0.05; max += span * 0.05;
+    const sx = m => padL + m / MONTHS * (W - padL - padR);
+    const sy = v => padT + (max - v) / (max - min) * (H - padT - padB);
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart', role: 'img', 'aria-label': 'Caixa acumulado por mês' }, mount);
+    const step = niceStep((max - min) / 6);
+    const grid = el('g', { class: 'grid' }, svg);
+    for (let v = Math.ceil(min / step) * step; v <= max; v += step) {
+      el('line', { x1: padL, x2: W - padR, y1: sy(v), y2: sy(v) }, grid);
+      const t = el('text', { x: padL - 8, y: sy(v) + 4, 'text-anchor': 'end', class: 'num muted' }, svg); t.textContent = fmtBR(Math.round(v / 1000) + 0);
+    }
+    el('line', { x1: padL, x2: W - padR, y1: sy(0), y2: sy(0), stroke: 'var(--ink-2)', 'stroke-width': 1.5 }, svg);
+    [0, 3, 9, 12, 18, 24].forEach(m => { const t = el('text', { x: sx(m), y: H - 12, 'text-anchor': 'middle', class: 'muted' }, svg); t.textContent = 'm' + m; });
+    [[3, 'fase 2'], [9, 'fase 3'], [12, 'B2B']].forEach(([m, l]) => { el('line', { x1: sx(m), x2: sx(m), y1: padT, y2: H - padB, stroke: 'var(--line)', 'stroke-dasharray': '2 3' }, svg); const t = el('text', { x: sx(m) + 4, y: padT + 10, class: 'muted' }, svg); t.textContent = l; });
+    const path = rows => rows.map((r, i) => (i ? 'L' : 'M') + sx(r.m).toFixed(1) + ' ' + sy(r.cum).toFixed(1)).join(' ');
+    refs.forEach(r => el('path', { d: path(r.sim.rows), fill: 'none', stroke: r.c, 'stroke-width': 2, 'stroke-dasharray': '5 4', opacity: .85 }, svg));
+    el('path', { d: path(current.rows), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 2.5, 'stroke-linejoin': 'round' }, svg);
+    const last = current.rows[MONTHS];
+    el('circle', { cx: sx(MONTHS), cy: sy(last.cum), r: 4.5, fill: 'var(--ink)', stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+    if (current.payback) { const pb = current.rows[current.payback]; el('circle', { cx: sx(pb.m), cy: sy(pb.cum), r: 5, fill: 'var(--good)', stroke: 'var(--surface)', 'stroke-width': 2 }, svg); const t = el('text', { x: sx(pb.m), y: sy(pb.cum) - 10, 'text-anchor': 'middle', class: 'lbl' }, svg); t.textContent = 'payback m' + pb.m; }
+    const hover = el('line', { x1: 0, x2: 0, y1: padT, y2: H - padB, stroke: 'var(--muted)', opacity: 0 }, svg);
+    const hit = el('rect', { x: padL, y: padT, width: W - padL - padR, height: H - padT - padB, fill: 'transparent' }, svg);
+    hit.addEventListener('mousemove', e => {
+      const rect = svg.getBoundingClientRect(); const px = (e.clientX - rect.left) / rect.width * W;
+      const m = Math.max(0, Math.min(MONTHS, Math.round((px - padL) / (W - padL - padR) * MONTHS)));
+      hover.setAttribute('x1', sx(m)); hover.setAttribute('x2', sx(m)); hover.setAttribute('opacity', 1);
+      const r = current.rows[m];
+      showTip(e, `<b>Mês ${m}</b> · ${r.fam} famílias<br>margem R$ ${fmtBR(r.rev)} · custo R$ ${fmtBR(r.cost)}<br>acumulado <b>R$ ${fmtBR(r.cum)}</b>`);
+    });
+    hit.addEventListener('mouseleave', () => { hover.setAttribute('opacity', 0); hideTip(); });
+    document.getElementById('lg-roi').innerHTML = `<span><i style="background:var(--ink)"></i>Premissas atuais</span>` + refs.map(r => `<span><i style="background:${r.c}"></i>${r.n}</span>`).join('');
+  }
+  function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+
+  function render() {
+    const p = read();
+    const sim = simulate(p);
+    const refs = [
+      { n: 'Conservador', c: 'var(--s2)', sim: simulate(PRESETS.cons) },
+      { n: 'Base', c: 'var(--s1)', sim: simulate(PRESETS.base) },
+      { n: 'Otimista', c: 'var(--s3)', sim: simulate(PRESETS.otim) },
+    ];
+    drawRoi(sim, refs);
+    const set = (id, v, cls) => { const e = document.getElementById(id); e.textContent = v; e.className = 'v num' + (cls ? ' ' + cls : ''); };
+    set('k-inv', 'R$ ' + fmtBR(sim.invest));
+    set('k-pay', sim.payback ? 'mês ' + sim.payback : 'não ocorre em 24 m', sim.payback ? 'pos' : 'neg');
+    set('k-cum', 'R$ ' + fmtBR(sim.cum), sim.cum >= 0 ? 'pos' : 'neg');
+    set('k-roi', (sim.roi >= 0 ? '+' : '') + fmtBR(sim.roi * 100) + '%', sim.roi >= 0 ? 'pos' : 'neg');
+    set('k-mrev', 'R$ ' + fmtBR(sim.revPhase3));
+    set('k-mcost', 'R$ ' + fmtBR(sim.fixed));
+    set('k-be', isFinite(sim.breakEven) && sim.breakEven > 0 ? fmtBR(sim.breakEven, 1) : '—');
+    document.getElementById('o-dev').textContent = 'semana ≈ R$ ' + fmtBR(p.dev / 4.33);
+    const t = document.getElementById('t-roi');
+    t.innerHTML = '<thead><tr><th>Mês</th><th class="r">Famílias</th><th class="r">Margem</th><th class="r">Custo</th><th class="r">Líquido</th><th class="r">Acumulado</th></tr></thead><tbody>' +
+      sim.rows.map(r => `<tr><td>${r.m}</td><td class="r">${r.fam}</td><td class="r">${fmtBR(r.rev)}</td><td class="r">${fmtBR(r.cost)}</td><td class="r">${fmtBR(r.net)}</td><td class="r">${fmtBR(r.cum)}</td></tr>`).join('') + '</tbody>';
+    try { localStorage.setItem('nogaria-roi', JSON.stringify(p)); } catch (e) { }
+  }
+
+  const presetBtns = document.querySelectorAll('#presets button');
+  presetBtns.forEach(b => b.addEventListener('click', () => { presetBtns.forEach(x => x.classList.remove('on')); b.classList.add('on'); write(PRESETS[b.dataset.p]); render(); }));
+  KEYS.forEach(k => inp(k).addEventListener('input', () => { presetBtns.forEach(x => x.classList.remove('on')); render(); }));
+  let initial = PRESETS.base;
+  try { const s = localStorage.getItem('nogaria-roi'); if (s) { const o = JSON.parse(s); if (KEYS.every(k => typeof o[k] === 'number')) { initial = o; presetBtns.forEach(x => x.classList.remove('on')); } } } catch (e) { }
+  write(initial); render();
+  window.addEventListener('resize', render);
+})();
+</script>
