@@ -4,6 +4,7 @@ export { EPCOT_DIA_09_ITEMS } from './epcotDia09';
 export { HOLLYWOOD_STUDIOS_ITEMS } from './hollywoodStudios';
 export { ANIMAL_KINGDOM_ITEMS } from './animalKingdom';
 export { ANIMAL_KINGDOM_DIA_11_ITEMS } from './animalKingdomDia11';
+export { HOLLYWOOD_STUDIOS_DIA_12_ITEMS } from './hollywoodStudiosDia12';
 export { UNIVERSAL_STUDIOS_FLORIDA_ITEMS } from './universalStudiosFlorida';
 export { ISLANDS_OF_ADVENTURE_ITEMS } from './islandsOfAdventure';
 export { EPIC_UNIVERSE_ITEMS } from './epicUniverse';
