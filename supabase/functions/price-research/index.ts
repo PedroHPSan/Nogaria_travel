@@ -1,8 +1,9 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { searchPrices } from './gemini.ts';
+import { resolveGeminiModel } from '../_shared/gemini.ts';
+import { estimateCostUsd } from '../_shared/aiPricing.ts';
 import {
   ALLOWED_MARKETS,
-  DEFAULT_AI_MODEL,
   DEFAULT_FREE_TIER_DAILY_REQUESTS,
   DEFAULT_FREE_TIER_DAILY_TOKENS,
   DEFAULT_FREE_TIER_RPM_LIMIT,
@@ -155,16 +156,9 @@ Deno.serve(async (request) => {
     }
 
     // model_name é texto livre na UI: nomes de outro provedor ou gerações
-    // descontinuadas do Gemini retornariam HTTP 404 na API.
-    let modelName = String(config?.model_name ?? '').trim();
-    if (
-      !modelName.startsWith('gemini-') ||
-      modelName.includes('1.5') ||
-      modelName.includes('2.5') ||
-      modelName.includes('flash-latest')
-    ) {
-      modelName = DEFAULT_AI_MODEL;
-    }
+    // descontinuadas do Gemini retornariam HTTP 404 na API. Mesma regra (e mesmo
+    // default) do bot — era uma segunda cópia, que já tinha divergido do _shared.
+    const modelName = resolveGeminiModel(config?.model_name as string | null | undefined);
     const modelTemperature = Number(config?.temperature ?? 0.2);
     const dailyTokenLimit = config?.daily_token_limit ?? DEFAULT_FREE_TIER_DAILY_TOKENS;
     const monthlyBudgetUsd = config?.monthly_budget_usd ? Number(config.monthly_budget_usd) : null;
@@ -227,8 +221,7 @@ Deno.serve(async (request) => {
     const result = await searchPrices(body, apiKey, modelName, modelTemperature);
     const elapsed = Date.now() - started;
 
-    // Gemini Flash: US$ 0,075 por 1M de entrada, US$ 0,30 por 1M de saída.
-    const cost = (result.tokensIn / 1_000_000) * 0.075 + (result.tokensOut / 1_000_000) * 0.3;
+    const cost = estimateCostUsd(modelName, result.tokensIn, result.tokensOut);
 
     let usageInsertError: { message: string } | null = null;
     if (tenantId) {
@@ -240,7 +233,7 @@ Deno.serve(async (request) => {
         model: modelName,
         tokens_input: result.tokensIn,
         tokens_output: result.tokensOut,
-        estimated_cost_usd: Number(cost.toFixed(6)),
+        estimated_cost_usd: cost,
         timestamp: new Date().toISOString(),
       });
       usageInsertError = insErr;
@@ -263,7 +256,7 @@ Deno.serve(async (request) => {
       usage: {
         tokens_in: result.tokensIn,
         tokens_out: result.tokensOut,
-        cost_usd: Number(cost.toFixed(6)),
+        cost_usd: cost,
         elapsed_ms: elapsed,
         logged: !usageInsertError,
       },

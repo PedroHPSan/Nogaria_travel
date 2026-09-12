@@ -43,7 +43,7 @@ export type ToolExecutor = (name: string, args: Record<string, unknown>) => Prom
 
 const MAX_TOOL_ROUNDS = 4;
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
 /**
  * Resolve o modelo a usar a partir do `model_name` salvo em `ai_provider_configs`.

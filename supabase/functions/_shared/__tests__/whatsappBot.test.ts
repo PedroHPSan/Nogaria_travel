@@ -267,7 +267,13 @@ describe('createToolExecutor — validação de argumentos', () => {
 });
 
 describe('resolveGeminiModel', () => {
-  it('mantém um modelo Gemini válido', () => {
+  it('o default é o modelo mais capaz da linha', () => {
+    expect(DEFAULT_GEMINI_MODEL).toBe('gemini-3.8-flash');
+  });
+
+  it('mantém um modelo Gemini válido, inclusive a geração anterior', () => {
+    expect(resolveGeminiModel('gemini-3.8-flash')).toBe('gemini-3.8-flash');
+    // 3.5 continua existindo: quem escolher explicitamente não é sobrescrito.
     expect(resolveGeminiModel('gemini-3.5-flash')).toBe('gemini-3.5-flash');
     expect(resolveGeminiModel('gemini-3-pro')).toBe('gemini-3-pro');
   });

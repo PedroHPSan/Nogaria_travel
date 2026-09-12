@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { chatWithTools, extractJsonFromDocument, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
+import { estimateCostUsd } from '../_shared/aiPricing.ts';
 import { downloadMedia, sendTextMessage } from '../_shared/whatsappClient.ts';
 import { fetchTripContext, buildSystemPrompt, localDateIso } from '../_shared/tripContext.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
@@ -277,7 +278,7 @@ async function handleMediaMessage(supabase: SupabaseClient, msg: IncomingMediaMe
   const extraction = parseVoucherExtraction(json);
 
   try {
-    const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
+    const cost = estimateCostUsd(model, usage.tokensIn, usage.tokensOut);
     await supabase.from('ai_usage_logs').insert({
       tenant_id: config.tenant_id,
       user_name: msg.from,
@@ -286,7 +287,7 @@ async function handleMediaMessage(supabase: SupabaseClient, msg: IncomingMediaMe
       model,
       tokens_input: usage.tokensIn,
       tokens_output: usage.tokensOut,
-      estimated_cost_usd: Number(cost.toFixed(6)),
+      estimated_cost_usd: cost,
       timestamp: new Date().toISOString(),
       latency_ms: Date.now() - startedAt,
       tool_rounds: 0,
@@ -472,8 +473,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
       ...(quotaFooter ? { payload: quotaFooter } : {}),
     });
 
-    // Mesmo modelo de custo do price-research (Gemini Flash).
-    const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
+    const cost = estimateCostUsd(model, usage.tokensIn, usage.tokensOut);
     await supabase.from('ai_usage_logs').insert({
       tenant_id: config.tenant_id,
       user_name: msg.from,
@@ -482,7 +482,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
       model,
       tokens_input: usage.tokensIn,
       tokens_output: usage.tokensOut,
-      estimated_cost_usd: Number(cost.toFixed(6)),
+      estimated_cost_usd: cost,
       timestamp: new Date().toISOString(),
       latency_ms: Date.now() - startedAt,
       tool_rounds: usage.toolRounds,

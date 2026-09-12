@@ -87,7 +87,7 @@ Icons are `lucide-react` throughout (16 files). `recharts`, `date-fns`, `clsx`, 
 
 ## WhatsApp Bot (NLP via Gemini + Meta Cloud API)
 
-Added 2026-08-25. The bot answers trip questions, sends the daily activity list, and delivers reminders via WhatsApp. AI is **Gemini** (`gemini-3.5-flash`, same REST v1beta pattern as `price-research`, costs logged to `ai_usage_logs` with `function_name: 'whatsapp_bot'`).
+Added 2026-08-25. The bot answers trip questions, sends the daily activity list, and delivers reminders via WhatsApp. AI is **Gemini** (default `gemini-3.8-flash`, same REST v1beta pattern as `price-research`, costs logged to `ai_usage_logs` with `function_name: 'whatsapp_bot'` — see *Modelo e custo* below).
 
 **Constraint that shaped the design:** the official Meta Cloud API does **not** support groups — delivery is 1:1 to each participant's `participants.whatsapp_phone`. (A group-capable Evolution API variant was considered and rejected.)
 
@@ -96,6 +96,22 @@ Layout:
 - `supabase/functions/daily-digest/index.ts` — public, gated by `x-cron-secret` header. Sends the day's itinerary + reminders (tasks due ≤ 48h, flights ≤ 24h, height alerts for the youngest minor) to every participant with a phone, at each tenant's `digest_time`/`timezone`. Scheduled by pg_cron (`'whatsapp-daily-digest'`, hourly) in `20260825130000_daily_digest_cron.sql`, which reads `project_url`/`cron_secret` from **Vault** and skips with a WARNING if absent.
 - `supabase/functions/_shared/` — `formatter.ts` (digest text, pure), `tripContext.ts` (context loader + system prompt; `localDateIso` is timezone-aware), `gemini.ts` (tool-calling loop, max 4 rounds), `tripTools.ts` (5 tools: `get_itinerary`/`get_tasks`/`get_flight_info` read; `mark_itinerary_item_done`/`complete_task` write — all args strictly validated before touching the DB), `whatsappClient.ts` (Meta send adapter).
 - Tables: `whatsapp_configs` and `whatsapp_messages` (both tenant-scoped RLS, same pattern as `ai_provider_configs`); `participants.whatsapp_phone` added in `20260825120000_whatsapp_integration.sql` and mapped in `participantMapper.ts`.
+
+### Modelo e custo da IA (2026-09-12)
+
+**O modelo é configuração, não código.** As quatro chamadas ao Gemini (`whatsapp-webhook` para chat e para voucher, `copilot-chat`, `price-research`) leem `ai_provider_configs.model_name` do tenant **em runtime**, a cada requisição, e passam por `resolveGeminiModel()`. Consequência prática: dá pra trocar o modelo pelo campo "Modelo de IA" da aba Copiloto, sem deploy de nada — a próxima mensagem já sai no modelo novo. A linha do tenant sempre vence o default do código; um tenant **sem** linha em `ai_provider_configs` (nada cria uma automaticamente — `create_tenant_with_owner` não insere) cai no `DEFAULT_GEMINI_MODEL`.
+
+O default é **`gemini-3.8-flash`** (`_shared/gemini.ts`), o mais capaz da linha Flash e o único lugar onde esse default vive — `price-research` mantinha uma segunda cópia da regra de resolução, removida aqui porque já tinha divergido.
+
+`resolveGeminiModel` é deliberadamente **permissivo**: aceita qualquer `gemini-*` que não contenha `1.5`, `2.5` ou `flash-latest`, para não travar modelos futuros. O preço disso é que o campo da UI é texto livre sem validação de existência — `gemini-3.8-flsh` passa no filtro, vira HTTP 404 na API do Gemini, e como o webhook já devolveu 200 pra Meta o usuário só recebe a mensagem de fallback genérica; o erro real fica no log da function.
+
+**`_shared/aiPricing.ts` é a tabela de preços**, em USD por 1M de tokens. Antes disso o custo era `(tokensIn/1e6)*0.075 + (tokensOut/1e6)*0.3` hardcoded em quatro lugares — a tarifa do `gemini-1.5-flash`, nunca atualizada na migração para o 3.5. Com o 3.5-flash a US$ 1,50 / US$ 9,00, `estimated_cost_usd` saía ~20× abaixo na entrada e ~30× na saída, corrompendo silenciosamente as duas coisas que leem esse campo: o guardrail de `monthly_budget_usd` em `price-research` e a view `tenant_monthly_ai_costs`.
+
+Duas decisões de design na tabela, ambas testadas em `aiPricing.test.ts`:
+- **A virada de tarifa é datada, não um TODO.** A promoção da geração 3.6+ (US$ 0,75 / US$ 3,75) acaba em 31/12/2026 e dobra para US$ 1,50 / US$ 7,50. Sem `standardFrom` no código, todo custo registrado a partir de 01/01/2027 sairia pela metade até alguém lembrar de fazer deploy.
+- **Modelo desconhecido é cobrado pelo teto**, nunca pelo piso. Como `resolveGeminiModel` deixa passar qualquer `gemini-*` novo, cair fora da tabela é esperado, não excepcional. Subestimar deixa furar o orçamento sem o guardrail disparar; superestimar só freia mais cedo — é o único erro dos dois que dá pra perceber.
+
+Nota contraintuitiva: **subir de 3.5 para 3.8 barateia**. O 3.5-flash não tem promoção (US$ 1,50 / US$ 9,00) e é mais caro na saída que o 3.8 mesmo depois de 01/01/2027 (US$ 1,50 / US$ 7,50).
 
 ### Avisos de atividade e caminho quente do bot (2026-09-06)
 

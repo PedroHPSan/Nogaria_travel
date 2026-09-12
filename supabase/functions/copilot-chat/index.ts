@@ -5,6 +5,7 @@
 // tenant/trip vem inteiramente de is_tenant_member/is_trip_member.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { chatWithTools, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
+import { estimateCostUsd } from '../_shared/aiPricing.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
 import type { ParticipantRow } from '../_shared/tripContext.ts';
 
@@ -160,8 +161,7 @@ Deno.serve(async request => {
     });
     const elapsed = Date.now() - startedAt;
 
-    // Mesmo custo do Gemini Flash usado em price-research/whatsapp-webhook.
-    const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
+    const cost = estimateCostUsd(model, usage.tokensIn, usage.tokensOut);
     const { error: logErr } = await supabase.from('ai_usage_logs').insert({
       tenant_id: trip.tenant_id,
       user_name: user.email ?? user.id,
@@ -170,7 +170,7 @@ Deno.serve(async request => {
       model,
       tokens_input: usage.tokensIn,
       tokens_output: usage.tokensOut,
-      estimated_cost_usd: Number(cost.toFixed(6)),
+      estimated_cost_usd: cost,
       timestamp: new Date().toISOString(),
       latency_ms: elapsed,
       tool_rounds: usage.toolRounds,
@@ -183,7 +183,7 @@ Deno.serve(async request => {
 
     return json({
       text,
-      usage: { tokens_in: usage.tokensIn, tokens_out: usage.tokensOut, cost_usd: Number(cost.toFixed(6)) },
+      usage: { tokens_in: usage.tokensIn, tokens_out: usage.tokensOut, cost_usd: cost },
     });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'Erro inesperado.' }, 500);

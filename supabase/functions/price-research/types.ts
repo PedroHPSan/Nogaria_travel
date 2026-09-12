@@ -40,6 +40,5 @@ export const MAX_MARKETS = ALLOWED_MARKETS.length;
 export const DEFAULT_FREE_TIER_DAILY_REQUESTS = 100;
 export const DEFAULT_FREE_TIER_RPM_LIMIT = 8;
 export const DEFAULT_FREE_TIER_DAILY_TOKENS = 50_000;
-export const DEFAULT_AI_MODEL = 'gemini-3.5-flash';
 
 
