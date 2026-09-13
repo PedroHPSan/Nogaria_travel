@@ -18,6 +18,17 @@ import { detectConflicts, suggestFreeSlot, type ScheduleSlot } from './scheduleC
 import { consumePendingWrite, stagePendingWrite } from './pendingWrites.ts';
 import { sendTextMessage } from './whatsappClient.ts';
 import { computeBalances } from './balances.ts';
+import { fetchDailyWeather } from './weather.ts';
+import { fetchParkDayStatus } from './parkStatus.ts';
+import {
+  moveDay,
+  shiftDay,
+  summarizeProposal,
+  swapDays,
+  toRpcChanges,
+  validateProposal,
+  type ReplanItem,
+} from './replanEngine.ts';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
@@ -305,6 +316,42 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
       required: ['query'],
     },
   },
+  {
+    name: 'get_day_conditions',
+    description:
+      'Consulta clima, horário de funcionamento do parque predominante do dia e atrações do roteiro sinaladas como fechadas/em manutenção, para embasar uma decisão de replanejamento. ' +
+      'Use ANTES de sugerir empurrar, trocar ou mover um dia.',
+    parameters: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'Data no formato AAAA-MM-DD (opcional, default hoje).' },
+      },
+    },
+  },
+  {
+    name: 'replan_day',
+    description:
+      'Replaneja um DIA INTEIRO do roteiro (não um item — para mover só uma atividade use reschedule_itinerary_item). ' +
+      'operation=shift: empurra/adianta todas as atividades do dia em X minutos (shift_minutes). ' +
+      'operation=swap: troca a data entre dois dias, mantendo o horário de cada atividade (other_date). ' +
+      'operation=move: move todas as atividades de um dia para outra data, mantendo o horário (new_date). ' +
+      'Ação de organizador: só participantes autorizados a gerenciar o roteiro podem usar. ' +
+      'SEMPRE chame primeiro sem confirm — a tool devolve um resumo com o número de mudanças e avisos (conflito, item com reserva confirmada, parque fechado). ' +
+      'Só chame de novo com confirm=true depois que a família confirmar explicitamente numa mensagem seguinte.',
+    parameters: {
+      type: 'object',
+      properties: {
+        operation: { type: 'string', enum: ['shift', 'swap', 'move'], description: 'Tipo de replanejamento.' },
+        date: { type: 'string', description: 'Data do dia de origem, AAAA-MM-DD (opcional, default hoje).' },
+        shift_minutes: { type: 'integer', description: 'Só para operation=shift: desloca o dia em minutos (-720 a 720).' },
+        from_time: { type: 'string', description: 'Só para operation=shift: HH:MM a partir do qual empurrar (opcional — omitido empurra o dia todo).' },
+        other_date: { type: 'string', description: 'Só para operation=swap: a outra data envolvida na troca, AAAA-MM-DD.' },
+        new_date: { type: 'string', description: 'Só para operation=move: data de destino, AAAA-MM-DD.' },
+        confirm: { type: 'boolean', description: CONFIRM_DESCRIPTION },
+      },
+      required: ['operation'],
+    },
+  },
 ];
 
 export interface ToolContext {
@@ -324,6 +371,14 @@ export interface ToolContext {
   googleMapsApiKey: string | null;
   /** Usada só por web_search (groundedSearch); null desativa a tool com uma mensagem clara em vez de estourar. */
   geminiApiKey: string | null;
+  /**
+   * Modelo Gemini para web_search (groundedSearch usa a API do Gemini
+   * diretamente, sempre — mesmo quando o tenant conversa em Claude). Resolvido
+   * explicitamente via gemini.resolveGeminiModel(config.model_name), NUNCA com
+   * o modelo efetivo do chat: um tenant em Anthropic mandaria um nome Claude
+   * para a API do Gemini e quebraria a busca.
+   */
+  geminiModel: string;
 }
 
 function findParticipant(participants: ParticipantRow[], nameOrNick: string | null): ParticipantRow[] {
@@ -340,6 +395,32 @@ function findParticipantByPhone(participants: ParticipantRow[], phone: string): 
   const digits = phone.replace(/\D/g, '');
   if (!digits) return null;
   return participants.find(p => (p.whatsapp_phone ?? '').replace(/\D/g, '') === digits) ?? null;
+}
+
+/**
+ * Fan-out best-effort de uma mudança de roteiro para todos os outros
+ * participantes com whatsapp_phone (conversas 1:1, sem grupo — a Meta Cloud
+ * API não suporta grupo). Falha por participante é reportada de volta a quem
+ * disparou a ação, nunca escondida. Usada por reschedule_itinerary_item e
+ * replan_day — mesmo texto de aviso, mesmo tratamento de falha.
+ */
+async function notifyParticipants(
+  ctx: { phoneNumberId: string; metaAccessToken: string; participants: ParticipantRow[]; senderPhone: string },
+  text: string,
+): Promise<{ notified: string[]; notReached: string[] }> {
+  const sender = findParticipantByPhone(ctx.participants, ctx.senderPhone);
+  const others = ctx.participants.filter(p => p.id !== sender?.id && p.whatsapp_phone);
+  const notified: string[] = [];
+  const notReached: string[] = [];
+  for (const p of others) {
+    try {
+      await sendTextMessage({ phoneNumberId: ctx.phoneNumberId, accessToken: ctx.metaAccessToken, to: p.whatsapp_phone!.replace(/\D/g, ''), text });
+      notified.push(p.nickname ?? p.full_name);
+    } catch {
+      notReached.push(p.nickname ?? p.full_name);
+    }
+  }
+  return { notified, notReached };
 }
 
 interface ItineraryMatch extends ScoredRow {
@@ -486,6 +567,36 @@ export interface ItineraryItemRow {
   time_end: string | null;
 }
 
+/** Linha crua de itinerary_items usada só por replan_day (um dia inteiro, não uma busca fuzzy). */
+interface ReplanRow {
+  id: string;
+  title: string;
+  date: string;
+  time_start: string;
+  time_end: string | null;
+  base_order: number | null;
+  park: string | null;
+  status: string | null;
+  show_block_start: string | null;
+  counts_toward_completion: boolean | null;
+}
+
+const REPLAN_DAY_COLUMNS = 'id, title, date, time_start, time_end, base_order, park, status, show_block_start, counts_toward_completion';
+
+function toReplanItem(row: ReplanRow): ReplanItem {
+  return {
+    id: row.id,
+    title: row.title,
+    date: row.date,
+    time_start: row.time_start,
+    time_end: row.time_end,
+    base_order: row.base_order,
+    park: row.park,
+    is_filler: row.counts_toward_completion === false,
+    locked: row.status === 'confirmed' || row.show_block_start != null,
+  };
+}
+
 interface RescheduleTarget {
   newDate: string;
   newTimeStart: string;
@@ -524,7 +635,7 @@ export function resolveRescheduleTarget(
 }
 
 export function createToolExecutor(ctx: ToolContext): (name: string, args: Record<string, unknown>) => Promise<unknown> {
-  const { supabase, tenantId, tripId, todayIso, participants, timeZone, senderPhone, phoneNumberId, metaAccessToken, googleMapsApiKey, geminiApiKey } = ctx;
+  const { supabase, tenantId, tripId, todayIso, participants, timeZone, senderPhone, phoneNumberId, metaAccessToken, googleMapsApiKey, geminiApiKey, geminiModel } = ctx;
 
   return async (name, args) => {
     switch (name) {
@@ -887,24 +998,8 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
             // Fan-out best-effort: são conversas 1:1 (sem grupo), então quem não
             // falou com o bot nas últimas 24h não recebe texto livre — a falha é
             // reportada de volta pra quem reagendou, não escondida.
-            const sender = findParticipantByPhone(participants, senderPhone);
-            const others = participants.filter(p => p.id !== sender?.id && p.whatsapp_phone);
-            const notified: string[] = [];
-            const notReached: string[] = [];
             const text = `📅 *Roteiro atualizado*: "${payload.itemTitle}" foi movido para ${payload.newDate} às ${String(payload.newTimeStart).slice(0, 5)}.`;
-            for (const p of others) {
-              try {
-                await sendTextMessage({
-                  phoneNumberId,
-                  accessToken: metaAccessToken,
-                  to: p.whatsapp_phone!.replace(/\D/g, ''),
-                  text,
-                });
-                notified.push(p.nickname ?? p.full_name);
-              } catch {
-                notReached.push(p.nickname ?? p.full_name);
-              }
-            }
+            const { notified, notReached } = await notifyParticipants({ phoneNumberId, metaAccessToken, participants, senderPhone }, text);
 
             return {
               rescheduled: true,
@@ -1170,8 +1265,140 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
       case 'web_search': {
         if (!geminiApiKey) return { error: 'Busca na web indisponível no momento.' };
         const query = requireString(args, 'query');
-        const result = await groundedSearch({ apiKey: geminiApiKey, model: 'gemini-3.5-flash', query });
+        const result = await groundedSearch({ apiKey: geminiApiKey, model: geminiModel, query });
         return { summary: result.text, sources: result.sources };
+      }
+
+      case 'get_day_conditions': {
+        const date = optionalDate(args, 'date') ?? todayIso;
+        const { data: trip } = await supabase.from('trips').select('destination_main').eq('id', tripId).maybeSingle();
+        const { data: dayItemsRaw } = await supabase
+          .from('itinerary_items')
+          .select('id, title, park, external_entity_id')
+          .eq('trip_id', tripId)
+          .eq('date', date);
+        const dayItems = (dayItemsRaw ?? []) as { id: string; title: string; park: string | null; external_entity_id: string | null }[];
+
+        const parkCounts = new Map<string, number>();
+        for (const i of dayItems) if (i.park) parkCounts.set(i.park, (parkCounts.get(i.park) ?? 0) + 1);
+        const predominantPark = [...parkCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+        const [weather, parkStatus, pendingCount] = await Promise.all([
+          trip?.destination_main ? fetchDailyWeather({ destination: trip.destination_main, dateIso: date, timeZone }) : Promise.resolve(null),
+          predominantPark
+            ? fetchParkDayStatus(supabase, {
+                park: predominantPark,
+                dateIso: date,
+                items: dayItems.map(i => ({ id: i.id, title: i.title, external_entity_id: i.external_entity_id })),
+              })
+            : Promise.resolve(null),
+          supabase.from('itinerary_item_outcomes').select('id', { count: 'exact', head: true }).eq('trip_id', tripId).eq('status', 'skipped'),
+        ]);
+
+        return {
+          date,
+          weather: weather
+            ? { tempMaxC: weather.tempMaxC, tempMinC: weather.tempMinC, precipitationProbabilityMax: weather.precipitationProbabilityMax, description: weather.description }
+            : null,
+          park: parkStatus ? { name: parkStatus.park, opening: parkStatus.opening, closing: parkStatus.closing, closed: parkStatus.closed, source: parkStatus.source } : null,
+          attractions_flagged: (parkStatus?.attractions ?? []).filter(a => a.status !== 'OPERATING').map(a => ({ title: a.title, status: a.status })),
+          items_count: dayItems.length,
+          pending_from_previous_days: pendingCount.count ?? 0,
+          note:
+            'Horário e status vêm da themeparks.wiki (comunidade) — trate como dica, confirme no app oficial. Feriados/eventos não estão aqui: use web_search.',
+        };
+      }
+
+      case 'replan_day': {
+        const confirm = args.confirm === true;
+        return withConfirmation(
+          { supabase, tenantId, tripId, senderPhone },
+          'replan_day',
+          confirm,
+          async (): Promise<PrepareOutcome> => {
+            // Checa permissão ANTES de encenar a pendência — um não-organizador
+            // não deve ver e "confirmar" algo que nunca será aplicado.
+            const sender = findParticipantByPhone(participants, senderPhone);
+            if (!sender?.can_manage_itinerary) {
+              return {
+                kind: 'resolved',
+                response: {
+                  allowed: false,
+                  message:
+                    'Replanejar o dia inteiro é uma ação de organizador. Peça para quem tem essa permissão marcada em Participantes → editar → "Pode replanejar o roteiro".',
+                },
+              };
+            }
+
+            const operation = requireString(args, 'operation');
+            if (!['shift', 'swap', 'move'].includes(operation)) {
+              throw new Error('Argumento inválido: operation deve ser shift, swap ou move.');
+            }
+            const date = optionalDate(args, 'date') ?? todayIso;
+
+            const { data: trip } = await supabase.from('trips').select('start_date, end_date').eq('id', tripId).maybeSingle();
+            if (!trip) throw new Error('Viagem não encontrada.');
+
+            const loadDay = async (d: string): Promise<ReplanItem[]> => {
+              const { data } = await supabase
+                .from('itinerary_items')
+                .select(REPLAN_DAY_COLUMNS)
+                .eq('trip_id', tripId)
+                .eq('date', d)
+                .order('time_start', { ascending: true });
+              return ((data ?? []) as ReplanRow[]).map(toReplanItem);
+            };
+
+            let proposal;
+            if (operation === 'shift') {
+              const shiftMinutes = optionalInt(args, 'shift_minutes', -720, 720);
+              if (shiftMinutes === null) throw new Error('Argumento inválido: informe shift_minutes para operation=shift.');
+              const fromTime = optionalTime(args, 'from_time') ?? undefined;
+              const items = await loadDay(date);
+              if (items.length === 0) return { kind: 'resolved', response: { found: false, message: `Nenhuma atividade cadastrada em ${date}.` } };
+              proposal = shiftDay(items, { minutes: shiftMinutes, fromTime });
+            } else if (operation === 'swap') {
+              const otherDate = optionalDate(args, 'other_date');
+              if (!otherDate) throw new Error('Argumento inválido: informe other_date para operation=swap.');
+              const [itemsA, itemsB] = await Promise.all([loadDay(date), loadDay(otherDate)]);
+              proposal = swapDays(itemsA, itemsB, date, otherDate);
+            } else {
+              const newDate = optionalDate(args, 'new_date');
+              if (!newDate) throw new Error('Argumento inválido: informe new_date para operation=move.');
+              const [items, existing] = await Promise.all([loadDay(date), loadDay(newDate)]);
+              if (items.length === 0) return { kind: 'resolved', response: { found: false, message: `Nenhuma atividade cadastrada em ${date}.` } };
+              proposal = moveDay(items, newDate, existing);
+            }
+
+            const validated = validateProposal(proposal, { tripStart: trip.start_date, tripEnd: trip.end_date });
+            if (validated.changes.length === 0) {
+              return { kind: 'resolved', response: { changed: false, message: 'Nada mudaria com essa operação.' } };
+            }
+
+            const preview = summarizeProposal(validated);
+            return { kind: 'stage', preview, payload: { changes: toRpcChanges(validated), summary: preview, dates: validated.dates } };
+          },
+          async payload => {
+            const changes = payload.changes as { item_id: string; date: string; time_start: string; time_end: string | null; base_order: number | null }[];
+            const { data, error } = await supabase.rpc('apply_itinerary_changes', { p_trip_id: tripId, p_changes: changes });
+            if (error) throw new Error(`Erro ao aplicar o replanejamento: ${error.message}`);
+
+            const summary = String(payload.summary);
+            const { notified, notReached } = await notifyParticipants(
+              { phoneNumberId, metaAccessToken, participants, senderPhone },
+              `📅 *Roteiro replanejado*: ${summary}`,
+            );
+
+            return {
+              replanned: true,
+              count: (data as { count?: number } | null)?.count ?? changes.length,
+              dates: payload.dates,
+              summary,
+              notified,
+              notReached,
+            };
+          },
+        );
       }
 
       default:

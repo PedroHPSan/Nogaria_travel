@@ -10,6 +10,10 @@ import {
 } from '../_shared/tripContext.ts';
 import { formatDailyDigest } from '../_shared/formatter.ts';
 import { fetchDailyWeather } from '../_shared/weather.ts';
+import { fetchParkDayStatus } from '../_shared/parkStatus.ts';
+import { formatConditionsAlertMessage, selectConditionAlerts } from '../_shared/conditionsAlert.ts';
+
+const CONDITIONS_ALERT_COOLDOWN_HOURS = 12;
 
 const DIGEST_LEAD_DAYS = 1;
 
@@ -40,7 +44,7 @@ Deno.serve(async request => {
 
   const { data: configs, error } = await supabase
     .from('whatsapp_configs')
-    .select('tenant_id, phone_number_id, digest_time, evening_digest_time, timezone')
+    .select('tenant_id, phone_number_id, digest_time, evening_digest_time, timezone, quiet_hours_start, quiet_hours_end')
     .eq('enabled', true);
   if (error) return json({ error: `Erro ao carregar configs: ${error.message}` }, 500);
 
@@ -61,6 +65,12 @@ Deno.serve(async request => {
       hour: '2-digit',
       hour12: false,
     }).format(now);
+
+    // Roda em TODA execução horária, independente de digest_time — é o que
+    // permite avisar de chuva/parque fechado antes do organizador sair de
+    // manhã, sem depender de um cron dedicado (ver conditionsAlert.ts).
+    const conditionsResult = await checkConditionsAlert(supabase, config, todayIso, now, metaToken);
+    if (conditionsResult) summary[`${config.tenant_id}:conditions`] = conditionsResult;
 
     const triggers = forceSend
       ? [{ mode: forceMode, dateIso: forceMode === 'tomorrow' ? addDaysIso(todayIso, 1) : todayIso }]
@@ -106,6 +116,26 @@ async function sendDigestForTrigger(
 
     const child = youngestWithHeight(ctx.participants);
     const weather = await fetchDailyWeather({ destination: ctx.trip.destination_main, dateIso, timeZone: config.timezone });
+
+    // Parque predominante do dia (mais itens) — best-effort, nunca bloqueia o digest.
+    const parkCounts = new Map<string, number>();
+    for (const i of ctx.todayItems) {
+      const park = i.park as string | null;
+      if (park) parkCounts.set(park, (parkCounts.get(park) ?? 0) + 1);
+    }
+    const predominantPark = [...parkCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    const parkStatus = predominantPark
+      ? await fetchParkDayStatus(supabase, {
+          park: predominantPark,
+          dateIso,
+          items: ctx.todayItems.map(i => ({
+            id: String(i.id),
+            title: String(i.title),
+            external_entity_id: (i.external_entity_id as string | null) ?? null,
+          })),
+        })
+      : null;
+
     const text = formatDailyDigest({
       tripTitle: ctx.trip.title,
       dateIso,
@@ -139,6 +169,7 @@ async function sendDigestForTrigger(
       child: child ? { nickname: child.nickname ?? child.full_name, height_cm: child.height_cm } : null,
       timezone: config.timezone,
       weather,
+      parkStatus,
     });
 
     const recipients = ctx.participants.filter((p: { whatsapp_phone: string | null }) => p.whatsapp_phone);
@@ -175,5 +206,98 @@ async function sendDigestForTrigger(
   } catch (err) {
     console.error(`[daily-digest] Falha no tenant ${config.tenant_id} (${mode}):`, err);
     return `${mode}:error`;
+  }
+}
+
+/**
+ * Verifica clima/status de parque contra o roteiro de hoje e, se algo pedir
+ * atenção, manda UMA mensagem (nunca uma por condição) para quem tem
+ * can_manage_itinerary — é a única mensagem não solicitada com chamada à
+ * ação, então só para quem pode de fato agir nela. Cooldown de 12h + quiet
+ * hours ficam em conditionsAlert.ts (puro, testado); aqui só o I/O: busca de
+ * contexto, dedupe via whatsapp_messages e envio.
+ */
+async function checkConditionsAlert(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  config: { tenant_id: string; phone_number_id: string; timezone: string; quiet_hours_start: string | null; quiet_hours_end: string | null },
+  todayIso: string,
+  now: Date,
+  metaToken: string,
+): Promise<string | null> {
+  try {
+    const ctx = await fetchTripContext(supabase, config.tenant_id, todayIso);
+    if (!ctx.trip) return null;
+    if (todayIso < ctx.trip.start_date || todayIso > ctx.trip.end_date) return null;
+
+    const organizers = ctx.participants.filter((p: { whatsapp_phone: string | null; can_manage_itinerary?: boolean }) => p.whatsapp_phone && p.can_manage_itinerary);
+    if (organizers.length === 0) return 'skipped:sem-organizador-com-telefone';
+
+    const { data: recentAlert } = await supabase
+      .from('whatsapp_messages')
+      .select('id')
+      .eq('tenant_id', config.tenant_id)
+      .eq('direction', 'outbound')
+      .contains('payload', { alert: 'conditions' })
+      .gte('created_at', new Date(now.getTime() - CONDITIONS_ALERT_COOLDOWN_HOURS * 60 * 60_000).toISOString())
+      .limit(1);
+    const alreadyAlertedToday = (recentAlert?.length ?? 0) > 0;
+
+    const weather = await fetchDailyWeather({ destination: ctx.trip.destination_main, dateIso: todayIso, timeZone: config.timezone });
+
+    const parkCounts = new Map<string, number>();
+    for (const i of ctx.todayItems) {
+      const park = i.park as string | null;
+      if (park) parkCounts.set(park, (parkCounts.get(park) ?? 0) + 1);
+    }
+    const predominantPark = [...parkCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    const parkStatus = predominantPark
+      ? await fetchParkDayStatus(supabase, {
+          park: predominantPark,
+          dateIso: todayIso,
+          items: ctx.todayItems.map(i => ({ id: String(i.id), title: String(i.title), external_entity_id: (i.external_entity_id as string | null) ?? null })),
+        })
+      : null;
+
+    const localMinutesStr = new Intl.DateTimeFormat('en-GB', { timeZone: config.timezone, hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+    const [lh, lm] = localMinutesStr.split(':').map(Number);
+    const localMinutes = lh * 60 + lm;
+
+    const alerts = selectConditionAlerts({
+      items: ctx.todayItems.map(i => ({ park: (i.park as string | null) ?? null })),
+      weather,
+      parkStatus,
+      localMinutes,
+      quietHoursStart: config.quiet_hours_start ?? '22:00',
+      quietHoursEnd: config.quiet_hours_end ?? '07:00',
+      alreadyAlertedToday,
+    });
+
+    if (alerts.length === 0) return null;
+
+    const text = formatConditionsAlertMessage(alerts);
+    let sentCount = 0;
+    for (const organizer of organizers) {
+      const phone = organizer.whatsapp_phone!.replace(/\D/g, '');
+      try {
+        const sent = await sendTextMessage({ phoneNumberId: config.phone_number_id, accessToken: metaToken, to: phone, text });
+        await supabase.from('whatsapp_messages').insert({
+          tenant_id: config.tenant_id,
+          wa_message_id: sent.waMessageId,
+          direction: 'outbound',
+          sender_phone: phone,
+          body: text,
+          kind: 'alert',
+          payload: { alert: 'conditions', date: todayIso },
+        });
+        sentCount++;
+      } catch (err) {
+        console.error(`[daily-digest] Falha ao enviar alerta de condições para ${phone}:`, err);
+      }
+    }
+    return `conditions:sent:${sentCount}`;
+  } catch (err) {
+    console.error(`[daily-digest] Falha ao checar condições do tenant ${config.tenant_id}:`, err);
+    return 'conditions:error';
   }
 }

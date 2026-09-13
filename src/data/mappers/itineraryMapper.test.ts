@@ -42,6 +42,7 @@ const linhaAtracao: ItineraryItemRow = {
   recommended_arrival_min_before: null,
   last_showtime_of_day: false,
   reminder_minutes_before: null,
+  external_entity_id: null,
 };
 
 const linhaShow: ItineraryItemRow = {

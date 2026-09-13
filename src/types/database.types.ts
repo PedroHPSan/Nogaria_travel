@@ -58,6 +58,8 @@ export interface Participant {
   notes?: string;
   budget_limit_usd: number;
   quota_eligible?: boolean;
+  /** Autoriza ações em lote/destrutivas do bot sobre o roteiro (replan_day). Ver migration 20260914120000. Ausente/undefined equivale a `false`. */
+  can_manage_itinerary?: boolean;
   /** Consentimento do responsável para tratar dados do menor (LGPD art. 14). */
   guardian_consent_at?: string | null;
   guardian_consent_by?: string | null;
@@ -184,6 +186,8 @@ export interface ItineraryItem {
    * `0` desliga o aviso deste item — ver `_shared/reminderScheduler.ts`.
    */
   reminder_minutes_before?: number;
+  /** Id da atração/show correspondente na themeparks.wiki. Ver `_shared/parkStatus.ts`; null/undefined = sem correspondência resolvida, nunca chutar status. */
+  external_entity_id?: string | null;
 }
 
 export interface GiftCard {

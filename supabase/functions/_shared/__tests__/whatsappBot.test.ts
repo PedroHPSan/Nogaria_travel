@@ -10,7 +10,7 @@ import {
   type TripContext,
 } from '../tripContext.ts';
 import { createToolExecutor, resolveMatch } from '../tripTools.ts';
-import { DEFAULT_GEMINI_MODEL, backoffDelayMs, buildModelTurnParts, resolveGeminiModel, sanitizeHistory } from '../gemini.ts';
+import { DEFAULT_GEMINI_MODEL, backoffDelayMs, buildGenerationConfig, buildModelTurnParts, resolveGeminiModel, sanitizeHistory } from '../gemini.ts';
 
 const baseItem: DigestItineraryItem = {
   date: '2026-08-25',
@@ -186,9 +186,9 @@ describe('resolveDigestTriggers', () => {
 
 describe('youngestWithHeight', () => {
   const participants: ParticipantRow[] = [
-    { id: '1', full_name: 'Pedro', nickname: null, is_minor: false, height_cm: 180, whatsapp_phone: null },
-    { id: '2', full_name: 'Débora', nickname: 'Dé', is_minor: true, height_cm: 150, whatsapp_phone: null },
-    { id: '3', full_name: 'Gabriela', nickname: 'Gabi', is_minor: true, height_cm: 100, whatsapp_phone: null },
+    { id: '1', full_name: 'Pedro', nickname: null, is_minor: false, height_cm: 180, whatsapp_phone: null , can_manage_itinerary: false },
+    { id: '2', full_name: 'Débora', nickname: 'Dé', is_minor: true, height_cm: 150, whatsapp_phone: null , can_manage_itinerary: false },
+    { id: '3', full_name: 'Gabriela', nickname: 'Gabi', is_minor: true, height_cm: 100, whatsapp_phone: null , can_manage_itinerary: false },
   ];
 
   it('retorna o menor participante mirim com altura cadastrada', () => {
@@ -213,7 +213,7 @@ describe('buildSystemPrompt', () => {
         currency_base: 'USD',
       },
       participants: [
-        { id: '3', full_name: 'Gabriela', nickname: 'Gabi', is_minor: true, height_cm: 100, whatsapp_phone: null },
+        { id: '3', full_name: 'Gabriela', nickname: 'Gabi', is_minor: true, height_cm: 100, whatsapp_phone: null , can_manage_itinerary: false },
       ],
       todayItems: [],
       tasksDueSoon: [],
@@ -241,6 +241,7 @@ describe('createToolExecutor — validação de argumentos', () => {
     phoneNumberId: 'pn1',
     metaAccessToken: 'token',
     googleMapsApiKey: null,
+    geminiModel: 'gemini-3.8-flash',
   });
 
   it('rejeita data fora do formato AAAA-MM-DD', async () => {
@@ -267,12 +268,12 @@ describe('createToolExecutor — validação de argumentos', () => {
 });
 
 describe('resolveGeminiModel', () => {
-  it('mantém um modelo Gemini válido', () => {
-    expect(resolveGeminiModel('gemini-3.5-flash')).toBe('gemini-3.5-flash');
-    expect(resolveGeminiModel('gemini-3-pro')).toBe('gemini-3-pro');
+  it('mantém um modelo da allowlist', () => {
+    expect(resolveGeminiModel('gemini-3.8-flash')).toBe('gemini-3.8-flash');
+    expect(resolveGeminiModel(DEFAULT_GEMINI_MODEL)).toBe(DEFAULT_GEMINI_MODEL);
   });
 
-  it('cai no default para nomes vazios, de outro provedor ou de gerações descontinuadas', () => {
+  it('ALLOWLIST, não blocklist: cai no default para qualquer nome fora de SUPPORTED_GEMINI_MODELS — vazio, de outro provedor, de geração descontinuada do Gemini OU de uma config antiga salva antes desta migração', () => {
     expect(resolveGeminiModel(undefined)).toBe(DEFAULT_GEMINI_MODEL);
     expect(resolveGeminiModel('')).toBe(DEFAULT_GEMINI_MODEL);
     expect(resolveGeminiModel('gpt-4o')).toBe(DEFAULT_GEMINI_MODEL);
@@ -280,6 +281,34 @@ describe('resolveGeminiModel', () => {
     expect(resolveGeminiModel('gemini-1.5-flash')).toBe(DEFAULT_GEMINI_MODEL);
     expect(resolveGeminiModel('gemini-2.5-pro')).toBe(DEFAULT_GEMINI_MODEL);
     expect(resolveGeminiModel('gemini-flash-latest')).toBe(DEFAULT_GEMINI_MODEL);
+    // Config salva ANTES da migração para 3.8 — atualiza silenciosamente o tenant.
+    expect(resolveGeminiModel('gemini-3.5-flash')).toBe(DEFAULT_GEMINI_MODEL);
+    // Nome Gemini plausível mas fora da allowlist (este módulo não sabe a
+    // generationConfig certa para uma geração que não testamos).
+    expect(resolveGeminiModel('gemini-3-pro')).toBe(DEFAULT_GEMINI_MODEL);
+  });
+});
+
+describe('buildGenerationConfig', () => {
+  it('modelos 3.x omitem temperature/top_p/top_k e emitem thinking_level', () => {
+    const config = buildGenerationConfig('gemini-3.8-flash', { temperature: 0.4, thinkingLevel: 'LOW' });
+    expect(config).toEqual({ thinking_level: 'LOW' });
+    expect(config).not.toHaveProperty('temperature');
+  });
+
+  it('thinking_level default é MEDIUM quando não especificado', () => {
+    expect(buildGenerationConfig('gemini-3.8-flash', { temperature: 0.4 })).toEqual({ thinking_level: 'MEDIUM' });
+  });
+
+  it('preserva responseMimeType junto do thinking_level', () => {
+    expect(buildGenerationConfig('gemini-3.8-flash', { temperature: 0, thinkingLevel: 'MEDIUM', responseMimeType: 'application/json' })).toEqual({
+      responseMimeType: 'application/json',
+      thinking_level: 'MEDIUM',
+    });
+  });
+
+  it('modelos fora da família 3.x continuam enviando temperature (ex.: um fallback hipotético não-3.x)', () => {
+    expect(buildGenerationConfig('gemini-2.5-flash', { temperature: 0.7 })).toEqual({ temperature: 0.7 });
   });
 });
 
@@ -335,7 +364,7 @@ describe('buildSystemPrompt — pré-carregamento do dia', () => {
       currency_base: 'USD',
     },
     participants: [
-      { id: '3', full_name: 'Gabriela', nickname: 'Gabi', is_minor: true, height_cm: 100, whatsapp_phone: null },
+      { id: '3', full_name: 'Gabriela', nickname: 'Gabi', is_minor: true, height_cm: 100, whatsapp_phone: null , can_manage_itinerary: false },
     ],
     todayItems: [
       { time_start: '09:00:00', time_end: '11:00:00', title: 'Space Mountain', park: 'Magic Kingdom', min_height_cm: 112 },
@@ -419,6 +448,7 @@ describe('set_activity_reminder — validação', () => {
     phoneNumberId: 'pn1',
     metaAccessToken: 'token',
     googleMapsApiKey: null,
+    geminiModel: 'gemini-3.8-flash',
   });
 
   it('exige minutes_before inteiro dentro do intervalo', async () => {

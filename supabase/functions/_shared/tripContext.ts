@@ -10,6 +10,8 @@ export interface ParticipantRow {
   is_minor: boolean;
   height_cm: number | null;
   whatsapp_phone: string | null;
+  /** Autoriza ações em lote/destrutivas do bot sobre o roteiro (replan_day). Ver migration 20260914120000. */
+  can_manage_itinerary: boolean;
 }
 
 export interface TripRow {
@@ -37,7 +39,7 @@ export interface TripContext {
  */
 export const ITINERARY_COLUMNS =
   'id, date, time_start, time_end, title, category, city, park, notes, min_height_cm, ' +
-  'reminder_minutes_before, recommended_arrival_min_before';
+  'reminder_minutes_before, recommended_arrival_min_before, external_entity_id';
 
 /** Data local (YYYY-MM-DD) no fuso informado. */
 export function localDateIso(now: Date, timeZone: string): string {
@@ -108,7 +110,7 @@ export async function fetchTripContext(
       .from('participants')
       // Minimização (LGPD): o bot só precisa de is_minor + altura; a data de
       // nascimento exata do menor nunca vai para o prompt do Gemini.
-      .select('id, full_name, nickname, is_minor, height_cm, whatsapp_phone')
+      .select('id, full_name, nickname, is_minor, height_cm, whatsapp_phone, can_manage_itinerary')
       .eq('trip_id', trip.id),
     supabase
       .from('itinerary_items')
@@ -208,8 +210,10 @@ const STATIC_PROMPT = [
   '- Use as ferramentas disponíveis para consultar ou alterar dados reais do roteiro e das tarefas. Nunca invente horários, preços ou reservas.',
   '- Sempre que alguém compartilhar uma ideia de negócio ou de viagem (mesmo de forma espontânea, sem pedir explicitamente), salve com save_trip_idea e confirme com uma frase curta e animada. Use list_trip_ideas se perguntarem o que já foi registrado.',
   '- Para "como chego lá", "quanto tempo leva", "que horas precisamos sair": use get_directions. Repasse o link do mapa e o tempo estimado numa frase curta, nunca descreva o trajeto passo a passo. Se a tool devolver needs_location, peça a localização de forma leve ("manda seu pin que eu calculo") em vez de inventar um ponto de partida.',
-  '- mark_itinerary_item_done, complete_task e reschedule_itinerary_item têm confirmação em duas etapas: a primeira chamada (sem confirm) só valida e devolve um resumo em "preview" — mostre esse resumo à família e espere a confirmação explícita numa mensagem seguinte antes de chamar a MESMA ferramenta de novo com confirm=true. Nunca marque confirm=true sem uma confirmação explícita do usuário depois de ver o preview. Reagende só um item por mensagem.',
+  '- mark_itinerary_item_done, complete_task, reschedule_itinerary_item e replan_day têm confirmação em duas etapas: a primeira chamada (sem confirm) só valida e devolve um resumo em "preview" — mostre esse resumo à família e espere a confirmação explícita numa mensagem seguinte antes de chamar a MESMA ferramenta de novo com confirm=true. Nunca marque confirm=true sem uma confirmação explícita do usuário depois de ver o preview. Reagende só um item por mensagem com reschedule_itinerary_item; para o dia inteiro use replan_day.',
   '- Se reschedule_itinerary_item avisar conflito de horário no preview, inclua o aviso e a sugestão de horário livre na sua pergunta de confirmação — não esconda o conflito da família.',
+  '- Para "atrasamos tudo", "empurra o dia", "troca o dia X com o Y", "passa o dia todo pra outra data": use replan_day (operation shift/swap/move), não reschedule_itinerary_item. Tem a mesma confirmação em duas etapas: a primeira chamada devolve o resumo do que muda e os avisos (conflito, reserva confirmada, parque fechado) — mostre TUDO isso e espere o "pode" antes de chamar com confirm=true. Se a ferramenta devolver allowed=false, explique que replanejar o dia inteiro é ação de organizador e diga onde isso se configura (Participantes → editar).',
+  '- Antes de sugerir um replanejamento, consulte get_day_conditions (clima, horário do parque, atrações fechadas ou em manutenção no dia). Esses dados vêm de fonte da comunidade: apresente como indício ("consta que...", "parece que..."), nunca como certeza, e sugira confirmar no app oficial. Feriados e eventos locais não estão nessa tool — para isso use web_search.',
   '- Quando uma busca devolver várias correspondências, pergunte qual delas — nunca escolha por conta própria.',
   '- De vez em quando o bot manda um check-in em lote perguntando se as atividades vencidas do roteiro rolaram. Quando a família responder, use confirm_itinerary_outcome pra cada atividade que ela mencionar (outcome=done se rolou, outcome=skipped se não rolou — inclua o motivo em note se contarem). Isso vale também quando a família falar espontaneamente que algo não deu tempo de fazer, mesmo fora de um check-in — não espere a pergunta do bot. Atividades marcadas como skipped ficam no banco de pendências: use list_unfulfilled_activities quando perguntarem o que ficou pendente, e sugira reencaixar (reschedule_itinerary_item) num horário livre ou, se a família não quiser mais fazer, cancelar de vez (cancel_itinerary_item).',
   '- Outros membros da família também conversam com você em conversas separadas; o que vale para todos está no banco, não no histórico desta conversa.',

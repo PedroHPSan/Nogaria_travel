@@ -63,6 +63,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
   const [visaStatus, setVisaStatus] = useState<'valid' | 'pending' | 'exempt' | 'expired'>('valid');
   const [heightCm, setHeightCm] = useState<number | ''>('');
   const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [canManageItinerary, setCanManageItinerary] = useState(false);
   const [guardianConsent, setGuardianConsent] = useState(false);
   const [dietary, setDietary] = useState('');
   const [notes, setNotes] = useState('');
@@ -117,6 +118,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setVisaStatus(initialData.visa_status || 'valid');
       setHeightCm(initialData.height_cm ?? '');
       setWhatsappPhone(initialData.whatsapp_phone ?? '');
+      setCanManageItinerary(Boolean(initialData.can_manage_itinerary));
       setGuardianConsent(Boolean(initialData.guardian_consent_at));
       setDietary(initialData.dietary_restrictions ? initialData.dietary_restrictions.join(', ') : '');
       setNotes(initialData.notes || '');
@@ -154,6 +156,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setVisaStatus('valid');
       setHeightCm('');
       setWhatsappPhone('');
+      setCanManageItinerary(false);
       setGuardianConsent(false);
       setDietary('');
       setNotes('');
@@ -226,6 +229,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       visa_status: visaStatus,
       height_cm: heightCm !== '' ? Number(heightCm) : undefined,
       whatsapp_phone: phoneDigits || undefined,
+      can_manage_itinerary: !isMinor && canManageItinerary,
       ...consent,
       dietary_restrictions: dietaryArray,
       notes: notes.trim() || undefined,
@@ -338,6 +342,22 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
             É por este número que o assistente reconhece quem escreve e envia o roteiro e os avisos.
           </p>
         </div>
+
+        {!isMinor && (
+          <label className="p-3 rounded-xl bg-ink-900/60 border border-ink-800 flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={canManageItinerary}
+              onChange={e => setCanManageItinerary(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-info-500"
+            />
+            <span className="text-xs text-ink-200">
+              <strong className="text-ink-100">Pode replanejar o roteiro pelo WhatsApp.</strong>{' '}
+              Autoriza este telefone a empurrar o dia, trocar dias e mover atividades em lote pelo assistente
+              (ações individuais, como marcar uma atividade como feita, continuam liberadas para todos).
+            </span>
+          </label>
+        )}
 
         {isMinor && (
           <label className="p-3 rounded-xl bg-warning-500/5 border border-warning-500/30 flex items-start gap-3 cursor-pointer">

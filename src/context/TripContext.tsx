@@ -36,6 +36,7 @@ import type { WriteFailure } from '../data/useWriteFailures';
 import { useTripsData } from '../data/useTripsData';
 import { useParticipantsData } from '../data/useParticipantsData';
 import { useItineraryData } from '../data/useItineraryData';
+import { useItineraryOutcomes } from '../data/useItineraryOutcomes';
 import { useTripIdeasData } from '../data/useTripIdeasData';
 import { useExpensesData } from '../data/useExpensesData';
 import { usePurchasesData } from '../data/usePurchasesData';
@@ -125,6 +126,13 @@ interface TripContextType {
   addItineraryItem: (i: Omit<ItineraryItem, 'id'>) => void;
   updateItineraryItem: (id: string, i: Partial<ItineraryItem>) => void;
   deleteItineraryItem: (id: string) => void;
+  /** Aplica um lote de mudanças (replanejamento de dia) via RPC transacional — ver ReplanBoard. */
+  applyItineraryChanges: (
+    tripId: string,
+    changes: { item_id: string; date: string; time_start: string; time_end: string | null; base_order: number | null }[],
+  ) => Promise<{ ok: true; applied: Record<string, unknown>[]; before: Record<string, unknown>[] } | { ok: false }>;
+  /** itinerary_item_id -> {status, note}, vindo do check-in do WhatsApp (itinerary_item_outcomes). */
+  itineraryOutcomes: Record<string, { status: 'pending' | 'skipped' | 'cancelled'; note: string | null }>;
 
   ideas: TripIdea[];
   addIdea: (i: Omit<TripIdea, 'id' | 'created_at'>) => void;
@@ -305,10 +313,17 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addItineraryItem,
     updateItineraryItem,
     deleteItineraryItem,
+    applyItineraryChanges,
   } = useItineraryData({
     client,
     tripId: activeTripIdResolvido,
     recordFailure,
+    realtime,
+  });
+
+  const { outcomes: itineraryOutcomes } = useItineraryOutcomes({
+    client,
+    tripId: activeTripIdResolvido,
     realtime,
   });
 
@@ -710,6 +725,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addItineraryItem,
         updateItineraryItem,
         deleteItineraryItem,
+        applyItineraryChanges,
+        itineraryOutcomes,
 
         ideas,
         addIdea,

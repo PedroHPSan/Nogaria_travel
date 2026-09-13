@@ -32,7 +32,7 @@ export const AiCopilotView: React.FC = () => {
     createdDefaultRef.current = true;
     addAiProvider({
       provider: 'gemini',
-      model_name: 'gemini-3.5-flash',
+      model_name: 'gemini-3.8-flash',
       is_active: true,
       is_default: true,
       daily_token_limit: 100000,
@@ -67,6 +67,10 @@ export const AiCopilotView: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const activeProvider = aiProviders.find(p => p.id === activeProviderId) || aiProviders[0];
+  // Gemini 3.x remove temperature/top_p/top_k do generationConfig (ver
+  // buildGenerationConfig em _shared/gemini.ts) — o slider continua salvando
+  // o valor (o caminho Claude usa), só deixa de ter efeito no Gemini.
+  const isGemini38OrLater = activeProvider?.provider === 'gemini' && (activeProvider?.model_name ?? '').startsWith('gemini-3.');
 
   const handlePresetPrompt = (text: string) => {
     setPromptInput(text);
@@ -263,15 +267,21 @@ export const AiCopilotView: React.FC = () => {
                   min="0"
                   max="1"
                   step="0.1"
+                  disabled={isGemini38OrLater}
                   value={activeProvider?.temperature || 0.2}
                   onChange={e => activeProvider && updateAiProvider(activeProvider.id, { temperature: Number(e.target.value) })}
-                  className="w-full"
+                  className="w-full disabled:opacity-40"
                 />
                 <div className="flex justify-between text-[10px] text-ink-400">
                   <span>Determinístico (0.0)</span>
                   <span>{activeProvider?.temperature}</span>
                   <span>Criativo (1.0)</span>
                 </div>
+                {isGemini38OrLater && (
+                  <p className="mt-1 text-[11px] text-ink-500">
+                    O Gemini 3.8 não aceita temperatura — este controle vale só quando o modelo é o Claude.
+                  </p>
+                )}
               </div>
 
               <div>

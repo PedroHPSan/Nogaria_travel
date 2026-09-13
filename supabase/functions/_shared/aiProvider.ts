@@ -9,9 +9,16 @@ import type { ChatMessage, GeminiToolDeclaration, GeminiUsage, ToolExecutor } fr
 
 export type SupportedProvider = 'gemini' | 'anthropic';
 
-/** Custo por milhão de tokens (USD). Só os modelos curados têm preço aqui de propósito — evita estimar custo de um modelo que nunca foi de fato chamado. */
+/**
+ * Custo por milhão de tokens (USD). Só os modelos curados têm preço aqui de
+ * propósito — evita estimar custo de um modelo que nunca foi de fato chamado.
+ * O fallback em estimateCostUsd usa PRICING[DEFAULT_GEMINI_MODEL]: trocar o
+ * default sem atualizar este valor subestimaria o custo em até 10x na view
+ * tenant_monthly_ai_costs — mantenha os dois em sincronia.
+ */
 const PRICING: Record<string, { input: number; output: number }> = {
-  [gemini.DEFAULT_GEMINI_MODEL]: { input: 0.075, output: 0.3 },
+  // Preço introdutório do gemini-3.8-flash até 2026-12-31; depois 1,50/7,50 — revisar.
+  [gemini.DEFAULT_GEMINI_MODEL]: { input: 0.75, output: 3.75 },
   [claude.DEFAULT_CLAUDE_MODEL]: { input: 1.0, output: 5.0 },
 };
 

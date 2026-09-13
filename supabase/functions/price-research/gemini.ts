@@ -1,4 +1,5 @@
 import type { PriceQuoteCandidate, PriceResearchRequest } from './types.ts';
+import { buildGenerationConfig } from '../_shared/gemini.ts';
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -153,7 +154,9 @@ export async function searchPrices(
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature,
+        // MEDIUM: pesquisa de preço se beneficia de mais raciocínio (cruzar
+        // fontes, evitar preço inventado) e é chamada rara, não o caminho quente.
+        ...buildGenerationConfig(model, { temperature, thinkingLevel: 'MEDIUM' }),
         maxOutputTokens: 4096,
       },
     }),

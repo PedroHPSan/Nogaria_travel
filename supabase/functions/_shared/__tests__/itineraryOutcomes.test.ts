@@ -8,8 +8,8 @@ vi.mock('../whatsappClient.ts', () => ({
 }));
 
 const participants: ParticipantRow[] = [
-  { id: 'p1', full_name: 'Pedro', nickname: 'Pedro', is_minor: false, height_cm: 180, whatsapp_phone: '5511999990001' },
-  { id: 'p2', full_name: 'Débora', nickname: 'Dé', is_minor: false, height_cm: 165, whatsapp_phone: '5511999990002' },
+  { id: 'p1', full_name: 'Pedro', nickname: 'Pedro', is_minor: false, height_cm: 180, whatsapp_phone: '5511999990001' , can_manage_itinerary: false },
+  { id: 'p2', full_name: 'Débora', nickname: 'Dé', is_minor: false, height_cm: 165, whatsapp_phone: '5511999990002' , can_manage_itinerary: false },
 ];
 
 function baseCtx(supabase: ReturnType<typeof createTestSupabase>) {
@@ -24,6 +24,7 @@ function baseCtx(supabase: ReturnType<typeof createTestSupabase>) {
     phoneNumberId: 'pn1',
     metaAccessToken: 'token',
     googleMapsApiKey: null,
+    geminiModel: 'gemini-3.8-flash',
   };
 }
 

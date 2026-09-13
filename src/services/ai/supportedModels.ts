@@ -9,7 +9,7 @@ export interface SupportedModelOption {
 }
 
 export const SUPPORTED_MODELS: SupportedModelOption[] = [
-  { provider: 'gemini', model: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash (padrão — rápido e mais barato)' },
+  { provider: 'gemini', model: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (padrão — rápido e mais barato)' },
   { provider: 'anthropic', model: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (mais confiável em ações, custo maior)' },
 ];
 

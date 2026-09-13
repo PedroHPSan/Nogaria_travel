@@ -444,6 +444,11 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
       metaAccessToken: Deno.env.get('META_WA_TOKEN') ?? '',
       googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? null,
       geminiApiKey,
+      // Explícito, não o `model` efetivo do chat: web_search sempre chama a
+      // API do Gemini, mesmo com o tenant conversando em Claude — a allowlist
+      // de resolveGeminiModel já rejeita um model_name de outro provedor
+      // (ex.: claude-haiku-4-5-...) e cai no default do Gemini sozinha.
+      geminiModel: resolveGeminiModel(aiConfig?.model_name),
     }),
   });
 

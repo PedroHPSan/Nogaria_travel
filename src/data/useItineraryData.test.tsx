@@ -62,7 +62,9 @@ const novoItem: Omit<ItineraryItem, 'id'> = {
   child_friendly: true,
 };
 
-function makeClient(opts: { rows?: unknown[]; error?: string } = {}): SupabaseLike {
+function makeClient(
+  opts: { rows?: unknown[]; error?: string; rpc?: SupabaseLike['rpc'] } = {},
+): SupabaseLike {
   const err = opts.error ? { message: opts.error } : null;
   return {
     from: () => ({
@@ -71,6 +73,7 @@ function makeClient(opts: { rows?: unknown[]; error?: string } = {}): SupabaseLi
       update: () => ({ eq: () => Promise.resolve({ error: err }) }),
       delete: () => ({ eq: () => Promise.resolve({ error: err }) }),
     }),
+    rpc: opts.rpc,
   };
 }
 
@@ -286,6 +289,59 @@ describe('useItineraryData', () => {
     });
 
     expect(result.current.itinerary.map(i => i.title)).toEqual(['Item 2', 'Item 1']);
+  });
+});
+
+describe('applyItineraryChanges', () => {
+  afterEach(() => cleanup());
+
+  it('aplica o retorno da RPC via merge funcional, sem depender de `itinerary` stale', async () => {
+    const item1 = { ...linhaSevenDwarfs, id: 'a', date: '2026-09-07', time_start: '08:00:00', title: 'Item 1' };
+    const item2 = { ...linhaSevenDwarfs, id: 'b', date: '2026-09-07', time_start: '12:00:00', title: 'Item 2' };
+    const rpc = vi.fn().mockResolvedValue({
+      data: {
+        applied: [
+          { item_id: 'a', date: '2026-09-07', time_start: '08:30:00', time_end: null, base_order: 0 },
+          { item_id: 'b', date: '2026-09-07', time_start: '12:30:00', time_end: null, base_order: 10 },
+        ],
+        before: [],
+      },
+      error: null,
+    });
+    const client = makeClient({ rows: [item1, item2], rpc });
+    const { result } = renderHook(() => useItineraryData(deps(client)));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let outcome: Awaited<ReturnType<typeof result.current.applyItineraryChanges>> | undefined;
+    await act(async () => {
+      outcome = await result.current.applyItineraryChanges(TRIP, [
+        { item_id: 'a', date: '2026-09-07', time_start: '08:30', time_end: null, base_order: 0 },
+        { item_id: 'b', date: '2026-09-07', time_start: '12:30', time_end: null, base_order: 10 },
+      ]);
+    });
+
+    expect(outcome?.ok).toBe(true);
+    expect(rpc).toHaveBeenCalledWith('apply_itinerary_changes', expect.objectContaining({ p_trip_id: TRIP }));
+    expect(result.current.itinerary.find(i => i.id === 'a')?.time_start).toBe('08:30');
+    expect(result.current.itinerary.find(i => i.id === 'b')?.time_start).toBe('12:30');
+  });
+
+  it('registra falha e não aplica nada quando a RPC retorna erro', async () => {
+    const recordFailure = vi.fn();
+    const item1 = { ...linhaSevenDwarfs, id: 'a' };
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } });
+    const client = makeClient({ rows: [item1], rpc });
+    const { result } = renderHook(() => useItineraryData(deps(client, recordFailure)));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let outcome: Awaited<ReturnType<typeof result.current.applyItineraryChanges>> | undefined;
+    await act(async () => {
+      outcome = await result.current.applyItineraryChanges(TRIP, [{ item_id: 'a', date: '2026-09-07', time_start: '09:00', time_end: null, base_order: null }]);
+    });
+
+    expect(outcome?.ok).toBe(false);
+    expect(recordFailure).toHaveBeenCalled();
+    expect(result.current.itinerary.find(i => i.id === 'a')?.time_start).toBe('08:40');
   });
 });
 

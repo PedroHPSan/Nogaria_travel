@@ -101,6 +101,7 @@ describe('create_flight_from_document — segunda fase', () => {
     phoneNumberId: 'pn1',
     metaAccessToken: 'token',
     googleMapsApiKey: null,
+    geminiModel: 'gemini-3.8-flash',
   });
 
   it('sem confirm não grava nada e explica que precisa do documento', async () => {

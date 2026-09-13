@@ -63,7 +63,7 @@ function findConflictingShow(item: ItineraryItem, dayItems: ItineraryItem[]): It
 }
 
 export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants }) => {
-  const { updateItineraryItem } = useTrip();
+  const { updateItineraryItem, itineraryOutcomes } = useTrip();
 
   const sortedItems = sortItineraryChronologically(items);
   const coverage = computeCoverage(items, participants);
@@ -126,6 +126,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
           sortedItems.map(item => {
             const isShow = Boolean(item.item_type === 'show' && item.show_block_start && item.show_block_end);
             const conflict = findConflictingShow(item, sortedItems);
+            const outcome = itineraryOutcomes[item.id];
 
             return (
               <div
@@ -159,6 +160,19 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({ items, participants })
                         {item.counts_toward_completion === false && (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-ink-900 text-ink-500 border border-ink-800">
                             Não conta para cobertura
+                          </span>
+                        )}
+                        {outcome?.status === 'skipped' && (
+                          <span
+                            title={outcome.note ?? undefined}
+                            className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-warning-500/10 text-warning-400 border border-warning-500/30"
+                          >
+                            Não rolou
+                          </span>
+                        )}
+                        {outcome?.status === 'cancelled' && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-ink-900 text-ink-500 border border-ink-800 line-through">
+                            Cancelada
                           </span>
                         )}
                       </div>

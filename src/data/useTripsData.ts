@@ -23,6 +23,8 @@ export interface SupabaseLike {
       eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
     };
   };
+  /** Opcional: só useItineraryData::applyItineraryChanges (RPC apply_itinerary_changes) usa hoje. */
+  rpc?: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 }
 
 export interface TripsDataDeps {

@@ -703,7 +703,7 @@ export const INITIAL_AI_CONFIGS: AiProviderConfig[] = [
   {
     id: 'ai-gemini-flash',
     provider: 'gemini',
-    model_name: 'gemini-1.5-flash',
+    model_name: 'gemini-3.8-flash',
     is_active: true,
     is_default: true,
     daily_token_limit: 1000000,
@@ -719,7 +719,7 @@ export const INITIAL_AI_LOGS: AiUsageLog[] = [
     user_name: 'Bárbara Nogueira',
     function_name: 'AuditLogistics',
     provider: 'gemini',
-    model: 'gemini-1.5-flash',
+    model: 'gemini-3.8-flash',
     tokens_input: 1250,
     tokens_output: 450,
     estimated_cost_usd: 0.0003

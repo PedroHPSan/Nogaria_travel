@@ -154,15 +154,12 @@ Deno.serve(async (request) => {
       config = c;
     }
 
-    // model_name é texto livre na UI: nomes de outro provedor ou gerações
-    // descontinuadas do Gemini retornariam HTTP 404 na API.
+    // ALLOWLIST, não blocklist (alinhado com _shared/gemini.ts::resolveGeminiModel):
+    // model_name é texto livre na UI, e qualquer coisa fora do único modelo que
+    // este módulo sabe operar (generationConfig muda por geração) cai no default —
+    // inclusive uma config antiga salva como 'gemini-3.5-flash'.
     let modelName = String(config?.model_name ?? '').trim();
-    if (
-      !modelName.startsWith('gemini-') ||
-      modelName.includes('1.5') ||
-      modelName.includes('2.5') ||
-      modelName.includes('flash-latest')
-    ) {
+    if (modelName !== DEFAULT_AI_MODEL) {
       modelName = DEFAULT_AI_MODEL;
     }
     const modelTemperature = Number(config?.temperature ?? 0.2);

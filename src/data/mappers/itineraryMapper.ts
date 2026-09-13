@@ -42,6 +42,7 @@ export interface ItineraryItemRow {
   recommended_arrival_min_before: number | null;
   last_showtime_of_day: boolean;
   reminder_minutes_before: number | null;
+  external_entity_id: string | null;
 }
 
 /** Colunas `time` do Postgres voltam como "HH:MM:SS" — trunca pros 5 primeiros caracteres. */
@@ -91,6 +92,7 @@ export function itineraryFromRow(row: ItineraryItemRow): ItineraryItem {
     recommended_arrival_min_before: row.recommended_arrival_min_before ?? undefined,
     last_showtime_of_day: row.last_showtime_of_day,
     reminder_minutes_before: row.reminder_minutes_before ?? undefined,
+    external_entity_id: row.external_entity_id ?? undefined,
   };
 }
 
@@ -136,5 +138,6 @@ export function itineraryToInsert(item: ItineraryItem): ItineraryItemRow {
     recommended_arrival_min_before: item.recommended_arrival_min_before ?? null,
     last_showtime_of_day: item.last_showtime_of_day ?? false,
     reminder_minutes_before: item.reminder_minutes_before ?? null,
+    external_entity_id: item.external_entity_id ?? null,
   };
 }

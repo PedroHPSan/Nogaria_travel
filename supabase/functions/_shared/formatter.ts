@@ -40,6 +40,14 @@ export interface DigestWeather {
   description: string;
 }
 
+export interface DigestParkStatus {
+  park: string;
+  opening: string | null;
+  closing: string | null;
+  closed: boolean;
+  attractions: { title: string; status: 'OPERATING' | 'DOWN' | 'CLOSED' | 'REFURBISHMENT' }[];
+}
+
 const CATEGORY_EMOJI: Record<string, string> = {
   flight: '✈️',
   hotel: '🏨',
@@ -72,6 +80,27 @@ export function formatWeatherLine(weather: DigestWeather): string {
   return `🌡️ ${weather.tempMinC}°C–${weather.tempMaxC}°C, ${weather.description}${rain}`;
 }
 
+/**
+ * Linha de horário/status do parque predominante do dia, pro topo do digest.
+ * Fonte da comunidade (themeparks.wiki) — nunca afirma sem qualificar; omitida
+ * (retorna null) quando não há nada a dizer, para não virar ruído.
+ */
+export function formatParkStatusLine(status: DigestParkStatus): string | null {
+  if (status.closed) return `🎢 ${status.park} consta *fechado* hoje (fonte da comunidade — confirme no app oficial).`;
+  if (!status.opening && status.attractions.length === 0) return null;
+
+  const hours = status.opening && status.closing ? ` ${status.opening}–${status.closing}` : '';
+  const flagged = status.attractions.filter(a => a.status !== 'OPERATING');
+  const flaggedText =
+    flagged.length > 0
+      ? ` ⚠️ ${flagged
+          .slice(0, 3)
+          .map(a => `${a.title} (${a.status === 'REFURBISHMENT' ? 'manutenção' : a.status === 'CLOSED' ? 'fechada' : 'fora do ar'})`)
+          .join(', ')}`
+      : '';
+  return `🎢 ${status.park} hoje:${hours}.${flaggedText}`;
+}
+
 function formatItemLine(item: DigestItineraryItem, child: DigestChild | null): string {
   const timeRange = item.time_end ? `${item.time_start}–${item.time_end}` : item.time_start;
   let line = `🔹 ${categoryEmoji(item.category)} *${timeRange}* • ${item.title}`;
@@ -102,8 +131,10 @@ export function formatDailyDigest(input: {
   mode?: 'today' | 'tomorrow';
   /** Previsão do dia (Open-Meteo); ausente/null não aparece — clima é melhor-esforço, nunca bloqueia o digest. */
   weather?: DigestWeather | null;
+  /** Horário/status do parque predominante do dia (themeparks.wiki); ausente/null não aparece — mesma filosofia do clima. */
+  parkStatus?: DigestParkStatus | null;
 }): string {
-  const { tripTitle, dateIso, items, tasksDueSoon, nextFlight, child, timezone, mode = 'today', weather } = input;
+  const { tripTitle, dateIso, items, tasksDueSoon, nextFlight, child, timezone, mode = 'today', weather, parkStatus } = input;
   const isTomorrow = mode === 'tomorrow';
 
   const lines: string[] = [];
@@ -114,6 +145,10 @@ export function formatDailyDigest(input: {
   );
   lines.push(`📅 *${formatDatePtBr(dateIso)}* — ${tripTitle}`);
   if (weather) lines.push(formatWeatherLine(weather));
+  if (parkStatus) {
+    const line = formatParkStatusLine(parkStatus);
+    if (line) lines.push(line);
+  }
   lines.push('');
 
   if (items.length === 0) {

@@ -5,6 +5,7 @@ import { DiningRadarModal } from '../../components/modals/DiningRadarModal';
 import { AttractionGuideModal } from '../../components/modals/AttractionGuideModal';
 import { DayTimeline } from './DayTimeline';
 import { MonthCalendar } from './MonthCalendar';
+import { ReplanBoard } from './ReplanBoard';
 import { ViewHeader } from '../../components/ui/ViewHeader';
 import { Avatar } from '../../components/Avatar';
 import type { ItineraryItem } from '../../types/database.types';
@@ -24,7 +25,8 @@ import {
   List,
   Clock,
   Calendar,
-  Download
+  Download,
+  LayoutGrid
 } from 'lucide-react';
 
 function downloadBlob(content: string, filename: string, mimeType: string): void {
@@ -39,10 +41,10 @@ function downloadBlob(content: string, filename: string, mimeType: string): void
   URL.revokeObjectURL(url);
 }
 
-type ViewMode = 'list' | 'timeline' | 'calendar';
+type ViewMode = 'list' | 'timeline' | 'calendar' | 'replan';
 
 export const ItineraryView: React.FC = () => {
-  const { itinerary, activeTrip, participants, addItineraryItem, updateItineraryItem, deleteItineraryItem } = useTrip();
+  const { itinerary, activeTrip, participants, addItineraryItem, updateItineraryItem, deleteItineraryItem, applyItineraryChanges, itineraryOutcomes } = useTrip();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
@@ -265,6 +267,15 @@ export const ItineraryView: React.FC = () => {
           <Calendar className="w-3.5 h-3.5" />
           Calendário
         </button>
+        <button
+          onClick={() => setViewMode('replan')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+            viewMode === 'replan' ? 'bg-info-600/20 text-info-400' : 'text-ink-400 hover:text-ink-100'
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+          Replanejar
+        </button>
       </div>
 
       {viewMode === 'list' && (
@@ -471,6 +482,17 @@ export const ItineraryView: React.FC = () => {
             setTimelineDate(date);
             setViewMode('timeline');
           }}
+        />
+      )}
+
+      {viewMode === 'replan' && (
+        <ReplanBoard
+          items={tripItinerary}
+          participants={tripParticipants}
+          outcomes={itineraryOutcomes}
+          tripStart={activeTrip.start_date}
+          tripEnd={activeTrip.end_date}
+          onApply={changes => applyItineraryChanges(activeTrip.id, changes)}
         />
       )}
 

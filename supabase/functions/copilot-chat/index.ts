@@ -4,7 +4,7 @@
 // do service role do webhook — aqui não há telefone, então a autorização por
 // tenant/trip vem inteiramente de is_tenant_member/is_trip_member.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import type { ChatMessage } from '../_shared/gemini.ts';
+import { resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
 import { chatWithConfiguredProvider } from '../_shared/aiProvider.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
 import type { ParticipantRow } from '../_shared/tripContext.ts';
@@ -26,7 +26,10 @@ const MAX_HISTORY = 10;
 // de reschedule notifica via WhatsApp — fora do escopo desta issue #26).
 // web_search entra aqui (não depende de telefone) para dar ao Copiloto acesso
 // a informação atual (clima, eventos) além dos dados da viagem no banco.
-const WEB_TOOL_NAMES = new Set(['get_itinerary', 'get_tasks', 'get_flight_info', 'mark_itinerary_item_done', 'complete_task', 'web_search']);
+// replan_day fica de fora de propósito: é ação de organizador com fan-out por
+// WhatsApp (notifica os outros participantes) — a tela ReplanBoard cobre esse
+// caso melhor no web. get_day_conditions é só leitura, entra normalmente.
+const WEB_TOOL_NAMES = new Set(['get_itinerary', 'get_tasks', 'get_flight_info', 'mark_itinerary_item_done', 'complete_task', 'web_search', 'get_day_conditions']);
 const WEB_TOOLS = TOOL_DECLARATIONS.filter(t => WEB_TOOL_NAMES.has(t.name));
 
 interface TripRow {
@@ -159,6 +162,7 @@ Deno.serve(async request => {
         metaAccessToken: '',
         googleMapsApiKey: null,
         geminiApiKey,
+        geminiModel: resolveGeminiModel(aiConfigRes.data?.model_name),
       }),
     });
     const elapsed = Date.now() - startedAt;

@@ -147,5 +147,61 @@ export function useItineraryData({ client, tripId, recordFailure, realtime }: It
     [client, recordFailure, itinerary],
   );
 
-  return { itinerary, loading, addItineraryItem, updateItineraryItem, deleteItineraryItem };
+  /**
+   * Aplica um lote de mudanças (empurrar dia, trocar dias, mover dia — ver
+   * src/services/replanEngine.ts) via a RPC transacional apply_itinerary_changes,
+   * em vez de N chamadas de updateItineraryItem: essa função depende de
+   * `itinerary` no useCallback e envia a linha inteira, então N chamadas no
+   * mesmo tick leriam o mesmo snapshot e a última sobrescreveria as
+   * anteriores. A RPC é atômica e devolve o `before`, usado pelo ReplanBoard
+   * para montar um "Desfazer" de sessão sem tabela de histórico.
+   */
+  const applyItineraryChanges = useCallback(
+    async (
+      tripIdArg: string,
+      changes: { item_id: string; date: string; time_start: string; time_end: string | null; base_order: number | null }[],
+    ): Promise<{ ok: true; applied: Record<string, unknown>[]; before: Record<string, unknown>[] } | { ok: false }> => {
+      if (!client.rpc) return { ok: false };
+
+      const { data, error } = await client.rpc('apply_itinerary_changes', { p_trip_id: tripIdArg, p_changes: changes });
+      if (error || !data) {
+        recordFailure({
+          entity: 'Roteiro',
+          operation: 'atualizar',
+          label: `${changes.length} ${changes.length === 1 ? 'atividade' : 'atividades'}`,
+          retry: () => {
+            void applyItineraryChanges(tripIdArg, changes);
+          },
+        });
+        return { ok: false };
+      }
+
+      const result = data as { applied?: Record<string, unknown>[]; before?: Record<string, unknown>[] };
+      const applied = result.applied ?? [];
+      // Funcional, sem `itinerary` nas deps: imune ao mesmo problema de stale
+      // que motivou a RPC em primeiro lugar. Merge por id — o realtime, que
+      // recebe os mesmos N eventos da transação, faz o mesmo merge e vira
+      // no-op quando já refletido aqui.
+      setItinerary(prev =>
+        sortItineraryChronologically(
+          prev.map(item => {
+            const patch = applied.find(a => a.item_id === item.id);
+            if (!patch) return item;
+            return {
+              ...item,
+              date: String(patch.date ?? item.date),
+              time_start: String(patch.time_start ?? item.time_start).slice(0, 5),
+              time_end: patch.time_end != null ? String(patch.time_end).slice(0, 5) : undefined,
+              base_order: patch.base_order != null ? Number(patch.base_order) : item.base_order,
+            };
+          }),
+        ),
+      );
+
+      return { ok: true, applied, before: result.before ?? [] };
+    },
+    [client, recordFailure],
+  );
+
+  return { itinerary, loading, addItineraryItem, updateItineraryItem, deleteItineraryItem, applyItineraryChanges };
 }
