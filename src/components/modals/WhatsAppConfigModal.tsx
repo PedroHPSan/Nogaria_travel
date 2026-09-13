@@ -139,6 +139,18 @@ export const WhatsAppConfigModal: React.FC<WhatsAppConfigModalProps> = ({ isOpen
               <label className="block text-ink-300 font-semibold mb-1">Retenção das mensagens (dias após a viagem)</label>
               <input type="number" min={7} max={730} value={form.message_retention_days} onChange={e => set('message_retention_days', Number(e.target.value))} disabled={!isAdmin} className={inputClass} />
             </div>
+            <div className="sm:col-span-2">
+              <label className="block text-ink-300 font-semibold mb-1">Telefone do admin para avisos de franquia</label>
+              <input
+                type="text"
+                value={form.admin_alert_phone ?? ''}
+                onChange={e => set('admin_alert_phone', e.target.value.trim() === '' ? null : e.target.value)}
+                disabled={!isAdmin}
+                className={inputClass}
+                placeholder="Ex: 5511998887777 (opcional, vazio desativa)"
+              />
+              <p className="text-[10px] text-ink-500 mt-1">Recebe um aviso separado (fora do rodapé mostrado à família) quando a franquia chegar a 90% e quando esgotar.</p>
+            </div>
           </div>
 
           {message && (

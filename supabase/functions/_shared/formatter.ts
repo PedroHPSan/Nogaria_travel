@@ -33,6 +33,13 @@ export interface DigestChild {
   height_cm: number | null;
 }
 
+export interface DigestWeather {
+  tempMaxC: number;
+  tempMinC: number;
+  precipitationProbabilityMax: number;
+  description: string;
+}
+
 const CATEGORY_EMOJI: Record<string, string> = {
   flight: '✈️',
   hotel: '🏨',
@@ -57,6 +64,12 @@ export function formatDatePtBr(dateIso: string): string {
     month: '2-digit',
     timeZone: 'UTC',
   });
+}
+
+/** Linha curta de clima pro topo do digest — chuva só aparece se a chance for relevante (>=30%), pra não virar ruído em dia de sol. */
+export function formatWeatherLine(weather: DigestWeather): string {
+  const rain = weather.precipitationProbabilityMax >= 30 ? ` • ☔ ${weather.precipitationProbabilityMax}% de chance de chuva` : '';
+  return `🌡️ ${weather.tempMinC}°C–${weather.tempMaxC}°C, ${weather.description}${rain}`;
 }
 
 function formatItemLine(item: DigestItineraryItem, child: DigestChild | null): string {
@@ -87,8 +100,10 @@ export function formatDailyDigest(input: {
   timezone: string;
   /** 'today' (digest da manhã) ou 'tomorrow' (prévia da noite) — só muda o texto de abertura; dateIso já vem no dia certo. */
   mode?: 'today' | 'tomorrow';
+  /** Previsão do dia (Open-Meteo); ausente/null não aparece — clima é melhor-esforço, nunca bloqueia o digest. */
+  weather?: DigestWeather | null;
 }): string {
-  const { tripTitle, dateIso, items, tasksDueSoon, nextFlight, child, timezone, mode = 'today' } = input;
+  const { tripTitle, dateIso, items, tasksDueSoon, nextFlight, child, timezone, mode = 'today', weather } = input;
   const isTomorrow = mode === 'tomorrow';
 
   const lines: string[] = [];
@@ -98,6 +113,7 @@ export function formatDailyDigest(input: {
       : `☀️ *Bom dia, Família!* Hoje é dia de aventura!`,
   );
   lines.push(`📅 *${formatDatePtBr(dateIso)}* — ${tripTitle}`);
+  if (weather) lines.push(formatWeatherLine(weather));
   lines.push('');
 
   if (items.length === 0) {

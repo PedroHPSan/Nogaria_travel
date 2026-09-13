@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
-import { chatWithTools, extractJsonFromDocument, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
+import { extractJsonFromDocument, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
+import { chatWithConfiguredProvider } from '../_shared/aiProvider.ts';
 import { downloadMedia, sendTextMessage } from '../_shared/whatsappClient.ts';
 import { fetchTripContext, buildSystemPrompt, localDateIso } from '../_shared/tripContext.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
@@ -14,11 +15,13 @@ import {
 } from '../_shared/voucherExtract.ts';
 import {
   evaluateQuota,
+  formatAdminQuotaAlert,
   formatQuotaExceeded,
   formatQuotaWarning,
   monthStartUtcIso,
   nextMonthStartLocalIso,
   resolveMonthlyQuota,
+  type QuotaStatus,
 } from '../_shared/quota.ts';
 
 const HISTORY_LIMIT = 10;
@@ -349,7 +352,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
   // Idempotência: Meta reenvia webhooks; wa_message_id é unique no banco.
   const { data: config } = await supabase
     .from('whatsapp_configs')
-    .select('tenant_id, timezone, enabled, monthly_message_quota, tenants(plan)')
+    .select('tenant_id, timezone, enabled, monthly_message_quota, admin_alert_phone, tenants(plan)')
     .eq('phone_number_id', msg.phoneNumberId)
     .maybeSingle();
   if (!config || !config.enabled) return 'ignored:no-config';
@@ -371,6 +374,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
   const now = new Date();
   const quota = await checkQuota(supabase, config, msg, now);
   if (quota.kind === 'exceeded') {
+    await notifyAdminQuota(supabase, config, msg.phoneNumberId, quota, now);
     const noticed = await quotaNoticeSentToday(supabase, config.tenant_id, msg.from, 'exceeded', now);
     if (!noticed) {
       const text = formatQuotaExceeded(quota, nextMonthStartLocalIso(now, config.timezone));
@@ -405,27 +409,25 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
     return 'replied:no-trip';
   }
 
-  const apiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!apiKey) throw new Error('GEMINI_API_KEY não configurada nas secrets do Supabase.');
+  const geminiApiKey = Deno.env.get('GEMINI_API_KEY') ?? null;
+  const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY') ?? null;
+  if (!geminiApiKey) throw new Error('GEMINI_API_KEY não configurada nas secrets do Supabase.');
 
-  // Só configs do Gemini: o Copiloto permite provedores OpenAI/Claude/DeepSeek
-  // com is_active, e o nome desses modelos não existe na API do Gemini.
+  // is_active/is_default decide QUAL config, não mais o provedor fixo em
+  // 'gemini' — aiProvider.ts resolve gemini vs. anthropic a partir dela.
   const { data: aiConfig } = await supabase
     .from('ai_provider_configs')
-    .select('model_name, temperature')
+    .select('provider, model_name, temperature')
     .eq('tenant_id', config.tenant_id)
-    .eq('provider', 'gemini')
     .eq('is_active', true)
     .order('is_default', { ascending: false })
     .limit(1)
     .maybeSingle();
-  const model = resolveGeminiModel(aiConfig?.model_name);
 
   const history = await loadHistory(supabase, config.tenant_id, msg.from, msg.waMessageId);
-  const { text, usage } = await chatWithTools({
-    apiKey,
-    model,
-    temperature: Number(aiConfig?.temperature ?? 0.4),
+  const { text, usage, provider, model, costUsd } = await chatWithConfiguredProvider({
+    config: aiConfig ?? { provider: 'gemini', model_name: null, temperature: 0.4 },
+    keys: { geminiApiKey, claudeApiKey },
     systemPrompt: buildSystemPrompt(ctx, todayIso, config.timezone),
     history,
     userText: msg.text,
@@ -441,14 +443,18 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
       phoneNumberId: msg.phoneNumberId,
       metaAccessToken: Deno.env.get('META_WA_TOKEN') ?? '',
       googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? null,
+      geminiApiKey,
     }),
   });
 
   let quotaFooter: { quota: 'warning' } | null = null;
   let outgoing = text;
-  if (quota.kind === 'warning' && !(await quotaNoticeSentToday(supabase, config.tenant_id, msg.from, 'warning', now))) {
-    outgoing = `${text}\n\n${formatQuotaWarning(quota)}`;
-    quotaFooter = { quota: 'warning' };
+  if (quota.kind === 'warning') {
+    await notifyAdminQuota(supabase, config, msg.phoneNumberId, quota, now);
+    if (!(await quotaNoticeSentToday(supabase, config.tenant_id, msg.from, 'warning', now))) {
+      outgoing = `${text}\n\n${formatQuotaWarning(quota)}`;
+      quotaFooter = { quota: 'warning' };
+    }
   }
 
   const sent = await sendTextMessage({
@@ -472,17 +478,15 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
       ...(quotaFooter ? { payload: quotaFooter } : {}),
     });
 
-    // Mesmo modelo de custo do price-research (Gemini Flash).
-    const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
     await supabase.from('ai_usage_logs').insert({
       tenant_id: config.tenant_id,
       user_name: msg.from,
       function_name: 'whatsapp_bot',
-      provider: 'gemini',
+      provider,
       model,
       tokens_input: usage.tokensIn,
       tokens_output: usage.tokensOut,
-      estimated_cost_usd: Number(cost.toFixed(6)),
+      estimated_cost_usd: costUsd,
       timestamp: new Date().toISOString(),
       latency_ms: Date.now() - startedAt,
       tool_rounds: usage.toolRounds,
@@ -546,8 +550,47 @@ interface QuotaConfig {
   tenant_id: string;
   timezone: string;
   monthly_message_quota: number | null;
+  admin_alert_phone: string | null;
   // PostgREST devolve o embed de FK como objeto (ou lista, se a relação for ambígua).
   tenants: { plan: string } | { plan: string }[] | null;
+}
+
+/**
+ * Manda o aviso de franquia num canal separado do rodapé enviado ao usuário —
+ * dedupe por telefone do admin (mesma função `quotaNoticeSentToday`), então
+ * não repete mais de uma vez por dia mesmo com várias mensagens da família.
+ */
+async function notifyAdminQuota(
+  supabase: SupabaseClient,
+  config: QuotaConfig,
+  phoneNumberId: string,
+  status: Extract<QuotaStatus, { kind: 'warning' | 'exceeded' }>,
+  now: Date,
+): Promise<void> {
+  const adminPhone = config.admin_alert_phone;
+  if (!adminPhone) return;
+  if (await quotaNoticeSentToday(supabase, config.tenant_id, adminPhone, status.kind, now)) return;
+
+  try {
+    const text = formatAdminQuotaAlert(status);
+    await sendTextMessage({
+      phoneNumberId,
+      accessToken: Deno.env.get('META_WA_TOKEN') ?? '',
+      to: adminPhone,
+      text,
+    });
+    await supabase.from('whatsapp_messages').insert({
+      tenant_id: config.tenant_id,
+      direction: 'outbound',
+      sender_phone: adminPhone,
+      body: text,
+      kind: 'reminder',
+      payload: { quota: status.kind },
+    });
+  } catch (err) {
+    // Aviso ao admin é observabilidade extra — não pode derrubar a resposta à família.
+    console.error('[whatsapp-webhook] Falha ao notificar admin de franquia:', err);
+  }
 }
 
 /** Mensagens recebidas (chat) do tenant no mês local corrente vs. franquia efetiva. */

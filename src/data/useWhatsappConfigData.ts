@@ -16,6 +16,7 @@ export interface WhatsappConfigRow {
   quiet_hours_end: string;
   monthly_message_quota: number | null;
   message_retention_days: number;
+  admin_alert_phone: string | null;
 }
 
 export type WhatsappConfigInput = Omit<WhatsappConfigRow, 'id' | 'tenant_id'>;
@@ -32,6 +33,7 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsappConfigInput = {
   quiet_hours_end: '07:00',
   monthly_message_quota: null,
   message_retention_days: 90,
+  admin_alert_phone: null,
 };
 
 /**
@@ -82,6 +84,7 @@ function normalizeRow(raw: unknown): WhatsappConfigRow | null {
     quiet_hours_end: hhmm(r.quiet_hours_end) || DEFAULT_WHATSAPP_CONFIG.quiet_hours_end,
     monthly_message_quota: r.monthly_message_quota === null || r.monthly_message_quota === undefined ? null : Number(r.monthly_message_quota),
     message_retention_days: Number(r.message_retention_days ?? DEFAULT_WHATSAPP_CONFIG.message_retention_days),
+    admin_alert_phone: r.admin_alert_phone ? String(r.admin_alert_phone) : null,
   };
 }
 

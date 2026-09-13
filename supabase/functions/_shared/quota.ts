@@ -83,6 +83,21 @@ export function formatQuotaWarning(status: Extract<QuotaStatus, { kind: 'warning
   return `_Aviso: ${status.used} de ${status.quota} mensagens do mês já usadas (restam ${status.remaining})._`;
 }
 
+/**
+ * Aviso ao admin (canal separado do rodapé enviado ao usuário que mandou a
+ * mensagem) — sem isto, quem administra a conta só descobre que a franquia
+ * estourou quando a família reclama que o bot parou de responder.
+ */
+export function formatAdminQuotaAlert(status: Extract<QuotaStatus, { kind: 'warning' | 'exceeded' }>): string {
+  if (status.kind === 'exceeded') {
+    return (
+      `⚠️ *Franquia do bot esgotada*: ${status.used}/${status.quota} mensagens este mês. ` +
+      'O bot parou de responder a família até a renovação ou até você ampliar o plano.'
+    );
+  }
+  return `⚠️ *Franquia do bot em ${Math.round((status.used / status.quota) * 100)}%*: ${status.used}/${status.quota} mensagens este mês (restam ${status.remaining}).`;
+}
+
 /** Primeiro dia do mês seguinte, no fuso do tenant (`YYYY-MM-DD`). */
 export function nextMonthStartLocalIso(now: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit' }).formatToParts(now);

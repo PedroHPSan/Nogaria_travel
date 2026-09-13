@@ -4,7 +4,8 @@
 // do service role do webhook — aqui não há telefone, então a autorização por
 // tenant/trip vem inteiramente de is_tenant_member/is_trip_member.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { chatWithTools, resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
+import type { ChatMessage } from '../_shared/gemini.ts';
+import { chatWithConfiguredProvider } from '../_shared/aiProvider.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
 import type { ParticipantRow } from '../_shared/tripContext.ts';
 
@@ -23,7 +24,9 @@ const MAX_HISTORY = 10;
 // list_trip_ideas (dependem de localização e telefone compartilhados via
 // WhatsApp) e sem reschedule_itinerary_item/set_activity_reminder (o fan-out
 // de reschedule notifica via WhatsApp — fora do escopo desta issue #26).
-const WEB_TOOL_NAMES = new Set(['get_itinerary', 'get_tasks', 'get_flight_info', 'mark_itinerary_item_done', 'complete_task']);
+// web_search entra aqui (não depende de telefone) para dar ao Copiloto acesso
+// a informação atual (clima, eventos) além dos dados da viagem no banco.
+const WEB_TOOL_NAMES = new Set(['get_itinerary', 'get_tasks', 'get_flight_info', 'mark_itinerary_item_done', 'complete_task', 'web_search']);
 const WEB_TOOLS = TOOL_DECLARATIONS.filter(t => WEB_TOOL_NAMES.has(t.name));
 
 interface TripRow {
@@ -40,13 +43,14 @@ function buildWebSystemPrompt(trip: TripRow, participants: ParticipantRow[]): st
   const roster = participants.map(p => `${p.nickname ?? p.full_name}${p.is_minor ? ' [menor]' : ''}`).join(', ');
   return [
     'Você é o Copiloto de IA da Plataforma de Viagens, um assistente que responde perguntas sobre uma viagem específica com acesso aos dados reais dela.',
-    'Responda sempre em português (pt-BR), de forma direta e objetiva.',
+    'Responda sempre em português (pt-BR), de forma direta e objetiva — 1-3 frases na maioria dos casos, sem listar informação que não foi pedida.',
     `Viagem ativa: "${trip.title}" para ${trip.destination_main}, de ${trip.start_date} a ${trip.end_date}. Moeda base: ${trip.currency_base}.`,
     `Participantes: ${roster || 'não cadastrados'}.`,
     '- Use as ferramentas disponíveis (roteiro, tarefas, voos) para consultar dados reais antes de responder. Nunca invente horários, preços ou reservas.',
     '- mark_itinerary_item_done e complete_task têm confirmação em duas etapas: a primeira chamada (sem confirm) só valida e devolve um resumo em "preview" — mostre esse resumo ao usuário e espere confirmação explícita numa mensagem seguinte antes de chamar a MESMA ferramenta de novo com confirm=true.',
     '- Compras, gift cards e orçamento não têm ferramenta aqui: responda em 1-2 frases dizendo que esse relatório é consultado nas telas do app, sem tentar calcular ou estimar nada.',
     '- Se a pergunta não for sobre a viagem, responda brevemente e redirecione de forma leve para o assunto da viagem.',
+    '- Para clima, eventos, horário de funcionamento ou qualquer coisa que não esteja nos dados da viagem, use web_search e resuma em 1-2 frases — nunca invente esse tipo de informação.',
   ].join('\n');
 }
 
@@ -118,9 +122,8 @@ Deno.serve(async request => {
       supabase.from('whatsapp_configs').select('timezone').eq('tenant_id', trip.tenant_id).maybeSingle(),
       supabase
         .from('ai_provider_configs')
-        .select('model_name, temperature')
+        .select('provider, model_name, temperature')
         .eq('tenant_id', trip.tenant_id)
-        .eq('provider', 'gemini')
         .eq('is_active', true)
         .order('is_default', { ascending: false })
         .limit(1)
@@ -129,16 +132,15 @@ Deno.serve(async request => {
 
     const participants = (participantsRes.data ?? []) as ParticipantRow[];
     const timeZone = whatsappConfigRes.data?.timezone ?? 'America/Sao_Paulo';
-    const model = resolveGeminiModel(aiConfigRes.data?.model_name);
 
-    const apiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!apiKey) return json({ error: 'GEMINI_API_KEY não configurada nas secrets do Supabase.' }, 500);
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY') ?? null;
+    const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY') ?? null;
+    if (!geminiApiKey) return json({ error: 'GEMINI_API_KEY não configurada nas secrets do Supabase.' }, 500);
 
     const startedAt = Date.now();
-    const { text, usage } = await chatWithTools({
-      apiKey,
-      model,
-      temperature: Number(aiConfigRes.data?.temperature ?? 0.3),
+    const { text, usage, provider, model, costUsd } = await chatWithConfiguredProvider({
+      config: aiConfigRes.data ?? { provider: 'gemini', model_name: null, temperature: 0.3 },
+      keys: { geminiApiKey, claudeApiKey },
       systemPrompt: buildWebSystemPrompt(trip, participants),
       history,
       userText: message,
@@ -156,21 +158,20 @@ Deno.serve(async request => {
         phoneNumberId: '',
         metaAccessToken: '',
         googleMapsApiKey: null,
+        geminiApiKey,
       }),
     });
     const elapsed = Date.now() - startedAt;
 
-    // Mesmo custo do Gemini Flash usado em price-research/whatsapp-webhook.
-    const cost = (usage.tokensIn / 1_000_000) * 0.075 + (usage.tokensOut / 1_000_000) * 0.3;
     const { error: logErr } = await supabase.from('ai_usage_logs').insert({
       tenant_id: trip.tenant_id,
       user_name: user.email ?? user.id,
       function_name: 'copilot_web',
-      provider: 'gemini',
+      provider,
       model,
       tokens_input: usage.tokensIn,
       tokens_output: usage.tokensOut,
-      estimated_cost_usd: Number(cost.toFixed(6)),
+      estimated_cost_usd: costUsd,
       timestamp: new Date().toISOString(),
       latency_ms: elapsed,
       tool_rounds: usage.toolRounds,
@@ -183,7 +184,7 @@ Deno.serve(async request => {
 
     return json({
       text,
-      usage: { tokens_in: usage.tokensIn, tokens_out: usage.tokensOut, cost_usd: Number(cost.toFixed(6)) },
+      usage: { tokens_in: usage.tokensIn, tokens_out: usage.tokensOut, cost_usd: costUsd },
     });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'Erro inesperado.' }, 500);

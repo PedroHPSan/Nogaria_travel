@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   evaluateQuota,
+  formatAdminQuotaAlert,
   formatQuotaExceeded,
   formatQuotaWarning,
   monthStartUtcIso,
@@ -66,5 +67,10 @@ describe('quota (#27)', () => {
     expect(text).toContain('300');
     expect(text).toContain('01/10/2026');
     expect(formatQuotaWarning({ kind: 'warning', used: 275, quota: 300, remaining: 25 })).toContain('restam 25');
+  });
+
+  it('aviso ao admin distingue warning (percentual) de exceeded (bot parado)', () => {
+    expect(formatAdminQuotaAlert({ kind: 'warning', used: 275, quota: 300, remaining: 25 })).toContain('92%');
+    expect(formatAdminQuotaAlert({ kind: 'exceeded', used: 301, quota: 300 })).toContain('parou de responder');
   });
 });

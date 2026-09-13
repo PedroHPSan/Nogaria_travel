@@ -46,6 +46,13 @@ const MAX_TOOL_ROUNDS = 4;
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash';
 
 /**
+ * Modelos Gemini que o bot e o Copiloto sabem falar de fato — a UI de
+ * configuração (AiCopilotView) só deve oferecer estes, em vez do texto livre
+ * que hoje permite salvar qualquer string e cair no default silenciosamente.
+ */
+export const SUPPORTED_GEMINI_MODELS = [DEFAULT_GEMINI_MODEL] as const;
+
+/**
  * Resolve o modelo a usar a partir do `model_name` salvo em `ai_provider_configs`.
  * O campo é texto livre na UI do Copiloto, então pode chegar vazio, com um modelo
  * de outro provedor (gpt-*, claude-*) ou com uma geração descontinuada do Gemini —
@@ -190,6 +197,45 @@ export async function extractJsonFromDocument(input: {
   } catch {
     return { json: null, usage };
   }
+}
+
+export interface GroundedSearchResult {
+  text: string;
+  sources: string[];
+  usage: Pick<GeminiUsage, 'tokensIn' | 'tokensOut'>;
+}
+
+/**
+ * Busca na web via grounding nativo do Gemini (`google_search`). É uma chamada
+ * isolada, sem os `tools` de function calling: misturar tool nativa com
+ * function_declarations no mesmo request é instável entre gerações do Gemini,
+ * então o `web_search` exposto ao modelo (tripTools.ts) chama isto por fora do
+ * loop de `chatWithTools` e devolve o resultado como se fosse a resposta de
+ * uma tool comum. Temperatura baixa: é busca factual, não criação de texto.
+ */
+export async function groundedSearch(input: {
+  apiKey: string;
+  model: string;
+  query: string;
+}): Promise<GroundedSearchResult> {
+  const data = await generateContent(input.model, input.apiKey, 0.1, {
+    contents: [{ role: 'user', parts: [{ text: input.query }] }],
+    tools: [{ google_search: {} }],
+  });
+
+  const usage = { tokensIn: data.usageMetadata?.promptTokenCount ?? 0, tokensOut: data.usageMetadata?.candidatesTokenCount ?? 0 };
+  const parts = data.candidates?.[0]?.content?.parts ?? [];
+  const text = parts.map(p => p.text ?? '').join('').trim();
+
+  // groundingChunks não está tipado em GenerateContentResponse (campo extra da
+  // API só usado aqui); acesso solto de propósito em vez de inflar a interface
+  // geral do módulo com um shape usado por uma única função.
+  const candidate = (data as unknown as { candidates?: { groundingMetadata?: { groundingChunks?: { web?: { uri?: string } }[] } }[] }).candidates?.[0];
+  const sources = (candidate?.groundingMetadata?.groundingChunks ?? [])
+    .map(c => c.web?.uri)
+    .filter((uri): uri is string => Boolean(uri));
+
+  return { text: text || 'Não encontrei informação confiável sobre isso agora.', sources: [...new Set(sources)].slice(0, 5), usage };
 }
 
 /**

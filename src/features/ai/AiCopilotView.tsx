@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ViewHeader } from '../../components/ui/ViewHeader';
 import { sendCopilotMessage } from '../../services/ai/copilotClient';
+import { SUPPORTED_MODELS, findSupportedModel } from '../../services/ai/supportedModels';
 import {
   Sparkles,
   Send,
   Sliders,
   Cpu,
   History,
-  AlertTriangle
+  Globe
 } from 'lucide-react';
 
 
@@ -70,8 +71,8 @@ export const AiCopilotView: React.FC = () => {
   return (
     <div className="space-y-6 pb-20">
       <ViewHeader
-        title="Copiloto IA & Configuração do Gemini"
-        subtitle="Chat com acesso real ao roteiro, tarefas e voos da viagem via Gemini. Suporte a outros provedores (OpenAI, Claude, DeepSeek) ainda não foi implementado."
+        title="Copiloto IA & Configuração do Modelo"
+        subtitle="Chat com acesso real ao roteiro, tarefas e voos da viagem, com busca na web quando faltar informação. Gemini e Claude são os provedores implementados; escolha abaixo."
         actions={
           <div className="flex items-center gap-2 p-1.5 rounded-xl bg-ink-900 border border-ink-800 text-xs">
             <Cpu className="w-4 h-4 text-accent-400" />
@@ -101,18 +102,17 @@ export const AiCopilotView: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm text-ink-100">Assistente de Viagem IA</h3>
-                <p className="text-[10px] text-success-400 font-semibold">Provedor: gemini • {activeProvider?.model_name}</p>
+                <p className="text-[10px] text-success-400 font-semibold">Provedor: {activeProvider?.provider} • {activeProvider?.model_name}</p>
               </div>
             </div>
-            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-info-500/10 text-info-400 border border-info-500/20">
-              Contexto Completo Ativo
+            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-info-500/10 text-info-400 border border-info-500/20 flex items-center gap-1">
+              <Globe className="w-3 h-3" /> Contexto + Web
             </span>
           </div>
 
-          {activeProvider && activeProvider.provider !== 'gemini' && (
+          {activeProvider && !findSupportedModel(activeProvider.provider, activeProvider.model_name) && (
             <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-              O provedor "{activeProvider.provider}" ainda não foi implementado — as respostas usam Gemini de qualquer forma.
+              O modelo "{activeProvider.model_name}" ({activeProvider.provider}) não está na lista validada — o backend usa o padrão do Gemini até você escolher um modelo suportado ao lado.
             </div>
           )}
 
@@ -135,6 +135,12 @@ export const AiCopilotView: React.FC = () => {
               className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
             >
               ✈️ Próximo voo
+            </button>
+            <button
+              onClick={() => handlePresetPrompt('Como está o clima no destino hoje?')}
+              className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-ink-300 transition whitespace-nowrap"
+            >
+              🌦️ Clima hoje (web)
             </button>
           </div>
 
@@ -206,12 +212,24 @@ export const AiCopilotView: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-ink-300 font-semibold mb-1">Modelo de IA</label>
-                <input
-                  type="text"
-                  value={activeProvider?.model_name || ''}
-                  onChange={e => activeProvider && updateAiProvider(activeProvider.id, { model_name: e.target.value })}
+                <select
+                  value={activeProvider ? `${activeProvider.provider}::${activeProvider.model_name}` : ''}
+                  onChange={e => {
+                    if (!activeProvider) return;
+                    const [provider, model] = e.target.value.split('::');
+                    updateAiProvider(activeProvider.id, { provider: provider as typeof activeProvider.provider, model_name: model });
+                  }}
                   className="w-full px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-ink-100"
-                />
+                >
+                  {!findSupportedModel(activeProvider?.provider ?? '', activeProvider?.model_name ?? '') && activeProvider && (
+                    <option value={`${activeProvider.provider}::${activeProvider.model_name}`}>
+                      {activeProvider.provider} / {activeProvider.model_name} (não suportado)
+                    </option>
+                  )}
+                  {SUPPORTED_MODELS.map(m => (
+                    <option key={`${m.provider}::${m.model}`} value={`${m.provider}::${m.model}`}>{m.label}</option>
+                  ))}
+                </select>
               </div>
 
               <div>

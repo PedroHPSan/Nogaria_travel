@@ -9,6 +9,7 @@ import {
   type DigestMode,
 } from '../_shared/tripContext.ts';
 import { formatDailyDigest } from '../_shared/formatter.ts';
+import { fetchDailyWeather } from '../_shared/weather.ts';
 
 const DIGEST_LEAD_DAYS = 1;
 
@@ -104,6 +105,7 @@ async function sendDigestForTrigger(
     }
 
     const child = youngestWithHeight(ctx.participants);
+    const weather = await fetchDailyWeather({ destination: ctx.trip.destination_main, dateIso, timeZone: config.timezone });
     const text = formatDailyDigest({
       tripTitle: ctx.trip.title,
       dateIso,
@@ -136,6 +138,7 @@ async function sendDigestForTrigger(
         : null,
       child: child ? { nickname: child.nickname ?? child.full_name, height_cm: child.height_cm } : null,
       timezone: config.timezone,
+      weather,
     });
 
     const recipients = ctx.participants.filter((p: { whatsapp_phone: string | null }) => p.whatsapp_phone);

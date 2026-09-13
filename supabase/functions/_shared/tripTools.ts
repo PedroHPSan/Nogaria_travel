@@ -3,7 +3,7 @@
 // valida os argumentos com checagens estritas antes de tocar no banco.
 
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
-import type { GeminiToolDeclaration } from './gemini.ts';
+import { groundedSearch, type GeminiToolDeclaration } from './gemini.ts';
 import { formatLocalTime, type ParticipantRow } from './tripContext.ts';
 import {
   buildDirectionsUrl,
@@ -292,6 +292,19 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
       },
     },
   },
+  {
+    name: 'web_search',
+    description:
+      'Busca informação atual na internet (clima, eventos, horário de funcionamento, notícias, preços de referência). ' +
+      'Use só quando a pergunta não puder ser respondida com os dados da viagem no banco. Responda com um resumo curto, nunca cole a busca inteira.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'O que buscar, em linguagem natural.' },
+      },
+      required: ['query'],
+    },
+  },
 ];
 
 export interface ToolContext {
@@ -309,6 +322,8 @@ export interface ToolContext {
   metaAccessToken: string;
   /** ETA do get_directions via Routes API. Sem ela a tool ainda funciona — só devolve o link, sem ETA/leave_by. */
   googleMapsApiKey: string | null;
+  /** Usada só por web_search (groundedSearch); null desativa a tool com uma mensagem clara em vez de estourar. */
+  geminiApiKey: string | null;
 }
 
 function findParticipant(participants: ParticipantRow[], nameOrNick: string | null): ParticipantRow[] {
@@ -509,7 +524,7 @@ export function resolveRescheduleTarget(
 }
 
 export function createToolExecutor(ctx: ToolContext): (name: string, args: Record<string, unknown>) => Promise<unknown> {
-  const { supabase, tenantId, tripId, todayIso, participants, timeZone, senderPhone, phoneNumberId, metaAccessToken, googleMapsApiKey } = ctx;
+  const { supabase, tenantId, tripId, todayIso, participants, timeZone, senderPhone, phoneNumberId, metaAccessToken, googleMapsApiKey, geminiApiKey } = ctx;
 
   return async (name, args) => {
     switch (name) {
@@ -1150,6 +1165,13 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
         const { data, error } = await query;
         if (error) throw new Error(`Erro ao consultar ideias: ${error.message}`);
         return { ideas: data ?? [] };
+      }
+
+      case 'web_search': {
+        if (!geminiApiKey) return { error: 'Busca na web indisponível no momento.' };
+        const query = requireString(args, 'query');
+        const result = await groundedSearch({ apiKey: geminiApiKey, model: 'gemini-3.5-flash', query });
+        return { summary: result.text, sources: result.sources };
       }
 
       default:
