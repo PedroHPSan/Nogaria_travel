@@ -156,6 +156,15 @@ Resolvidas nesta passada: #20, #27, #31, #32, #33, #34, #35, #36. O que cada uma
 
 **Deploy pendente depois do merge** (nada disto é automático): `supabase db push --linked` (migrations `20260909120000` a `20260909150000`), `supabase functions deploy exchange-rate-sync whatsapp-webhook`, e — se os segredos `project_url`/`cron_secret` do Vault já existirem — a migration da PTAX agenda o cron sozinha; se não, criar os segredos e rodá-la de novo. Para popular o histórico de câmbio de uma vez: `curl -X POST -H "x-cron-secret: $CRON_SECRET" "$SUPABASE_URL/functions/v1/exchange-rate-sync?days=90"`.
 
+## Versionamento (a partir de 2026-09-14)
+
+`package.json.version` segue [SemVer](https://semver.org/lang/pt-BR/); `CHANGELOG.md` (formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)) registra cada release. Antes de `1.0.0` o projeto rodou 161 commits sem versionamento formal — a tag não marca "a primeira versão do produto", marca o início do controle.
+
+Fluxo por release em produção:
+1. Bump de `package.json.version` (patch para fix, minor para feature, major para breaking change de schema/contrato) + entrada nova no topo de `CHANGELOG.md`, no mesmo commit do trabalho ou num commit próprio de release.
+2. `git tag vX.Y.Z && git push origin vX.Y.Z` no commit que efetivamente foi para produção (depois do `vercel deploy --prod` e do `supabase db push`, não antes — a tag deve corresponder ao que está rodando).
+3. Deploy continua manual (ver seção acima) — a tag documenta o que foi deployado, não dispara o deploy.
+
 ## Gotchas
 
 - **`auditEngine.ts` is generic since #31** — every rule reads data (`birth_date`-derived `age`, `height_cm`, flight/accommodation dates, itinerary times), never a name or literal date; each rule is a pure function composed by `runFullTripAudit`, tested in `auditEngine.test.ts` against a *different* family. Eligibility (height/age) lives in `src/services/eligibility.ts`, shared by the audit, `coverageEngine.ts` and `ItineraryView.tsx`. The park catalog (`src/services/roteiro/*`) now carries `minHeightCm` for 56 attractions, so the height gate fires with real data. **`AiCopilotView.tsx` is still the `setTimeout` + keyword chain** — PR #47 (open) replaces it with the `copilot-chat` edge function; don't duplicate that work. `MonthCalendar.tsx` renders one block per month between `start_date` and `end_date` (#33).
