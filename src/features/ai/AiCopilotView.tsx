@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTrip } from '../../context/TripContext';
 import { ViewHeader } from '../../components/ui/ViewHeader';
 import { sendCopilotMessage } from '../../services/ai/copilotClient';
@@ -18,14 +18,38 @@ export const AiCopilotView: React.FC = () => {
     activeTrip,
     participants,
     aiProviders,
+    addAiProvider,
     updateAiProvider,
     aiLogs
   } = useTrip();
 
+  // Tenant novo: ai_provider_configs vem vazio (sem seed, #34) e sem nenhuma
+  // linha o painel inteiro fica sem o que editar. Cria a config padrão uma
+  // única vez em vez de deixar a tela sem campo preenchível.
+  const createdDefaultRef = useRef(false);
+  useEffect(() => {
+    if (aiProviders.length > 0 || createdDefaultRef.current) return;
+    createdDefaultRef.current = true;
+    addAiProvider({
+      provider: 'gemini',
+      model_name: 'gemini-3.5-flash',
+      is_active: true,
+      is_default: true,
+      daily_token_limit: 100000,
+      monthly_budget_usd: 20,
+      temperature: 0.3,
+    });
+  }, [aiProviders.length, addAiProvider]);
 
   const [activeProviderId, setActiveProviderId] = useState<string>(
     aiProviders.find(p => p.is_default)?.id || aiProviders[0]?.id || 'ai-gemini'
   );
+
+  useEffect(() => {
+    if (activeProviderId === 'ai-gemini' && aiProviders.length > 0) {
+      setActiveProviderId(aiProviders.find(p => p.is_default)?.id ?? aiProviders[0].id);
+    }
+  }, [aiProviders, activeProviderId]);
 
   const minors = participants.filter(p => p.is_minor);
   const minorsLabel = minors.length > 0

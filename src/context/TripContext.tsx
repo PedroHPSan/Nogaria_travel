@@ -180,6 +180,7 @@ interface TripContextType {
   deleteLoyaltyAccount: (id: string) => void;
 
   aiProviders: AiProviderConfig[];
+  addAiProvider: (config: Omit<AiProviderConfig, 'id'>) => void;
   updateAiProvider: (id: string, config: Partial<AiProviderConfig>) => void;
 
   aiLogs: AiUsageLog[];
@@ -460,6 +461,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     aiConfigs: aiProviders,
     aiLogs,
     updateAiConfig: updateAiProvider,
+    addAiConfig: addAiProvider,
     addAiLog,
   } = useAiData({
     client,
@@ -763,6 +765,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteLoyaltyAccount,
 
         aiProviders,
+        addAiProvider,
         updateAiProvider,
 
         aiLogs,
