@@ -10,6 +10,30 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.0.1] - 2026-09-13
+
+### Corrigido
+- `buildGenerationConfig` mandava `thinking_level` solto em `generationConfig`;
+  a API do Gemini 3.8 exige aninhado em `thinkingConfig.thinkingLevel`
+  (HTTP 400 "Unknown name thinking_level" em toda chamada do Copiloto/bot).
+- `chatWithTools` ecoava o id da function call como `call_id` no
+  `FunctionResponse`; o campo correto é `id` (HTTP 400 "Unknown name call_id"
+  sempre que o modelo chamava alguma tool).
+- RPC `apply_itinerary_changes`: `select count(*) ... for update` é sintaxe
+  inválida no Postgres (FOR UPDATE não permite agregação) — corrigido para
+  `perform ... for update` + `get diagnostics`. Provavelmente quebrava todo
+  "Aplicar" do ReplanBoard desde o v1.0.0.
+- RPC `apply_itinerary_changes`: a checagem de período da viagem rejeitava o
+  lote inteiro se qualquer item nele tivesse data fora do range, mesmo sem
+  estar mudando de data — agora só bloqueia quem de fato está mudando para
+  uma data inválida.
+
+### Adicionado
+- `reschedule_itinerary_item` habilitado no Copiloto web (antes só o bot do
+  WhatsApp reagendava atividades por chat); o fan-out de notificação por
+  WhatsApp vira no-op quando o chamador é o web.
+- Auto-scroll do Copiloto web para a última mensagem.
+
 ## [1.0.0] - 2026-09-14
 
 ### Adicionado
