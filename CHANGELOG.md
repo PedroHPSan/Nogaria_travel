@@ -10,6 +10,18 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.1.0] - 2026-09-13
+
+### Adicionado
+- **Controle de orçamento pelo bot**: nova flag `participants.can_manage_budget`
+  (mesmo padrão de `can_manage_itinerary`) autoriza a tool `add_expense`
+  (registra um gasto pelo WhatsApp conforme acontece, confirmação em duas
+  etapas, câmbio via PTAX) e o recebimento do checkin diário de orçamento —
+  mensagem separada do digest matinal, só para organizadores, com o custo
+  estimado do roteiro do dia (`itinerary_items.estimated_cost`) e uma
+  pergunta sobre o gasto real. Novo `kind` `budget_checkin` em
+  `whatsapp_messages`. Checkbox correspondente no `ParticipantModal`.
+
 ## [1.0.1] - 2026-09-13
 
 ### Corrigido
