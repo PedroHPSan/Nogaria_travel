@@ -41,6 +41,8 @@ export const AiCopilotView: React.FC = () => {
     });
   }, [aiProviders.length, addAiProvider]);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const [activeProviderId, setActiveProviderId] = useState<string>(
     aiProviders.find(p => p.is_default)?.id || aiProviders[0]?.id || 'ai-gemini'
   );
@@ -65,6 +67,12 @@ export const AiCopilotView: React.FC = () => {
     }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Sem isto a lista fica parada no topo a cada mensagem nova — o usuário
+  // precisa rolar manualmente pra ver a resposta que acabou de chegar.
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: 'end' });
+  }, [messages, isProcessing]);
 
   const activeProvider = aiProviders.find(p => p.id === activeProviderId) || aiProviders[0];
   // Gemini 3.x remove temperature/top_p/top_k do generationConfig (ver
@@ -202,6 +210,7 @@ export const AiCopilotView: React.FC = () => {
                 Processando consulta no modelo {activeProvider?.model_name}...
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Prompt Input Form */}

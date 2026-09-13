@@ -408,6 +408,11 @@ async function notifyParticipants(
   ctx: { phoneNumberId: string; metaAccessToken: string; participants: ParticipantRow[]; senderPhone: string },
   text: string,
 ): Promise<{ notified: string[]; notReached: string[] }> {
+  // Chamador web (Copiloto) não tem canal WhatsApp — phoneNumberId vem vazio
+  // (ver copilot-chat/index.ts). Sem isto, cada participante cairia em
+  // notReached por engano, como se o envio tivesse sido tentado e falhado.
+  if (!ctx.phoneNumberId) return { notified: [], notReached: [] };
+
   const sender = findParticipantByPhone(ctx.participants, ctx.senderPhone);
   const others = ctx.participants.filter(p => p.id !== sender?.id && p.whatsapp_phone);
   const notified: string[] = [];

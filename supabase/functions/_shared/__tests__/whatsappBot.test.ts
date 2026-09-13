@@ -290,20 +290,20 @@ describe('resolveGeminiModel', () => {
 });
 
 describe('buildGenerationConfig', () => {
-  it('modelos 3.x omitem temperature/top_p/top_k e emitem thinking_level', () => {
+  it('modelos 3.x omitem temperature/top_p/top_k e emitem thinkingConfig.thinkingLevel', () => {
     const config = buildGenerationConfig('gemini-3.8-flash', { temperature: 0.4, thinkingLevel: 'LOW' });
-    expect(config).toEqual({ thinking_level: 'LOW' });
+    expect(config).toEqual({ thinkingConfig: { thinkingLevel: 'LOW' } });
     expect(config).not.toHaveProperty('temperature');
   });
 
-  it('thinking_level default é MEDIUM quando não especificado', () => {
-    expect(buildGenerationConfig('gemini-3.8-flash', { temperature: 0.4 })).toEqual({ thinking_level: 'MEDIUM' });
+  it('thinkingLevel default é MEDIUM quando não especificado', () => {
+    expect(buildGenerationConfig('gemini-3.8-flash', { temperature: 0.4 })).toEqual({ thinkingConfig: { thinkingLevel: 'MEDIUM' } });
   });
 
-  it('preserva responseMimeType junto do thinking_level', () => {
+  it('preserva responseMimeType junto do thinkingConfig', () => {
     expect(buildGenerationConfig('gemini-3.8-flash', { temperature: 0, thinkingLevel: 'MEDIUM', responseMimeType: 'application/json' })).toEqual({
       responseMimeType: 'application/json',
-      thinking_level: 'MEDIUM',
+      thinkingConfig: { thinkingLevel: 'MEDIUM' },
     });
   });
 

@@ -22,14 +22,17 @@ const MAX_HISTORY = 10;
 
 // Subconjunto seguro pro Copiloto web: sem get_directions/save_trip_idea/
 // list_trip_ideas (dependem de localização e telefone compartilhados via
-// WhatsApp) e sem reschedule_itinerary_item/set_activity_reminder (o fan-out
-// de reschedule notifica via WhatsApp — fora do escopo desta issue #26).
-// web_search entra aqui (não depende de telefone) para dar ao Copiloto acesso
-// a informação atual (clima, eventos) além dos dados da viagem no banco.
-// replan_day fica de fora de propósito: é ação de organizador com fan-out por
-// WhatsApp (notifica os outros participantes) — a tela ReplanBoard cobre esse
-// caso melhor no web. get_day_conditions é só leitura, entra normalmente.
-const WEB_TOOL_NAMES = new Set(['get_itinerary', 'get_tasks', 'get_flight_info', 'mark_itinerary_item_done', 'complete_task', 'web_search', 'get_day_conditions']);
+// WhatsApp) e sem set_activity_reminder (lembrete é um conceito do bot, sem
+// tela equivalente no web). web_search entra aqui (não depende de telefone)
+// para dar ao Copiloto acesso a informação atual (clima, eventos) além dos
+// dados da viagem no banco. replan_day fica de fora de propósito: é ação de
+// organizador com fan-out por WhatsApp (notifica os outros participantes) —
+// a tela ReplanBoard cobre esse caso melhor no web. get_day_conditions é só
+// leitura, entra normalmente. reschedule_itinerary_item entra com o mesmo
+// tratamento: o fan-out por WhatsApp é best-effort e vira no-op no web
+// (phoneNumberId vazio — ver notifyParticipants em tripTools.ts), então mover
+// uma atividade continua funcionando mesmo sem notificar ninguém por lá.
+const WEB_TOOL_NAMES = new Set(['get_itinerary', 'get_tasks', 'get_flight_info', 'mark_itinerary_item_done', 'complete_task', 'web_search', 'get_day_conditions', 'reschedule_itinerary_item']);
 const WEB_TOOLS = TOOL_DECLARATIONS.filter(t => WEB_TOOL_NAMES.has(t.name));
 
 interface TripRow {
@@ -50,7 +53,8 @@ function buildWebSystemPrompt(trip: TripRow, participants: ParticipantRow[]): st
     `Viagem ativa: "${trip.title}" para ${trip.destination_main}, de ${trip.start_date} a ${trip.end_date}. Moeda base: ${trip.currency_base}.`,
     `Participantes: ${roster || 'não cadastrados'}.`,
     '- Use as ferramentas disponíveis (roteiro, tarefas, voos) para consultar dados reais antes de responder. Nunca invente horários, preços ou reservas.',
-    '- mark_itinerary_item_done e complete_task têm confirmação em duas etapas: a primeira chamada (sem confirm) só valida e devolve um resumo em "preview" — mostre esse resumo ao usuário e espere confirmação explícita numa mensagem seguinte antes de chamar a MESMA ferramenta de novo com confirm=true.',
+    '- mark_itinerary_item_done, complete_task e reschedule_itinerary_item têm confirmação em duas etapas: a primeira chamada (sem confirm) só valida e devolve um resumo em "preview" — mostre esse resumo ao usuário e espere confirmação explícita numa mensagem seguinte antes de chamar a MESMA ferramenta de novo com confirm=true.',
+    '- Para reagendar uma atividade, use reschedule_itinerary_item com new_date, new_time_start ou shift_minutes. Ninguém é avisado por WhatsApp quando a mudança vem do Copiloto web — se for relevante, sugira ao usuário avisar os outros participantes por fora.',
     '- Compras, gift cards e orçamento não têm ferramenta aqui: responda em 1-2 frases dizendo que esse relatório é consultado nas telas do app, sem tentar calcular ou estimar nada.',
     '- Se a pergunta não for sobre a viagem, responda brevemente e redirecione de forma leve para o assunto da viagem.',
     '- Para clima, eventos, horário de funcionamento ou qualquer coisa que não esteja nos dados da viagem, use web_search e resuma em 1-2 frases — nunca invente esse tipo de informação.',

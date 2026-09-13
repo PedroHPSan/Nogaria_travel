@@ -26,7 +26,7 @@ export interface ChatMessage {
 interface FunctionCall {
   name: string;
   args: Record<string, unknown>;
-  /** Presente no Gemini 3.x; precisa ser ecoado como `call_id` no FunctionResponse correspondente. */
+  /** Presente no Gemini 3.x; precisa ser ecoado como `id` no FunctionResponse correspondente. */
   id?: string;
 }
 
@@ -79,7 +79,7 @@ function supportsThinkingLevel(model: string): boolean {
 /**
  * generationConfig varia por geração do modelo: 3.8 exige remover
  * temperature/top_p/top_k (a API aceita mas o guia de migração pede a
- * remoção) e usar thinking_level no lugar de thinking_budget. thinking_level
+ * remoção) e usar thinkingConfig.thinkingLevel no lugar de thinking_budget. thinkingLevel
  * é o botão de custo mais perigoso da migração — thinking tokens são
  * cobrados como OUTPUT — por isso é constante por caminho de chamada, nunca
  * exposto na UI (ver chatWithTools/groundedSearch/extractJsonFromDocument).
@@ -92,7 +92,7 @@ export function buildGenerationConfig(
   if (opts.responseMimeType) base.responseMimeType = opts.responseMimeType;
 
   if (supportsThinkingLevel(model)) {
-    return { ...base, thinking_level: opts.thinkingLevel ?? 'MEDIUM' };
+    return { ...base, thinkingConfig: { thinkingLevel: opts.thinkingLevel ?? 'MEDIUM' } };
   }
   return { ...base, temperature: opts.temperature };
 }
@@ -339,9 +339,11 @@ export async function chatWithTools(input: {
       } catch (error) {
         result = { error: error instanceof Error ? error.message : 'Falha ao executar a ação.' };
       }
-      // O guia de migração do 3.8 exige name + call_id em cada FunctionResponse
+      // O guia de migração do 3.8 exige name + id em cada FunctionResponse
       // via generateContent — sem isto o tool-calling quebra silenciosamente.
-      const callId = call.id ? { call_id: call.id } : {};
+      // Campo é `id` (camelCase, mesmo nome de FunctionCall.id na resposta),
+      // não `call_id` — a API rejeita com HTTP 400 "Cannot find field".
+      const callId = call.id ? { id: call.id } : {};
       responseParts.push({ functionResponse: { name: call.name, response: { result }, ...callId } });
     }
     contents.push({ role: 'user', parts: responseParts });
