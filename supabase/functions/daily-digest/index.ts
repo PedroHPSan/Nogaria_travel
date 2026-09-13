@@ -6,9 +6,10 @@ import {
   youngestWithHeight,
   addDaysIso,
   resolveDigestTriggers,
+  resolveExchangeRate,
   type DigestMode,
 } from '../_shared/tripContext.ts';
-import { formatDailyDigest } from '../_shared/formatter.ts';
+import { formatDailyDigest, formatBudgetCheckinMessage } from '../_shared/formatter.ts';
 import { fetchDailyWeather } from '../_shared/weather.ts';
 import { fetchParkDayStatus } from '../_shared/parkStatus.ts';
 import { formatConditionsAlertMessage, selectConditionAlerts } from '../_shared/conditionsAlert.ts';
@@ -202,11 +203,68 @@ async function sendDigestForTrigger(
         failures.push(phone);
       }
     }
-    return `${mode}:sent:${sentCount}${failures.length ? ` failed:${failures.join(',')}` : ''}`;
+    let result = `${mode}:sent:${sentCount}${failures.length ? ` failed:${failures.join(',')}` : ''}`;
+
+    // Só no digest de HOJE (não na prévia de amanhã) — o gasto de um dia só
+    // faz sentido perguntar depois que ele começou.
+    if (mode === 'today') {
+      const budgetResult = await sendBudgetCheckin(supabase, config, ctx, dateIso, metaToken);
+      if (budgetResult) result += ` | ${budgetResult}`;
+    }
+
+    return result;
   } catch (err) {
     console.error(`[daily-digest] Falha no tenant ${config.tenant_id} (${mode}):`, err);
     return `${mode}:error`;
   }
+}
+
+/**
+ * Envia o checkin diário de orçamento (custo estimado do dia + pergunta de
+ * gasto real) a quem tem can_manage_budget, como mensagem separada do
+ * digest — mesmo racional de checkConditionsAlert: só quem pode agir no
+ * assunto recebe. Reaproveita ctx (já carregado por sendDigestForTrigger),
+ * sem round-trip extra ao banco além da cotação de câmbio.
+ */
+async function sendBudgetCheckin(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  config: { tenant_id: string; phone_number_id: string },
+  ctx: Awaited<ReturnType<typeof fetchTripContext>>,
+  dateIso: string,
+  metaToken: string,
+): Promise<string | null> {
+  const organizers = ctx.participants.filter(p => p.whatsapp_phone && p.can_manage_budget);
+  if (organizers.length === 0) return null;
+
+  const exchangeRate = await resolveExchangeRate(supabase, dateIso);
+  let estimatedUsd = 0;
+  for (const item of ctx.todayItems) {
+    const cost = Number(item.estimated_cost ?? 0);
+    if (!cost) continue;
+    estimatedUsd += item.currency === 'BRL' ? cost / exchangeRate : cost;
+  }
+
+  const text = formatBudgetCheckinMessage(dateIso, estimatedUsd);
+  let sentCount = 0;
+  for (const organizer of organizers) {
+    const phone = organizer.whatsapp_phone!.replace(/\D/g, '');
+    try {
+      const sent = await sendTextMessage({ phoneNumberId: config.phone_number_id, accessToken: metaToken, to: phone, text });
+      await supabase.from('whatsapp_messages').insert({
+        tenant_id: config.tenant_id,
+        wa_message_id: sent.waMessageId,
+        direction: 'outbound',
+        sender_phone: phone,
+        body: text,
+        kind: 'budget_checkin',
+      });
+      sentCount++;
+    } catch (err) {
+      console.error(`[daily-digest] Falha ao enviar checkin de orçamento para ${phone}:`, err);
+    }
+  }
+  return `budget:sent:${sentCount}`;
 }
 
 /**

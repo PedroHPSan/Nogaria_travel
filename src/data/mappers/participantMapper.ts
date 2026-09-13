@@ -28,6 +28,7 @@ export interface ParticipantRow {
   guardian_consent_by: string | null;
   guardian_consent_version: string | null;
   can_manage_itinerary: boolean;
+  can_manage_budget: boolean;
 }
 
 /**
@@ -77,6 +78,7 @@ export function participantFromRow(row: ParticipantRow, today: string): Particip
     guardian_consent_by: row.guardian_consent_by,
     guardian_consent_version: row.guardian_consent_version,
     can_manage_itinerary: row.can_manage_itinerary,
+    can_manage_budget: row.can_manage_budget,
   };
 }
 
@@ -105,5 +107,6 @@ export function participantToInsert(p: Participant, today: string): ParticipantR
     guardian_consent_by: p.guardian_consent_by ?? null,
     guardian_consent_version: p.guardian_consent_version ?? null,
     can_manage_itinerary: p.can_manage_itinerary ?? false,
+    can_manage_budget: p.can_manage_budget ?? false,
   };
 }

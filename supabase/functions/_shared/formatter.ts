@@ -263,3 +263,21 @@ export function formatItineraryCheckin(items: CheckinItem[]): string {
   lines.push('Rolou tudo? Me conta o que aconteceu (ex: "sim, tudo certo", "só o primeiro, o resto não deu tempo") que eu já ajusto o roteiro.');
   return lines.join('\n');
 }
+
+/**
+ * Checkin diário de orçamento — só para quem tem can_manage_budget, enviado
+ * junto do digest matinal (mesmo horário, mensagem separada). `estimatedUsd`
+ * é a soma de itinerary_items.estimated_cost do dia, já convertida para USD.
+ */
+export function formatBudgetCheckinMessage(dateIso: string, estimatedUsd: number): string {
+  const dateLabel = formatDatePtBr(dateIso);
+  const lines = [`💰 *Controle de orçamento — ${dateLabel}*`];
+  lines.push(
+    estimatedUsd > 0
+      ? `Custo estimado do roteiro de hoje: *US$ ${estimatedUsd.toFixed(2)}* (soma dos itens com valor estimado cadastrado).`
+      : 'Nenhum item do roteiro de hoje tem custo estimado cadastrado.',
+  );
+  lines.push('');
+  lines.push('Quanto vocês gastaram de fato? Me conta que eu já registro (ex: "gastei 45 dólares no almoço").');
+  return lines.join('\n');
+}

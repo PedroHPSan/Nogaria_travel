@@ -64,6 +64,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
   const [heightCm, setHeightCm] = useState<number | ''>('');
   const [whatsappPhone, setWhatsappPhone] = useState('');
   const [canManageItinerary, setCanManageItinerary] = useState(false);
+  const [canManageBudget, setCanManageBudget] = useState(false);
   const [guardianConsent, setGuardianConsent] = useState(false);
   const [dietary, setDietary] = useState('');
   const [notes, setNotes] = useState('');
@@ -119,6 +120,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setHeightCm(initialData.height_cm ?? '');
       setWhatsappPhone(initialData.whatsapp_phone ?? '');
       setCanManageItinerary(Boolean(initialData.can_manage_itinerary));
+      setCanManageBudget(Boolean(initialData.can_manage_budget));
       setGuardianConsent(Boolean(initialData.guardian_consent_at));
       setDietary(initialData.dietary_restrictions ? initialData.dietary_restrictions.join(', ') : '');
       setNotes(initialData.notes || '');
@@ -157,6 +159,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       setHeightCm('');
       setWhatsappPhone('');
       setCanManageItinerary(false);
+      setCanManageBudget(false);
       setGuardianConsent(false);
       setDietary('');
       setNotes('');
@@ -230,6 +233,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
       height_cm: heightCm !== '' ? Number(heightCm) : undefined,
       whatsapp_phone: phoneDigits || undefined,
       can_manage_itinerary: !isMinor && canManageItinerary,
+      can_manage_budget: !isMinor && canManageBudget,
       ...consent,
       dietary_restrictions: dietaryArray,
       notes: notes.trim() || undefined,
@@ -355,6 +359,22 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
               <strong className="text-ink-100">Pode replanejar o roteiro pelo WhatsApp.</strong>{' '}
               Autoriza este telefone a empurrar o dia, trocar dias e mover atividades em lote pelo assistente
               (ações individuais, como marcar uma atividade como feita, continuam liberadas para todos).
+            </span>
+          </label>
+        )}
+
+        {!isMinor && (
+          <label className="p-3 rounded-xl bg-ink-900/60 border border-ink-800 flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={canManageBudget}
+              onChange={e => setCanManageBudget(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-info-500"
+            />
+            <span className="text-xs text-ink-200">
+              <strong className="text-ink-100">Pode controlar o orçamento pelo WhatsApp.</strong>{' '}
+              Autoriza este telefone a registrar gastos pelo assistente e recebe, junto do resumo diário,
+              o custo estimado do roteiro do dia e uma pergunta sobre o gasto real.
             </span>
           </label>
         )}

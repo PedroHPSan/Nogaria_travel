@@ -4,7 +4,7 @@
 
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { groundedSearch, type GeminiToolDeclaration } from './gemini.ts';
-import { formatLocalTime, type ParticipantRow } from './tripContext.ts';
+import { formatLocalTime, resolveExchangeRate, type ParticipantRow } from './tripContext.ts';
 import {
   buildDirectionsUrl,
   computeLeaveBy,
@@ -114,6 +114,16 @@ function optionalInt(args: Record<string, unknown>, field: string, min: number, 
   }
   return value;
 }
+
+function requirePositiveNumber(args: Record<string, unknown>, field: string): number {
+  const value = args[field];
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new Error(`Argumento inválido: ${field} deve ser um número positivo.`);
+  }
+  return value;
+}
+
+const EXPENSE_CATEGORIES = ['accommodation', 'flight', 'transport', 'food', 'shopping', 'tickets', 'services', 'other'] as const;
 
 const CONFIRM_DESCRIPTION =
   'true só depois que a família confirmar explicitamente, numa mensagem seguinte, o resumo que você mostrou na resposta anterior. Nunca marque true na mesma mensagem que ainda não foi confirmada.';
@@ -326,6 +336,31 @@ export const TOOL_DECLARATIONS: GeminiToolDeclaration[] = [
       properties: {
         date: { type: 'string', description: 'Data no formato AAAA-MM-DD (opcional, default hoje).' },
       },
+    },
+  },
+  {
+    name: 'add_expense',
+    description:
+      'Registra um gasto da viagem assim que ele acontece — pagamento no restaurante, ingresso, transporte, compra, etc. ' +
+      'Ação de organizador: só participantes autorizados a controlar o orçamento podem usar. ' +
+      'SEMPRE chame primeiro sem confirm — a tool devolve um resumo (valor, categoria, quem pagou) para você mostrar à família antes de gravar. ' +
+      'Só chame de novo com confirm=true depois que a família confirmar explicitamente numa mensagem seguinte.',
+    parameters: {
+      type: 'object',
+      properties: {
+        description: { type: 'string', description: 'O que foi o gasto (ex: "Jantar no Be Our Guest").' },
+        amount: { type: 'number', description: 'Valor do gasto, sempre positivo, na moeda de `currency`.' },
+        currency: { type: 'string', enum: ['USD', 'BRL'], description: 'Moeda do valor informado (opcional, default USD).' },
+        category: {
+          type: 'string',
+          enum: [...EXPENSE_CATEGORIES],
+          description: 'Categoria do gasto (opcional, default other).',
+        },
+        date: { type: 'string', description: 'Data AAAA-MM-DD do gasto (opcional, default hoje).' },
+        paid_by: { type: 'string', description: 'Nome ou apelido de quem pagou (opcional — default quem está mandando a mensagem).' },
+        confirm: { type: 'boolean', description: CONFIRM_DESCRIPTION },
+      },
+      required: ['description', 'amount'],
     },
   },
   {
@@ -1312,6 +1347,102 @@ export function createToolExecutor(ctx: ToolContext): (name: string, args: Recor
           note:
             'Horário e status vêm da themeparks.wiki (comunidade) — trate como dica, confirme no app oficial. Feriados/eventos não estão aqui: use web_search.',
         };
+      }
+
+      case 'add_expense': {
+        const confirm = args.confirm === true;
+        return withConfirmation(
+          { supabase, tenantId, tripId, senderPhone },
+          'add_expense',
+          confirm,
+          async (): Promise<PrepareOutcome> => {
+            // Checa permissão ANTES de encenar a pendência — mesmo racional de replan_day.
+            const sender = findParticipantByPhone(participants, senderPhone);
+            if (!sender?.can_manage_budget) {
+              return {
+                kind: 'resolved',
+                response: {
+                  allowed: false,
+                  message:
+                    'Registrar gastos é uma ação de organizador. Peça para quem tem essa permissão marcada em Participantes → editar → "Pode controlar o orçamento".',
+                },
+              };
+            }
+
+            const description = requireString(args, 'description');
+            const amount = requirePositiveNumber(args, 'amount');
+            const currencyArg = optionalString(args, 'currency');
+            if (currencyArg && currencyArg !== 'USD' && currencyArg !== 'BRL') {
+              throw new Error('Argumento inválido: currency deve ser USD ou BRL.');
+            }
+            const currency = (currencyArg as 'USD' | 'BRL' | null) ?? 'USD';
+            const category = optionalString(args, 'category') ?? 'other';
+            if (!(EXPENSE_CATEGORIES as readonly string[]).includes(category)) {
+              throw new Error(`Argumento inválido: category deve ser uma de ${EXPENSE_CATEGORIES.join(', ')}.`);
+            }
+            const date = optionalDate(args, 'date') ?? todayIso;
+
+            const paidByName = optionalString(args, 'paid_by');
+            // findParticipant lança se paidByName não bater com ninguém; sender
+            // já foi validado acima (can_manage_budget exige achar o participante).
+            const payer = paidByName ? findParticipant(participants, paidByName)[0] : sender;
+
+            const exchangeRate = await resolveExchangeRate(supabase, todayIso);
+            const amountUsd = currency === 'USD' ? amount : amount / exchangeRate;
+            const amountBrl = currency === 'BRL' ? amount : amount * exchangeRate;
+
+            const preview = `Registrar gasto de ${currency} ${amount.toFixed(2)} ("${description}", categoria ${category}) pago por ${payer.nickname ?? payer.full_name} em ${date}?`;
+            return {
+              kind: 'stage',
+              preview,
+              payload: {
+                description,
+                amount,
+                currency,
+                amountUsd: Number(amountUsd.toFixed(2)),
+                amountBrl: Number(amountBrl.toFixed(2)),
+                exchangeRate,
+                category,
+                date,
+                paidById: payer.id,
+              },
+            };
+          },
+          async payload => {
+            // Sem lista de beneficiários no chat — assume a viagem inteira, como
+            // o default do ExpenseModal (organizador ajusta na tela se precisar).
+            const beneficiaryIds = participants.map(p => p.id);
+            const { data, error } = await supabase
+              .from('expenses')
+              .insert({
+                trip_id: tripId,
+                description: payload.description,
+                amount: payload.amount,
+                currency: payload.currency,
+                amount_usd: payload.amountUsd,
+                amount_brl: payload.amountBrl,
+                exchange_rate: payload.exchangeRate,
+                category: payload.category,
+                paid_by_id: payload.paidById,
+                beneficiary_ids: beneficiaryIds,
+                date: payload.date,
+                status: 'paid',
+              })
+              .select('id')
+              .single();
+            if (error) throw new Error(`Erro ao registrar gasto: ${error.message}`);
+
+            return {
+              added: true,
+              id: data.id,
+              description: payload.description,
+              amount: payload.amount,
+              currency: payload.currency,
+              category: payload.category,
+              date: payload.date,
+            };
+          },
+        );
       }
 
       case 'replan_day': {

@@ -12,6 +12,8 @@ export interface ParticipantRow {
   whatsapp_phone: string | null;
   /** Autoriza ações em lote/destrutivas do bot sobre o roteiro (replan_day). Ver migration 20260914120000. */
   can_manage_itinerary: boolean;
+  /** Autoriza a tool add_expense e o checkin diário de orçamento. Ver migration 20260914170000. */
+  can_manage_budget: boolean;
 }
 
 export interface TripRow {
@@ -39,7 +41,7 @@ export interface TripContext {
  */
 export const ITINERARY_COLUMNS =
   'id, date, time_start, time_end, title, category, city, park, notes, min_height_cm, ' +
-  'reminder_minutes_before, recommended_arrival_min_before, external_entity_id';
+  'reminder_minutes_before, recommended_arrival_min_before, external_entity_id, estimated_cost, currency';
 
 /** Data local (YYYY-MM-DD) no fuso informado. */
 export function localDateIso(now: Date, timeZone: string): string {
@@ -110,7 +112,7 @@ export async function fetchTripContext(
       .from('participants')
       // Minimização (LGPD): o bot só precisa de is_minor + altura; a data de
       // nascimento exata do menor nunca vai para o prompt do Gemini.
-      .select('id, full_name, nickname, is_minor, height_cm, whatsapp_phone, can_manage_itinerary')
+      .select('id, full_name, nickname, is_minor, height_cm, whatsapp_phone, can_manage_itinerary, can_manage_budget')
       .eq('trip_id', trip.id),
     supabase
       .from('itinerary_items')
@@ -181,6 +183,36 @@ export function resolveDigestTriggers(input: {
     triggers.push({ mode: 'tomorrow', dateIso: addDaysIso(input.todayIso, 1) });
   }
   return triggers;
+}
+
+/**
+ * Mesmo fallback de src/services/exchangeRateService.ts — nunca deveria ser o
+ * valor efetivamente usado em produção, só o último recurso.
+ */
+export const DEFAULT_EXCHANGE_RATE = 5.62;
+const MAX_STORED_RATE_AGE_DAYS = 7;
+
+/**
+ * Cotação USD/BRL do dia para uso server-side (bot/digest): lê a PTAX mais
+ * recente de `exchange_rates` (gravada pela edge function exchange-rate-sync)
+ * e cai no fallback fixo se a tabela estiver vazia ou a linha for velha
+ * demais. Sem acesso a localStorage/AwesomeAPI aqui — só o degrau
+ * server-confiável do cascade que exchangeRateService.ts usa no navegador.
+ */
+export async function resolveExchangeRate(supabase: SupabaseClient, todayIso: string): Promise<number> {
+  const { data } = await supabase
+    .from('exchange_rates')
+    .select('rate, date')
+    .eq('pair', 'USD-BRL')
+    .order('date', { ascending: false })
+    .limit(1);
+  const row = (data?.[0] ?? null) as { rate: number; date: string } | null;
+  if (!row) return DEFAULT_EXCHANGE_RATE;
+
+  const ageDays = Math.round(
+    (new Date(`${todayIso}T00:00:00Z`).getTime() - new Date(`${row.date}T00:00:00Z`).getTime()) / 86_400_000,
+  );
+  return ageDays <= MAX_STORED_RATE_AGE_DAYS ? Number(row.rate) : DEFAULT_EXCHANGE_RATE;
 }
 
 /** Menor participante com altura cadastrada — referência dos alertas de altura mínima. */

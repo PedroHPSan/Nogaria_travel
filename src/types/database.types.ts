@@ -60,6 +60,8 @@ export interface Participant {
   quota_eligible?: boolean;
   /** Autoriza ações em lote/destrutivas do bot sobre o roteiro (replan_day). Ver migration 20260914120000. Ausente/undefined equivale a `false`. */
   can_manage_itinerary?: boolean;
+  /** Autoriza a tool add_expense do bot e o checkin diário de orçamento. Ver migration 20260914170000. Ausente/undefined equivale a `false`. */
+  can_manage_budget?: boolean;
   /** Consentimento do responsável para tratar dados do menor (LGPD art. 14). */
   guardian_consent_at?: string | null;
   guardian_consent_by?: string | null;

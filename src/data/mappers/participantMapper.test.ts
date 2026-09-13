@@ -30,6 +30,7 @@ const row: ParticipantRow = {
   guardian_consent_by: null,
   guardian_consent_version: null,
   can_manage_itinerary: false,
+  can_manage_budget: false,
 };
 
 describe('deriveAge', () => {
