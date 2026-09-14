@@ -199,6 +199,11 @@ const DIAS: Dia[] = [
     premissas: [
       'Gerado a partir de src/services/roteiro/universalStudiosDia16.ts.',
       '',
+      'Segunda versão do dia, refeita junto com o replanejamento do 14/09: com',
+      'o Islands of Adventure coberto inteiro no dia 14, o Hogwarts Express',
+      'deixa de ser plano de resgate do Hogsmeade e a folga entra em',
+      'TRANSFORMERS: The Ride-3D, Horror Make-Up Show e DreamWorks Land.',
+      '',
       '16/09 é data do Halloween Horror Nights (setembro: 2-6, 9-13, 16-20,',
       '23-27, 30): o parque fecha às 17h para ingresso normal. Isso resolve o',
       'check-out do Royal Pacific (11h) e o check-in do Casa Faena em Miami',
