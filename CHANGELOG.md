@@ -10,6 +10,39 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.2.1] - 2026-09-14
+
+### Corrigido
+- **Dia 14/09 replanejado a partir das 11h.** A família passou a manhã no
+  hotel; o dia foi remontado do check-out do Celebration Suites em diante e,
+  contra a intuição, *ganhou* tempo de parque — entrada no Islands of Adventure
+  às 13h25 em vez de 14h25.
+- **Premissa de fechamento do IOA corrigida de 18h/19h para 20h** em 14/09. A
+  versão anterior encurtava Hogsmeade e punha o Hagrid's às 19h25 sem margem; o
+  parque abre 9h e fecha 20h na data, o que transforma ~4h de parque em 6h30 e
+  permite cobrir o Islands of Adventure inteiro. O Hagrid's (única atração
+  forte sem Express) entra na fila às 19h30, com 30 min de folga.
+- **TRANSFORMERS: The Ride-3D estava ausente** do roteiro do dia 16 e do
+  catálogo do Universal Studios Florida. É atração S, aceita Express e tem
+  barra de 102cm — os 4 andam juntos. Registrado no catálogo também o motivo
+  de o Hollywood Rip Ride Rockit não entrar: fechou em definitivo em agosto de
+  2025 (dá lugar ao Fast & Furious: Hollywood Drift, 2027).
+
+### Adicionado
+- Child Swap (rider switch) explícito nas quatro atrações do dia 14 que barram
+  a Gabi (112cm) — Hulk 137, Doctor Doom 132, VelociCoaster 130 e Forbidden
+  Journey 122 — com o procedimento real da fila Express descrito nas notas
+  (~10 min por troca, não uma fila inteira).
+- Dia 16 cobre o Universal Studios Florida inteiro num anel único sem repetir
+  trecho, com Horror Make-Up Show e um bloco próprio de DreamWorks Land. Com o
+  IOA fechado no dia 14, o Hogwarts Express volta a ser passeio, não resgate.
+- Testes: horário de funcionamento vira invariante do dia 14 (nenhum bloco de
+  parque fora de 9h-20h, exceto a fila do Hagrid's, que por desenho termina
+  depois do fechamento) e a lista das quatro trocas fica travada.
+
+> Deploy desta entrada é o `supabase/seeds/` aplicado ao Supabase, não um
+> `vercel deploy` — os módulos de roteiro não são lidos pelo app em runtime.
+
 ## [1.2.0] - 2026-09-14
 
 ### Adicionado
