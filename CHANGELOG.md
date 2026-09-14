@@ -10,6 +10,34 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.3.1] - 2026-09-14
+
+### Corrigido
+- **Dia 14/09, terceira versão — replanejado com a família já no Royal Pacific
+  (11h52).** O check-out e a estrada passam a `status: 'completed'` em vez de
+  sumirem do roteiro: o seed apaga e reinsere o dia inteiro, então sem essa
+  marcação um replanejamento no meio do dia faria o app esquecer o que já
+  aconteceu.
+- **Registro no balcão e almoço rodam em paralelo**, num bloco só: um adulto na
+  fila do check-in, o outro no Tuk Tuk Market com as meninas. Em série
+  custavam 60 min; em paralelo custam 35, e é isso que põe a família dentro do
+  parque às **13h** em vez de 13h35 — 7h de parque, contra as ~4h do plano
+  original da manhã.
+
+### Adicionado
+- Os 35 min recuperados viraram duas coisas: o **Seuss Trolley Train** no bloco
+  de abertura (a Gabi passa de três para quatro atrações próprias antes da
+  sequência de 137/132/130cm que a barra) e uma **pausa real de 20 min** depois
+  dos dois blocos molhados de Toon Lagoon — uma criança de 4 anos das 13h às
+  20h15 sem intervalo é o jeito mais confiável de perder Hogsmeade às 18h. A
+  pausa é `category: 'rest'`, então é a primeira coisa a encolher se o dia
+  estourar o relógio.
+- Testes: a lista de blocos `completed` fica travada e nenhum deles pode
+  aparecer depois do primeiro bloco pendente; a entrada no parque às 13h vira
+  invariante, junto com a instrução de paralelizar o balcão (se alguém
+  reseparar os dois blocos, o teste quebra em vez de o dia escorregar em
+  silêncio).
+
 ## [1.3.0] - 2026-09-14
 
 ### Adicionado

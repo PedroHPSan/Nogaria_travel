@@ -134,13 +134,42 @@ describe('Express Unlimited — onde vale e onde não vale', () => {
   });
 });
 
-describe('Islands of Adventure 14/09 — replanejado às 11h, parque aberto até 20h', () => {
+describe('Islands of Adventure 14/09 — replanejado no balcão às 11h55, parque até 20h', () => {
   it('começa às 11h, no hotel antigo, e não antes', () => {
-    // Replanejamento do dia: a família passou a manhã no hotel e o dia é
+    // Replanejamento do dia: a família passou a manhã no hotel e o dia foi
     // remontado a partir das 11h, o horário de check-out do Celebration Suites.
     const primeiro = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)[0];
     expect(primeiro.time_start).toBe('11:00');
     expect(primeiro.city).toBe('Kissimmee');
+  });
+
+  it('preserva como concluído o que a família já fez, em vez de apagar', () => {
+    // O seed apaga e reinsere o dia inteiro; sem marcar `completed` aqui, um
+    // replanejamento no meio do dia faria o app esquecer o que já rolou.
+    const concluidos = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
+      .filter(i => i.status === 'completed')
+      .map(i => i.title);
+    expect(concluidos).toEqual([
+      'Check-out do Celebration Suites e carga do carro',
+      'Kissimmee → Loews Royal Pacific Resort',
+    ]);
+    // Nada concluído pode aparecer depois do primeiro bloco ainda por fazer.
+    const primeiroPendente = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
+      .find(i => i.status !== 'completed');
+    porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
+      .filter(i => i.status === 'completed')
+      .forEach(item => {
+        expect(item.base_order!).toBeLessThan(primeiroPendente!.base_order!);
+      });
+  });
+
+  it('entra no parque às 13h — o balcão e o almoço rodam em paralelo', () => {
+    const primeiroParque = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS).find(i => i.item_type !== undefined);
+    expect(primeiroParque?.time_start).toBe('13:00');
+    // O bloco do Express carrega as duas tarefas: se alguém voltar a separá-las
+    // em dois blocos, a entrada no parque escorrega para 13h35 de novo.
+    const balcao = ISLANDS_OF_ADVENTURE_DIA_14_ITEMS.find(i => i.title.includes('Express Unlimited'));
+    expect(balcao?.notes).toContain('DIVIDIR');
   });
 
   it('mantém todo bloco de parque dentro do horário de funcionamento (9h–20h)', () => {
