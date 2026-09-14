@@ -23,7 +23,7 @@ const GABI_CM = 112;
 const BARRA_A_GABI_SEM_CHILD_SWAP = new Map([
   [
     "Hagrid's Magical Creatures Motorbike Adventure",
-    "não aceita Express e é o último bloco do dia: a fila de ~40 min entra no fechamento do parque. Em vez de prender os dois adultos na sala de troca, a família se divide — Débora anda com um adulto e a Gabi vai ao Seuss Landing com o outro.",
+    "não aceita Express e é o último bloco do dia: a fila de ~40 min entra no fechamento do parque. Em vez de prender os dois adultos na sala de troca, a família se divide — Débora anda com um adulto e a Gabi fica com o outro nas lojas de Hogsmeade, que atendem depois do fechamento.",
   ],
 ]);
 
@@ -134,11 +134,41 @@ describe('Express Unlimited — onde vale e onde não vale', () => {
   });
 });
 
-describe('Islands of Adventure 14/09 — meio período a partir das 12h', () => {
-  it('começa às 12h, no hotel antigo, e não antes', () => {
+describe('Islands of Adventure 14/09 — replanejado às 11h, parque aberto até 20h', () => {
+  it('começa às 11h, no hotel antigo, e não antes', () => {
+    // Replanejamento do dia: a família passou a manhã no hotel e o dia é
+    // remontado a partir das 11h, o horário de check-out do Celebration Suites.
     const primeiro = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)[0];
-    expect(primeiro.time_start).toBe('12:00');
+    expect(primeiro.time_start).toBe('11:00');
     expect(primeiro.city).toBe('Kissimmee');
+  });
+
+  it('mantém todo bloco de parque dentro do horário de funcionamento (9h–20h)', () => {
+    // Exceção: a fila do Hagrid's é entrada antes das 20h e termina depois —
+    // quem já está na fila anda mesmo com o parque fechado. É o único bloco
+    // com item_type que pode ultrapassar o fechamento, e só por isso ele é o
+    // último do dia.
+    porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
+      .filter(i => i.item_type !== undefined && !i.title.startsWith("Hagrid's"))
+      .forEach(item => {
+        expect(minutos(item.time_start), `${item.title} começa antes da abertura`).toBeGreaterThanOrEqual(9 * 60);
+        expect(minutos(item.time_end!), `${item.title} passa das 20h`).toBeLessThanOrEqual(20 * 60);
+      });
+  });
+
+  it("entra na fila do Hagrid's antes do fechamento das 20h", () => {
+    const hagrid = ISLANDS_OF_ADVENTURE_DIA_14_ITEMS.find(i => i.title.startsWith("Hagrid's"));
+    expect(minutos(hagrid!.time_start)).toBeLessThan(20 * 60);
+  });
+
+  it('cobre as quatro atrações que barram a Gabi com Child Swap', () => {
+    const trocas = ISLANDS_OF_ADVENTURE_DIA_14_ITEMS.filter(i => i.child_switch).map(i => i.title);
+    expect(trocas).toEqual([
+      'The Incredible Hulk Coaster',
+      "Doctor Doom's Fearfall",
+      'Jurassic World VelociCoaster',
+      'Harry Potter and the Forbidden Journey',
+    ]);
   });
 
   it('põe a retirada do Express Unlimited antes de qualquer bloco de parque', () => {

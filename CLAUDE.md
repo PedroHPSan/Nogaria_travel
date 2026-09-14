@@ -50,9 +50,29 @@ Deliberate deviations from the TS types, worth knowing before writing queries or
 
 **All collections are wired to Supabase** via one hook per entity in `src/data/use<X>Data.ts` (+ a mapper in `src/data/mappers/`), each with optimistic writes and a `recordFailure` retry path surfaced by `WriteFailureBanner`. IDs come from `crypto.randomUUID()` (`src/services/ids.ts`). Since #34 **no hook falls back to `initialMockData.ts`** when a collection comes back empty — a new tenant sees `EmptyState` boxes, not the author's Orlando trip; the seed file is kept only as fixture material. `TripContext.tsx` still mirrors each collection into `localStorage` (write-only relics, nothing reads them back; PR #48 removes them). Logging out clears the Supabase session and every `localStorage` key under the `STORAGE_KEY` prefix.
 
-### Deployment: Vercel, **manual only** (`vercel deploy --prod`)
+### Deployment: automated from the repo (GitHub Actions), since 2026-09-14
 
-Vercel project `nogaria-travel` (team `pedrohpsans-projects`) does **not** auto-deploy on push to `main` — by Pedro's decision, the Git integration is intentionally not used, so a merge to `main` puts nothing in production by itself. After merging, run `vercel deploy --prod --yes` from a clean `main` checkout (the CLI is linked via `.vercel/project.json`) and confirm with `vercel inspect <url>` → `status ● Ready`. The same applies to Supabase: `supabase db push --linked` for migrations and `supabase functions deploy <name>` for each edge function touched — none of it is automated from CI. Don't "fix" this by reconnecting the repo in the Vercel dashboard. Production URL is **`https://nogaria-travel.vercel.app`** — treat this as the stable canonical URL (not the custom domain, see below). The project's env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) are set directly in the Vercel dashboard (Project Settings → Environment Variables), not derived from anything in this repo — keep them in sync with `.env` by hand if the Supabase project ever changes.
+Vercel project `nogaria-travel` (team `pedrohpsans-projects`). Deployment **was** manual by Pedro's decision until 14/09/2026; it is now driven from the repository by two workflows, and the manual commands remain valid as a fallback.
+
+- **`.github/workflows/deploy.yml`** — on every push to `main` (and on demand via *Actions → Deploy (produção) → Run workflow*): a `verificar` job runs lint + build + tests, and only then does `deploy` run `vercel pull --environment=production` → `vercel build --prod` → `vercel deploy --prebuilt --prod`, finishing with `vercel inspect` and failing the job if the deployment is not `READY`. The build happens in CI, not on Vercel, which is why `vercel pull` is needed: it downloads the production env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) that live in the Vercel dashboard and in no file in this repo. The gate (lint/build/test) is repeated here rather than chained off `ci.yml` on purpose — a deploy that depends on another workflow's timing is a deploy that races.
+- **`.github/workflows/supabase.yml`** — writes to Supabase without a local CLI. `migracoes` runs `supabase db push --db-url` when a push to `main` touches `supabase/migrations/**` (or on demand); `funcoes` publishes only the edge functions the commit touched (a change under `_shared/` republishes all of them, since every function imports it); `seed` applies one file from `supabase/seeds/` and is **manual-only**, because a roteiro seed deletes the whole day from `itinerary_items` before inserting — it requires `confirmar_seed = sim` and accepts either the full filename or a fragment of it (`09-14`), refusing anything ambiguous. Running it with an empty `seed` just lists what is available in the job summary, which is the discovery path from a phone.
+
+**`vercel.json` keeps `git.deploymentEnabled: false` deliberately.** The Vercel Git integration stays off: if it were re-enabled, a push to `main` would fire *two* deploys — Vercel's own and this workflow's — and Vercel's would skip lint/build/test entirely. Don't "fix" it by reconnecting the repo in the dashboard.
+
+Secrets, in *Settings → Secrets and variables → Actions*. Every job degrades to a warning and skips when its secret is absent, so a fresh fork never fails red:
+
+| Secret | Used by | Where to get it |
+| --- | --- | --- |
+| `VERCEL_TOKEN` | deploy | vercel.com/account/tokens |
+| `VERCEL_ORG_ID` | deploy | `.vercel/project.json` (`orgId`) after `vercel link`, or the team settings page |
+| `VERCEL_PROJECT_ID` | deploy | `.vercel/project.json` (`projectId`) |
+| `SUPABASE_DB_URL` | migrations + seeds | Supabase dashboard → Connect → **Session pooler**, with the DB password filled in |
+| `SUPABASE_ACCESS_TOKEN` | edge functions | supabase.com/dashboard/account/tokens |
+| `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` | `ci.yml` tenant-isolation suite | `.env` |
+
+Optional repo *variable* `SUPABASE_PROJECT_REF` overrides the hard-coded `bkrqhividgljticgjrem`.
+
+Manual fallback, still correct when CI is unavailable: `vercel deploy --prod --yes` from a clean `main` checkout, `supabase db push --linked`, `supabase functions deploy <name>`. Production URL is **`https://nogaria-travel.vercel.app`** — treat this as the stable canonical URL (not the custom domain, see below). The Vercel env vars are set in the dashboard (Project Settings → Environment Variables), not derived from anything in this repo — keep them in sync with `.env` by hand if the Supabase project ever changes.
 
 The custom domain **`nogaria.store`** (registered via Locaweb) is attached to the Vercel project but currently broken (DNS/registrar-side issue, tracked as a support ticket with Locaweb — not a Vercel or app-code problem). Once fixed, it should become the primary URL; until then, use the `.vercel.app` one everywhere (including Supabase's Auth URL Configuration, below).
 
@@ -198,7 +218,7 @@ Resolvidas nesta passada: #20, #27, #31, #32, #33, #34, #35, #36. O que cada uma
 - **Configuração do bot na UI (#20).** `useWhatsappConfigData` + `WhatsAppConfigModal` (Conta → Bot do WhatsApp, admin edita) fazem upsert por `tenant_id` — exige o `unique (tenant_id)` de `20260909150000`. `whatsapp_phone` é editável no `ParticipantModal`.
 - **Isolamento (#35).** `npm run test:isolation` roda `tests/isolation/tenantIsolation.test.ts` contra o projeto real (cria/apaga usuários e tenants com prefixo `isolation-`); precisa de `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`. `.github/workflows/ci.yml` roda lint/build/test em todo push e PR e, depois, esse job — os três secrets precisam existir em Settings → Secrets do repositório, senão ele só avisa e pula.
 
-**Deploy pendente depois do merge** (nada disto é automático): `supabase db push --linked` (migrations `20260909120000` a `20260909150000`), `supabase functions deploy exchange-rate-sync whatsapp-webhook`, e — se os segredos `project_url`/`cron_secret` do Vault já existirem — a migration da PTAX agenda o cron sozinha; se não, criar os segredos e rodá-la de novo. Para popular o histórico de câmbio de uma vez: `curl -X POST -H "x-cron-secret: $CRON_SECRET" "$SUPABASE_URL/functions/v1/exchange-rate-sync?days=90"`.
+**Deploy pendente depois do merge** (desde 14/09/2026 o push em `main` dispara isto sozinho via `.github/workflows/supabase.yml`; os comandos abaixo são o fallback manual): `supabase db push --linked` (migrations `20260909120000` a `20260909150000`), `supabase functions deploy exchange-rate-sync whatsapp-webhook`, e — se os segredos `project_url`/`cron_secret` do Vault já existirem — a migration da PTAX agenda o cron sozinha; se não, criar os segredos e rodá-la de novo. Para popular o histórico de câmbio de uma vez: `curl -X POST -H "x-cron-secret: $CRON_SECRET" "$SUPABASE_URL/functions/v1/exchange-rate-sync?days=90"`.
 
 ## Versionamento (a partir de 2026-09-14)
 
@@ -207,7 +227,7 @@ Resolvidas nesta passada: #20, #27, #31, #32, #33, #34, #35, #36. O que cada uma
 Fluxo por release em produção:
 1. Bump de `package.json.version` (patch para fix, minor para feature, major para breaking change de schema/contrato) + entrada nova no topo de `CHANGELOG.md`, no mesmo commit do trabalho ou num commit próprio de release.
 2. `git tag vX.Y.Z && git push origin vX.Y.Z` no commit que efetivamente foi para produção (depois do `vercel deploy --prod` e do `supabase db push`, não antes — a tag deve corresponder ao que está rodando).
-3. Deploy continua manual (ver seção acima) — a tag documenta o que foi deployado, não dispara o deploy.
+3. Desde 14/09/2026 o deploy sai sozinho no push em `main` (ver seção acima); a tag continua documentando o que foi deployado, não disparando o deploy — por isso ela vem **depois** de o workflow terminar verde, não antes.
 
 ## Gotchas
 

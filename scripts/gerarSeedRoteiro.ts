@@ -163,16 +163,19 @@ const porOrdem = (itens: ItineraryItem[]) =>
 const DIAS: Dia[] = [
   {
     arquivo: 'roteiro_islands_of_adventure_2026-09-14.sql',
-    titulo: "Roteiro operacional do Islands of Adventure — 14/09/2026 (meio período, com Universal Express Unlimited)",
+    titulo: "Roteiro operacional do Islands of Adventure — 14/09/2026 (replanejado às 11h, com Universal Express Unlimited)",
     data: '2026-09-14',
     itens: ISLANDS_OF_ADVENTURE_DIA_14_ITEMS,
     premissas: [
       'Gerado a partir de src/services/roteiro/islandsOfAdventureDia14.ts.',
       '',
-      'Dia de meio período: começa às 12h no Celebration Suites (Kissimmee) e',
-      'passa pelo Loews Royal Pacific, onde o Universal Express Unlimited dos 4',
-      "hóspedes é retirado. Hagrid's não aceita Express e por isso é o último",
-      'bloco do dia. Gabi (112cm) fica de fora de 5 das 6 atrações mais fortes.',
+      'Segunda versão do dia: a família passou a manhã no hotel e o dia foi',
+      'remontado a partir das 11h. Sai do Celebration Suites (Kissimmee), passa',
+      'pelo Loews Royal Pacific para retirar o Universal Express Unlimited dos 4',
+      'hóspedes e entra no parque às 13h25, com fechamento às 20h — 6h30 de',
+      "parque contra as ~4h do plano anterior. Hagrid's não aceita Express e por",
+      'isso é o último bloco. Gabi (112cm) fica de fora de 5 das 6 atrações mais',
+      'fortes: 4 viram Child Swap com Express.',
     ],
   },
   {
@@ -195,6 +198,11 @@ const DIAS: Dia[] = [
     itens: UNIVERSAL_STUDIOS_DIA_16_ITEMS,
     premissas: [
       'Gerado a partir de src/services/roteiro/universalStudiosDia16.ts.',
+      '',
+      'Segunda versão do dia, refeita junto com o replanejamento do 14/09: com',
+      'o Islands of Adventure coberto inteiro no dia 14, o Hogwarts Express',
+      'deixa de ser plano de resgate do Hogsmeade e a folga entra em',
+      'TRANSFORMERS: The Ride-3D, Horror Make-Up Show e DreamWorks Land.',
       '',
       '16/09 é data do Halloween Horror Nights (setembro: 2-6, 9-13, 16-20,',
       '23-27, 30): o parque fecha às 17h para ingresso normal. Isso resolve o',

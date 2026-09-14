@@ -10,6 +10,79 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.3.0] - 2026-09-14
+
+### Adicionado
+- **Deploy de produção automático a partir do repositório**
+  (`.github/workflows/deploy.yml`). Push em `main` roda lint + build + testes e,
+  só então, `vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt
+  --prod`, confirmando com `vercel inspect` e falhando o job se não ficar
+  `READY`. O build acontece no CI, não na Vercel — é por isso que o `vercel
+  pull` é necessário: ele baixa as variáveis de produção
+  (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`), que moram no
+  dashboard da Vercel e em nenhum arquivo do repo. Também roda sob demanda
+  (*Actions → Run workflow*).
+- **Escrita no Supabase sem CLI instalada** (`.github/workflows/supabase.yml`),
+  com três jobs:
+  - `migracoes` — `supabase db push --db-url`, disparado quando um push em
+    `main` toca `supabase/migrations/**`;
+  - `funcoes` — publica apenas as edge functions que o commit tocou; uma
+    mudança em `_shared/` republica todas, porque todas importam de lá;
+  - `seed` — aplica um arquivo de `supabase/seeds/` via `psql`, **só manual**.
+    Um seed de roteiro apaga o dia inteiro de `itinerary_items` antes de
+    inserir, então exige `confirmar_seed = sim`; aceita o nome do arquivo ou um
+    pedaço dele (`09-14`) e recusa o que for ambíguo. Rodar com o campo vazio
+    lista os seeds disponíveis no resumo do job — é o caminho de descoberta
+    pelo celular.
+
+  Entradas do `workflow_dispatch` entram nos scripts por `env`, nunca
+  interpoladas direto: `${{ }}` é substituído como texto antes de o bash ver a
+  linha, e uma aspa na entrada viraria comando.
+
+### Alterado
+- `vercel.json` mantém `git.deploymentEnabled: false` **de propósito**, agora
+  com o motivo registrado: religar a integração Git da Vercel faria um push em
+  `main` disparar dois deploys, e o da Vercel não passa por lint/build/test.
+- `CLAUDE.md`: a seção de deployment deixa de descrever um processo manual e
+  passa a documentar os dois workflows, a tabela de secrets necessários
+  (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `SUPABASE_DB_URL`,
+  `SUPABASE_ACCESS_TOKEN`) e os comandos manuais como fallback. Todo job
+  degrada para *warning* e pula quando falta o seu secret, então o repositório
+  não fica vermelho antes de os segredos serem cadastrados.
+
+## [1.2.1] - 2026-09-14
+
+### Corrigido
+- **Dia 14/09 replanejado a partir das 11h.** A família passou a manhã no
+  hotel; o dia foi remontado do check-out do Celebration Suites em diante e,
+  contra a intuição, *ganhou* tempo de parque — entrada no Islands of Adventure
+  às 13h25 em vez de 14h25.
+- **Premissa de fechamento do IOA corrigida de 18h/19h para 20h** em 14/09. A
+  versão anterior encurtava Hogsmeade e punha o Hagrid's às 19h25 sem margem; o
+  parque abre 9h e fecha 20h na data, o que transforma ~4h de parque em 6h30 e
+  permite cobrir o Islands of Adventure inteiro. O Hagrid's (única atração
+  forte sem Express) entra na fila às 19h30, com 30 min de folga.
+- **TRANSFORMERS: The Ride-3D estava ausente** do roteiro do dia 16 e do
+  catálogo do Universal Studios Florida. É atração S, aceita Express e tem
+  barra de 102cm — os 4 andam juntos. Registrado no catálogo também o motivo
+  de o Hollywood Rip Ride Rockit não entrar: fechou em definitivo em agosto de
+  2025 (dá lugar ao Fast & Furious: Hollywood Drift, 2027).
+
+### Adicionado
+- Child Swap (rider switch) explícito nas quatro atrações do dia 14 que barram
+  a Gabi (112cm) — Hulk 137, Doctor Doom 132, VelociCoaster 130 e Forbidden
+  Journey 122 — com o procedimento real da fila Express descrito nas notas
+  (~10 min por troca, não uma fila inteira).
+- Dia 16 cobre o Universal Studios Florida inteiro num anel único sem repetir
+  trecho, com Horror Make-Up Show e um bloco próprio de DreamWorks Land. Com o
+  IOA fechado no dia 14, o Hogwarts Express volta a ser passeio, não resgate.
+- Testes: horário de funcionamento vira invariante do dia 14 (nenhum bloco de
+  parque fora de 9h-20h, exceto a fila do Hagrid's, que por desenho termina
+  depois do fechamento) e a lista das quatro trocas fica travada.
+
+> Deploy desta entrada é o `supabase/seeds/` aplicado ao Supabase, não um
+> `vercel deploy` — os módulos de roteiro não são lidos pelo app em runtime.
+
 ## [1.2.0] - 2026-09-14
 
 ### Adicionado
