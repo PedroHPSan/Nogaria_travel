@@ -10,6 +10,41 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.2.0] - 2026-09-14
+
+### Adicionado
+- **Fase Universal reprogramada — dias operacionais 14, 15 e 16/09**
+  (`islandsOfAdventureDia14.ts`, `epicUniverseDia15.ts`,
+  `universalStudiosDia16.ts`), substituindo os dias de catálogo gerados por
+  `buildParkDay`. Três restrições reais moldaram a alocação dos parques:
+  - o **Universal Express Unlimited** incluso na diária do Loews Royal Pacific
+    vale no Universal Studios Florida e no Islands of Adventure, mas **não no
+    Epic Universe** — por isso o Epic fica com o único dia inteiro, com Early
+    Park Admission às 9h, e os outros dois parques cabem em meio período e em
+    um dia encurtado;
+  - **16/09 é data do Halloween Horror Nights** (setembro: 2-6, 9-13, 16-20,
+    23-27, 30), então o Universal Studios fecha às 17h para ingresso normal —
+    o que resolve o check-out do Royal Pacific (11h) e as ~3h30 de estrada até
+    o check-in do Casa Faena, em Miami Beach;
+  - o dia 14 começa às **12h**, com a família ainda no hotel antigo: o bloco
+    crítico do dia é a retirada dos cartões Express no balcão do Royal Pacific,
+    não uma atração.
+- `buildOperationalDay` passa a aceitar fila paga por bloco
+  (`OperationalRow.lightningLane`) e por dia
+  (`OperationalDayConfig.defaultLightningLane`), com default `'none'` — os dias
+  Disney seguem inalterados. Marcar o dia inteiro como `'express'` seria falso:
+  Hagrid's e Pteranodon Flyers não aceitam Express, e é justamente isso que põe
+  o Hagrid's como último bloco do dia 14.
+- `scripts/gerarSeedRoteiro.ts` gera os SQLs de `supabase/seeds/` a partir dos
+  módulos TS. Os seeds anteriores pediam no cabeçalho "editar o TS e regerar",
+  mas eram escritos à mão — sem gerador, a ordem das colunas do `insert` e a
+  do `values` podiam divergir em silêncio.
+
+### Notas
+- Os três seeds foram validados contra um Postgres 16 real (migrations do
+  projeto aplicadas, viagem e participantes semeados): inserem 20/28/26 blocos
+  e são idempotentes na reexecução.
+
 ## [1.1.0] - 2026-09-13
 
 ### Adicionado

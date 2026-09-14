@@ -143,6 +143,14 @@ export interface OperationalRow {
   reminderMinutesBefore?: number;
   recommendedArrivalMinBefore?: number;
   recommendedWindow?: string;
+  /**
+   * Fila paga do bloco. Omitido = herda `defaultLightningLane` do dia (que por
+   * sua vez é `'none'`): um dia operacional normalmente existe porque não há
+   * fura-fila para reordenar o roteiro. Dias no Universal com Express
+   * Unlimited do hotel são a exceção — ver `islandsOfAdventureDia14.ts`.
+   */
+  lightningLane?: RoteiroLightningLane;
+  lightningLaneRank?: number;
   /** Default `true`; `false` marca horário travado (reserva, abertura, show). */
   timeIsEstimated?: boolean;
   countsTowardCompletion?: boolean;
@@ -158,12 +166,21 @@ export interface OperationalDayConfig {
   parkName: string;
   city: string;
   date: string;
+  /**
+   * Fila paga aplicada aos blocos que não declaram `lightningLane`. Default
+   * `'none'` — preserva o comportamento dos dias Disney sem Lightning Lane.
+   */
+  defaultLightningLane?: RoteiroLightningLane;
 }
 
 /**
- * Monta um dia com horários explícitos. `lightning_lane` sai `'none'` em todos
- * os itens por construção: um dia operacional só existe porque não há fila
- * paga para reordenar o roteiro.
+ * Monta um dia com horários explícitos. `lightning_lane` sai de
+ * `row.lightningLane ?? config.defaultLightningLane ?? 'none'`: o default
+ * mantém a premissa original (dia operacional existe porque não há fila paga
+ * para reordenar o roteiro), e a exceção é declarada bloco a bloco — no
+ * Universal o Express Unlimited do hotel não vale para todas as atrações
+ * (Hagrid's e Pteranodon Flyers ficam de fora), então marcar o dia inteiro
+ * como `'express'` seria falso.
  */
 export function buildOperationalDay(
   config: OperationalDayConfig,
@@ -196,7 +213,8 @@ export function buildOperationalDay(
       base_order: row.order,
       item_type: row.itemType,
       priority_tier: row.priority,
-      lightning_lane: 'none',
+      lightning_lane: row.lightningLane ?? config.defaultLightningLane ?? 'none',
+      lightning_lane_priority_rank: row.lightningLaneRank,
       single_rider: false,
       child_switch: row.childSwitch ?? false,
       recommended_window: row.recommendedWindow,

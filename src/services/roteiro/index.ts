@@ -8,3 +8,6 @@ export { HOLLYWOOD_STUDIOS_DIA_12_ITEMS } from './hollywoodStudiosDia12';
 export { UNIVERSAL_STUDIOS_FLORIDA_ITEMS } from './universalStudiosFlorida';
 export { ISLANDS_OF_ADVENTURE_ITEMS } from './islandsOfAdventure';
 export { EPIC_UNIVERSE_ITEMS } from './epicUniverse';
+export { ISLANDS_OF_ADVENTURE_DIA_14_ITEMS } from './islandsOfAdventureDia14';
+export { EPIC_UNIVERSE_DIA_15_ITEMS } from './epicUniverseDia15';
+export { UNIVERSAL_STUDIOS_DIA_16_ITEMS } from './universalStudiosDia16';
