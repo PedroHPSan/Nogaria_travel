@@ -60,6 +60,14 @@ import { buildOperationalDay, type OperationalRow } from './shared';
  * do vilarejo elimina uma travessia inteira e põe a família em Hogsmeade para
  * as últimas 2h30 do dia, que é onde está o material mais forte que sobra.
  *
+ * **Quarta versão, ao vivo dentro do parque:** Hulk e Doctor Doom saíram antes
+ * do Homem-Aranha — a família chegou ao Marvel e foi direto nas duas que barram
+ * a Gabi. Os blocos cumpridos viram `completed` com o horário real, e o
+ * Homem-Aranha assume o lugar deles em vez de ser dado como perdido: ele é a
+ * única das três em que os 4 andam juntos, e é a recompensa da Gabi depois de
+ * duas trocas seguidas. Nada depois das 14h40 se move — o Ripsaw Falls continua
+ * abrindo o Toon Lagoon no mesmo horário.
+ *
  * `reminderMinutesBefore: 0` desliga o aviso do item — só 7 momentos de
  * decisão avisam.
  */
@@ -88,23 +96,25 @@ const ROWS: OperationalRow[] = [
     category: 'rest', area: 'Hotel', location: "Universal's Loews Royal Pacific Resort",
     description: 'O bloco mais importante do dia. O Universal Express Unlimited dos 4 hóspedes é entregue no balcão, junto com as chaves — é o que sustenta os dias 14 e 16.',
     notes: 'DIVIDIR: um adulto fica na fila do balcão, o outro leva as meninas ao Tuk Tuk Market e compra o almoço para levar (~US$ 45). Fazer em série custaria 60 min; em paralelo custa 35, e são esses 35 min que compram a entrada no parque às 13h em vez de 13h35. No balcão: pedir os 4 cartões Express, conferir que valem HOJE e em 16/09 (dia do check-out), e deixar as malas no Bell Services — o quarto só libera às 16h.',
-    planB: 'Se o balcão se recusar a emitir o Express antes das 16h, insistir com o gerente de plantão — o benefício é do dia de chegada. Sem ele, inverter o dia: Seuss Landing e Hogsmeade primeiro, filas grandes só depois das 16h com os cartões na mão.',
+    status: 'completed',
     timeIsEstimated: false, reminderMinutesBefore: 0,
   },
   {
     order: 4, start: '12:30', end: '12:50', title: 'Royal Pacific → Islands of Adventure',
     category: 'transit', area: 'Deslocamento',
     location: "Universal's Loews Royal Pacific Resort → Universal's Islands of Adventure",
-    notes: 'Water taxi na doca do hotel ou a trilha a pé até o CityWalk — os dois dão ~12 min. Com o carrinho da Gabi, a caminhada é mais previsível que a fila do barco. Comer o grab-and-go no caminho ou nos bancos do Port of Entry.',
-    reminderMinutesBefore: 10,
+    status: 'completed',
+    notes: 'Water taxi na doca do hotel ou a trilha a pé até o CityWalk — os dois dão ~12 min. Comer o grab-and-go no caminho ou nos bancos do Port of Entry.',
+    timeIsEstimated: false, reminderMinutesBefore: 0,
   },
   {
     order: 5, start: '12:50', end: '13:00', title: 'Entrada, segurança e conferência do horário de fechamento',
     category: 'transit', area: 'Entrada', location: "Universal's Islands of Adventure",
     description: 'Ingresso Park-to-Park no app Universal Orlando Resort, com os cartões Express na mesma carteira digital.',
-    notes: 'Conferir no app o fechamento de hoje (previsto 20h) — é o número que decide a hora de entrar na fila do Hagrid\'s no fim do dia. Anotar também o horário das sessões do Ollivanders.',
+    status: 'completed',
+    notes: 'CONFERIR AINDA o fechamento de hoje no app (previsto 20h) — é o número que decide a hora de entrar na fila do Hagrid\'s. Anotar também o horário das sessões do Ollivanders.',
     planB: 'Se o fechamento for antes das 20h, cortar o bloco do Camp Jurassic e antecipar o jantar em 30 min: tudo depois dele desliza junto e o Hagrid\'s continua sendo o último.',
-    reminderMinutesBefore: 0,
+    timeIsEstimated: false, reminderMinutesBefore: 0,
   },
 
   // ---------- Seuss Landing: o pedaço da Gabi, logo na entrada ----------
@@ -113,34 +123,39 @@ const ROWS: OperationalRow[] = [
     title: 'Seuss Landing — Caro-Seuss-el, One Fish Two Fish, The Cat in the Hat e Trolley Train',
     category: 'park', area: 'Seuss Landing', itemType: 'attraction', priority: 'B',
     minHeightCm: 91, lightningLane: 'express', lightningLaneRank: 10,
-    description: 'Quatro atrações leves em sequência, todas dentro da altura da Gabi (91cm), a 5 min do Port of Entry. O Trolley Train entrou com os 35 min ganhos no balcão.',
-    notes: 'Único bloco em que a Gabi lidera, e é de propósito que ele venha ANTES da sequência de 137/132/130cm que a barra. O Trolley Train carrega devagar: se a fila dele passar de 15 min, trocar pelo If I Ran the Zoo ao lado e seguir.',
-    reminderMinutesBefore: 0,
+    status: 'completed',
+    description: 'Quatro atrações leves em sequência, todas dentro da altura da Gabi (91cm), a 5 min do Port of Entry.',
+    notes: 'Marcado como feito junto com o Hulk e o Doctor Doom. SE ficou para trás na pressa de chegar ao Marvel, a recuperação já existe no fim do dia: o Seuss fica a 8 min de Hogsmeade, e é exatamente para lá que a Gabi vai com um adulto enquanto a Débora anda no Hagrid\'s às 19h25.',
+    timeIsEstimated: false, reminderMinutesBefore: 0,
   },
 
   // ---------- Marvel Super Hero Island ----------
   {
-    order: 7, start: '13:35', end: '13:55', title: 'The Amazing Adventures of Spider-Man',
-    category: 'park', area: 'Marvel Super Hero Island', itemType: 'attraction', priority: 'S',
-    minHeightCm: 102, lightningLane: 'express', lightningLaneRank: 3,
-    description: 'Simulador 3D sobre trilho — a atração forte de maior alcance do dia.',
-    notes: 'Os 4 andam juntos (102cm). Inclui a travessia Seuss → Marvel pelo Port of Entry, ~6 min.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 8, start: '13:55', end: '14:20', title: 'The Incredible Hulk Coaster',
+    order: 7, start: '13:35', end: '14:00', title: 'The Incredible Hulk Coaster',
     category: 'park', area: 'Marvel Super Hero Island', itemType: 'attraction', priority: 'S',
     minHeightCm: 137, childSwitch: true, lightningLane: 'express', lightningLaneRank: 4,
-    description: 'Lançamento de 0 a 65 km/h dentro do tubo verde — a primeira das quatro trocas do dia.',
-    notes: 'Gabi (112cm) fica de fora. Child Swap: avisar o atendente na entrada da fila Express, subir os 4 até a plataforma, um adulto espera com a Gabi na sala de troca e anda na volta do outro. Com Express, ~10 min de custo. Bolsos vazios — lockers gratuitos na entrada.',
-    reminderMinutesBefore: 0,
+    status: 'completed',
+    description: 'Feito. Primeira das quatro trocas do dia — Gabi (112cm) ficou de fora.',
+    notes: 'Gabi (112cm) fica de fora. Child Swap na plataforma, ~10 min de custo com Express.',
+    timeIsEstimated: false, reminderMinutesBefore: 0,
   },
   {
-    order: 9, start: '14:20', end: '14:40', title: "Doctor Doom's Fearfall",
+    order: 8, start: '14:00', end: '14:20', title: "Doctor Doom's Fearfall",
     category: 'park', area: 'Marvel Super Hero Island', itemType: 'attraction', priority: 'A',
     minHeightCm: 132, childSwitch: true, lightningLane: 'express', lightningLaneRank: 8,
-    description: 'Torre de lançamento de 61m — curta, e a melhor vista do parque no topo.',
-    notes: 'Gabi (112cm) fora, Child Swap de novo. Enquanto isso, quem estiver com ela faz o Storm Force Accelatron ao lado (sem altura mínima, xícaras giratórias) e o encontro dos heróis Marvel, que costuma acontecer na esquina da Cafe 4.',
+    status: 'completed',
+    description: 'Feito. Segunda troca do dia.',
+    notes: 'Gabi (112cm) fora, Child Swap. Se o Storm Force Accelatron e o encontro dos heróis Marvel não saíram durante a troca, eles ficam aqui ao lado — 10 min, sem fila, e valem a volta se sobrar tempo antes do Toon Lagoon.',
+    timeIsEstimated: false, reminderMinutesBefore: 0,
+  },
+
+  // ---------- AGORA ----------
+  {
+    order: 9, start: '14:20', end: '14:40', title: 'The Amazing Adventures of Spider-Man',
+    category: 'park', area: 'Marvel Super Hero Island', itemType: 'attraction', priority: 'S',
+    minHeightCm: 102, lightningLane: 'express', lightningLaneRank: 3,
+    description: 'Simulador 3D sobre trilho — a atração forte de maior alcance do dia, e a primeira em que os 4 andam juntos.',
+    notes: 'Bloco de agora. Saiu da frente do Hulk e do Doctor Doom para o lugar deles: a família chegou ao Marvel e foi direto nas duas que barram a Gabi, então o Homem-Aranha vira a recompensa dela logo depois das duas trocas seguidas. Ainda dentro do Marvel — nenhuma caminhada extra.',
     reminderMinutesBefore: 0,
   },
 

@@ -10,6 +10,35 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.4.0] - 2026-09-14
+
+### Adicionado
+- **Disparar o roteiro por WhatsApp para todos, a partir do repositório**: job
+  `whatsapp` em `.github/workflows/supabase.yml`, com a entrada `digest`
+  (`hoje`/`amanha`). Chama a edge function `daily-digest` com o header
+  `x-force-send`, que é o que **ignora a checagem de `digest_time`** do tenant —
+  sem ele, um disparo fora da hora configurada é respondido com `skipped` e
+  ninguém recebe nada. Roda `needs: seed` de propósito: mandar o itinerário
+  antes de aplicá-lo entregaria a versão velha para a família inteira. Exige o
+  secret `CRON_SECRET` (o mesmo de `supabase secrets set`).
+
+### Corrigido
+- **Dia 14/09, quarta versão, ao vivo dentro do parque.** Hulk e Doctor Doom
+  saíram antes do Homem-Aranha — a família chegou ao Marvel e foi direto nas
+  duas atrações que barram a Gabi. Os blocos cumpridos (até o Doctor Doom) viram
+  `completed` com o horário real, e o **Homem-Aranha assume o lugar deles** em
+  vez de ser dado como perdido: é a única das três em que os 4 andam juntos, e
+  vira a recompensa da Gabi logo depois de duas trocas seguidas. Nada depois das
+  14h40 se move — o Ripsaw Falls continua abrindo o Toon Lagoon no mesmo
+  horário.
+- O teste do prefixo concluído deixou de depender de uma lista fixa de títulos
+  (que envelhece a cada replanejamento) e passa a travar o que importa: o
+  primeiro bloco pendente, e que todo `completed` venha antes dele. Um bloco
+  concluído depois de um pendente é buraco na linha do tempo — é assim que o
+  check-in do bot passa a cobrar item que já rolou.
+- O plano B da retirada do Express deixou de ser exigido depois que o bloco está
+  `completed`: fallback de fato consumado é ruído.
+
 ## [1.3.1] - 2026-09-14
 
 ### Corrigido

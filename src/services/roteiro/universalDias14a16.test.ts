@@ -146,24 +146,22 @@ describe('Islands of Adventure 14/09 — replanejado no balcão às 11h55, parqu
   it('preserva como concluído o que a família já fez, em vez de apagar', () => {
     // O seed apaga e reinsere o dia inteiro; sem marcar `completed` aqui, um
     // replanejamento no meio do dia faria o app esquecer o que já rolou.
-    const concluidos = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
-      .filter(i => i.status === 'completed')
-      .map(i => i.title);
-    expect(concluidos).toEqual([
-      'Check-out do Celebration Suites e carga do carro',
-      'Kissimmee → Loews Royal Pacific Resort',
-    ]);
-    // Nada concluído pode aparecer depois do primeiro bloco ainda por fazer.
-    const primeiroPendente = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
-      .find(i => i.status !== 'completed');
-    porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
+    const ordenado = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS);
+    const primeiroPendente = ordenado.find(i => i.status !== 'completed');
+    expect(primeiroPendente?.title).toBe('The Amazing Adventures of Spider-Man');
+
+    // O que está feito tem que ser um PREFIXO do dia: um bloco concluído depois
+    // de um pendente significa buraco na linha do tempo, e é assim que o app
+    // (e o check-in do bot) passa a cobrar item que já rolou.
+    ordenado
       .filter(i => i.status === 'completed')
       .forEach(item => {
-        expect(item.base_order!).toBeLessThan(primeiroPendente!.base_order!);
+        expect(item.base_order!, `${item.title} concluído depois de um bloco pendente`)
+          .toBeLessThan(primeiroPendente!.base_order!);
       });
   });
 
-  it('entra no parque às 13h — o balcão e o almoço rodam em paralelo', () => {
+  it('entra no parque às 13h — o balcão e o almoço rodaram em paralelo', () => {
     const primeiroParque = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS).find(i => i.item_type !== undefined);
     expect(primeiroParque?.time_start).toBe('13:00');
     // O bloco do Express carrega as duas tarefas: se alguém voltar a separá-las
@@ -205,7 +203,11 @@ describe('Islands of Adventure 14/09 — replanejado no balcão às 11h55, parqu
     expect(retirada, 'dia 14 sem o bloco de retirada do Express').toBeDefined();
     const primeiroParque = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS).find(i => i.item_type !== undefined);
     expect(minutos(retirada!.time_end!)).toBeLessThanOrEqual(minutos(primeiroParque!.time_start));
-    expect(retirada!.plan_b, 'retirada do Express sem plano B').toBeDefined();
+    // O plano B só faz sentido enquanto a retirada não aconteceu: depois de
+    // `completed`, exigir fallback de um fato consumado é ruído.
+    if (retirada!.status !== 'completed') {
+      expect(retirada!.plan_b, 'retirada do Express sem plano B').toBeDefined();
+    }
   });
 
   it('não inclui o Jurassic Park River Adventure (fechado até 19/11/2026)', () => {

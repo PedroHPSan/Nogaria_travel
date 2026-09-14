@@ -12,6 +12,8 @@
 #   SUPABASE_ACCESS_TOKEN token pessoal da conta
 #                         (supabase.com/dashboard/account/tokens). Só é usado
 #                         para publicar edge functions.
+#   CRON_SECRET           o mesmo valor de `supabase secrets set CRON_SECRET`.
+#                         Só é usado para disparar o digest por WhatsApp.
 #
 # O ref do projeto vem da variável de repositório SUPABASE_PROJECT_REF e cai no
 # ref conhecido do Nogaria_travel se ela não existir.
@@ -43,6 +45,11 @@ on:
         description: 'Edge functions a publicar, separadas por espaço. "todas" publica todas. Vazio = nenhuma.'
         type: string
         default: ''
+      digest:
+        description: 'Mandar o roteiro por WhatsApp para TODOS os participantes com telefone, agora'
+        type: choice
+        options: [nao, hoje, amanha]
+        default: nao
 
 concurrency:
   # Uma escrita por vez no banco de produção.
@@ -255,4 +262,41 @@ jobs:
             echo "### Edge functions publicadas"
             echo ""
             echo "\`$LISTA\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  whatsapp:
+    name: Digest por WhatsApp (todos os participantes)
+    runs-on: ubuntu-latest
+    # Depois do seed de propósito: mandar o roteiro antes de aplicá-lo
+    # entregaria a versão velha para a família inteira.
+    needs: seed
+    if: github.event_name == 'workflow_dispatch' && inputs.digest != 'nao'
+    env:
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      MODO: ${{ inputs.digest }}
+    steps:
+      - name: Dispara o daily-digest
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET ausente. É o mesmo valor de 'supabase secrets set CRON_SECRET' — cadastre em Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          [ "$MODO" = "amanha" ] && modo=tomorrow || modo=today
+
+          # x-force-send ignora a checagem de digest_time/evening_digest_time da
+          # function: sem ele, um disparo fora da hora configurada do tenant é
+          # respondido com `skipped` e ninguém recebe nada.
+          resposta=$(curl -sS --fail-with-body -X POST \
+            -H "x-cron-secret: $CRON_SECRET" \
+            -H "x-force-send: $CRON_SECRET" \
+            "https://${PROJECT_REF}.supabase.co/functions/v1/daily-digest?mode=$modo")
+
+          echo "$resposta"
+          {
+            echo ""
+            echo "### Digest enviado ($modo)"
+            echo ""
+            echo '```json'
+            echo "$resposta"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
