@@ -1,0 +1,258 @@
+# Escrita no Supabase sem a Supabase CLI instalada na máquina.
+#
+# Antes disto, migrations, seeds e edge functions só subiam de um terminal com
+# a CLI linkada e o `.env` do projeto — o que, em viagem, significava não subir.
+# Este workflow faz os três a partir do repositório, inclusive pelo celular
+# (aba Actions → Supabase → Run workflow).
+#
+# Autenticação, dois segredos independentes:
+#   SUPABASE_DB_URL       conexão Postgres do projeto (dashboard → Connect →
+#                         Session pooler, COM a senha). Serve para migrations
+#                         e para os seeds — é o único necessário no dia a dia.
+#   SUPABASE_ACCESS_TOKEN token pessoal da conta
+#                         (supabase.com/dashboard/account/tokens). Só é usado
+#                         para publicar edge functions.
+#
+# O ref do projeto vem da variável de repositório SUPABASE_PROJECT_REF e cai no
+# ref conhecido do Nogaria_travel se ela não existir.
+name: Supabase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+  workflow_dispatch:
+    inputs:
+      migrations:
+        description: 'Aplicar migrations pendentes (supabase db push)'
+        type: choice
+        options: [sim, nao]
+        default: sim
+      seed:
+        description: 'Seed a aplicar — nome do arquivo ou um pedaço dele (ex.: "09-14"). Vazio = só lista os disponíveis.'
+        type: string
+        default: ''
+      confirmar_seed:
+        description: 'CONFIRMAR o seed — ele APAGA o dia inteiro em itinerary_items antes de inserir'
+        type: choice
+        options: [nao, sim]
+        default: nao
+      functions:
+        description: 'Edge functions a publicar, separadas por espaço. "todas" publica todas. Vazio = nenhuma.'
+        type: string
+        default: ''
+
+concurrency:
+  # Uma escrita por vez no banco de produção.
+  group: supabase-producao
+  cancel-in-progress: false
+
+env:
+  PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF || 'bkrqhividgljticgjrem' }}
+
+jobs:
+  migracoes:
+    name: Migrations (db push)
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Decide se roda
+        id: decidir
+        # Entradas do dispatch entram por `env`, nunca interpoladas direto no
+        # script: `${{ }}` é substituído como texto antes de o bash ver a
+        # linha, e uma aspa na entrada viraria comando.
+        env:
+          EVENTO: ${{ github.event_name }}
+          MIGRATIONS: ${{ inputs.migrations }}
+        run: |
+          if [ "$EVENTO" = "workflow_dispatch" ]; then
+            [ "$MIGRATIONS" = "sim" ] && rodar=true || rodar=false
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null | grep -q '^supabase/migrations/'; then
+            rodar=true
+          else
+            rodar=false
+            echo "Nenhuma migration neste push."
+          fi
+          if [ "$rodar" = "true" ] && [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL ausente — migrations puladas. Cadastre em Settings → Secrets and variables → Actions."
+            rodar=false
+          fi
+          echo "rodar=$rodar" >> "$GITHUB_OUTPUT"
+
+      - uses: supabase/setup-cli@v1
+        if: steps.decidir.outputs.rodar == 'true'
+        with:
+          version: latest
+
+      - name: supabase db push
+        if: steps.decidir.outputs.rodar == 'true'
+        run: |
+          supabase db push --db-url "$SUPABASE_DB_URL" --include-all
+          {
+            echo "### Migrations"
+            echo ""
+            echo "\`supabase db push\` concluído no projeto \`$PROJECT_REF\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  seed:
+    name: Seed (SQL de supabase/seeds/)
+    runs-on: ubuntu-latest
+    needs: migracoes
+    if: github.event_name == 'workflow_dispatch'
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SEED: ${{ inputs.seed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve o seed
+        id: resolver
+        run: |
+          disponiveis=$(cd supabase/seeds && ls *.sql)
+          {
+            echo "### Seeds disponíveis"
+            echo ""
+            echo '```'
+            echo "$disponiveis"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "$SEED" ]; then
+            echo "Nenhum seed pedido — só listei os disponíveis acima."
+            echo "arquivo=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Aceita o nome inteiro ou um pedaço dele ("09-14", "epcot"). Um
+          # pedaço que casa com mais de um arquivo é erro, não escolha nossa:
+          # aplicar o seed errado apaga um dia do roteiro.
+          casados=$(printf '%s\n' "$disponiveis" | grep -F -- "$SEED" || true)
+          quantos=$(printf '%s\n' "$casados" | grep -c . || true)
+          if [ "$quantos" -eq 0 ]; then
+            echo "::error::Nenhum seed casa com '$SEED'. Veja a lista no resumo do job."
+            exit 1
+          fi
+          if [ "$quantos" -gt 1 ]; then
+            echo "::error::'$SEED' é ambíguo e casa com: $(echo $casados). Seja mais específico."
+            exit 1
+          fi
+          echo "arquivo=$casados" >> "$GITHUB_OUTPUT"
+          echo "Seed resolvido: $casados"
+
+      - name: Verifica confirmação e credenciais
+        id: liberar
+        if: steps.resolver.outputs.arquivo != ''
+        env:
+          CONFIRMAR: ${{ inputs.confirmar_seed }}
+        run: |
+          if [ "$CONFIRMAR" != "sim" ]; then
+            echo "::error::O seed apaga o dia inteiro em itinerary_items antes de inserir (e leva junto os participant_status já marcados). Rode de novo com confirmar_seed = sim."
+            exit 1
+          fi
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL ausente — não dá para aplicar o seed."
+            exit 1
+          fi
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+      - name: Aplica o seed
+        if: steps.liberar.outputs.ok == 'true'
+        env:
+          ARQUIVO: ${{ steps.resolver.outputs.arquivo }}
+        run: |
+          echo "Aplicando supabase/seeds/$ARQUIVO"
+          # ON_ERROR_STOP: sem isso o psql segue em frente depois de um erro e
+          # o job passaria com o banco pela metade.
+          psql "$SUPABASE_DB_URL" --set ON_ERROR_STOP=1 --echo-errors -f "supabase/seeds/$ARQUIVO"
+          {
+            echo ""
+            echo "### Seed aplicado"
+            echo ""
+            echo "\`$ARQUIVO\` no projeto \`$PROJECT_REF\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  funcoes:
+    name: Edge functions
+    runs-on: ubuntu-latest
+    needs: migracoes
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Decide o que publicar
+        id: decidir
+        env:
+          EVENTO: ${{ github.event_name }}
+          FUNCTIONS: ${{ inputs.functions }}
+          ANTES: ${{ github.event.before }}
+          AGORA: ${{ github.sha }}
+        run: |
+          if [ "$EVENTO" = "workflow_dispatch" ]; then
+            pedido="$FUNCTIONS"
+          else
+            # Push: publica só as functions que o commit tocou. `_shared` é
+            # importado por todas, então mexer nele republica todas.
+            mudou=$(git diff --name-only "$ANTES" "$AGORA" 2>/dev/null | grep '^supabase/functions/' || true)
+            if [ -z "$mudou" ]; then
+              pedido=''
+            elif echo "$mudou" | grep -q '^supabase/functions/_shared/'; then
+              pedido='todas'
+            else
+              pedido=$(echo "$mudou" | cut -d/ -f3 | sort -u | tr '\n' ' ')
+            fi
+          fi
+
+          if [ "$pedido" = "todas" ]; then
+            pedido=$(cd supabase/functions && ls -d */ | tr -d '/' | grep -v '^_shared$' | tr '\n' ' ')
+          fi
+
+          if [ -z "${pedido// /}" ]; then
+            echo "Nada a publicar."
+            echo "lista=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::warning::SUPABASE_ACCESS_TOKEN ausente — publicação de functions pulada. Cadastre em Settings → Secrets and variables → Actions."
+            echo "lista=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "lista=$pedido" >> "$GITHUB_OUTPUT"
+          echo "A publicar: $pedido"
+
+      - uses: supabase/setup-cli@v1
+        if: steps.decidir.outputs.lista != ''
+        with:
+          version: latest
+
+      - name: supabase functions deploy
+        if: steps.decidir.outputs.lista != ''
+        env:
+          LISTA: ${{ steps.decidir.outputs.lista }}
+        run: |
+          for fn in $LISTA; do
+            if [ ! -d "supabase/functions/$fn" ]; then
+              echo "::error::Função '$fn' não existe em supabase/functions/."
+              exit 1
+            fi
+            echo "→ $fn"
+            # config.toml manda: whatsapp-webhook, daily-digest,
+            # activity-reminders, activity-checkins e exchange-rate-sync são
+            # públicas (verify_jwt = false) e precisam continuar sendo.
+            supabase functions deploy "$fn" --project-ref "$PROJECT_REF"
+          done
+          {
+            echo ""
+            echo "### Edge functions publicadas"
+            echo ""
+            echo "\`$LISTA\`"
+          } >> "$GITHUB_STEP_SUMMARY"

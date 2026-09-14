@@ -1,0 +1,104 @@
+# Deploy de produção na Vercel, disparado pelo repositório.
+#
+# Até 14/09/2026 o deploy era manual (`vercel deploy --prod` de um checkout
+# limpo de main) e a integração Git da Vercel ficava desligada por decisão do
+# Pedro. Isto substitui o passo manual sem religar a integração Git:
+# `vercel.json` mantém `git.deploymentEnabled: false` de propósito, senão um
+# push em main dispararia DOIS deploys — o da Vercel e o deste workflow — e
+# o da Vercel não passa por lint/build/test.
+#
+# O portão é o job `verificar`: nenhum deploy sai sem a suíte verde.
+name: Deploy (produção)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Deploy de produção não se cancela pela metade: uma fila, sem
+  # cancel-in-progress, para não abortar um deploy no meio da subida.
+  group: deploy-producao
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    name: Lint, typecheck, build e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+
+  deploy:
+    name: vercel deploy --prod
+    runs-on: ubuntu-latest
+    needs: verificar
+    environment:
+      name: producao
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verifica credenciais
+        id: credenciais
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::warning::Secrets da Vercel ausentes — deploy pulado. Cadastre VERCEL_TOKEN, VERCEL_ORG_ID e VERCEL_PROJECT_ID em Settings → Secrets and variables → Actions."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.credenciais.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instala a Vercel CLI
+        if: steps.credenciais.outputs.ok == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Puxa a configuração de produção
+        if: steps.credenciais.outputs.ok == 'true'
+        # Traz também as variáveis de ambiente de produção (VITE_SUPABASE_URL,
+        # VITE_SUPABASE_PUBLISHABLE_KEY), que moram no dashboard da Vercel e
+        # não no repositório — é o que permite buildar aqui em vez de lá.
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        if: steps.credenciais.outputs.ok == 'true'
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy
+        id: deploy
+        if: steps.credenciais.outputs.ok == 'true'
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deploy: $url"
+
+      - name: Confirma que ficou Ready
+        if: steps.credenciais.outputs.ok == 'true'
+        run: |
+          estado=$(vercel inspect "${{ steps.deploy.outputs.url }}" --token="$VERCEL_TOKEN" 2>&1 | grep -oE '(READY|ERROR|CANCELED|BUILDING|QUEUED)' | head -1)
+          echo "Estado: ${estado:-desconhecido}"
+          {
+            echo "### Deploy de produção"
+            echo ""
+            echo "- Preview desta versão: ${{ steps.deploy.outputs.url }}"
+            echo "- URL canônica: https://nogaria-travel.vercel.app"
+            echo "- Estado: \`${estado:-desconhecido}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$estado" = "READY" ] || { echo "::error::Deploy não ficou READY."; exit 1; }

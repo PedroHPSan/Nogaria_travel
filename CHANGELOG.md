@@ -10,6 +10,46 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.3.0] - 2026-09-14
+
+### Adicionado
+- **Deploy de produção automático a partir do repositório**
+  (`.github/workflows/deploy.yml`). Push em `main` roda lint + build + testes e,
+  só então, `vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt
+  --prod`, confirmando com `vercel inspect` e falhando o job se não ficar
+  `READY`. O build acontece no CI, não na Vercel — é por isso que o `vercel
+  pull` é necessário: ele baixa as variáveis de produção
+  (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`), que moram no
+  dashboard da Vercel e em nenhum arquivo do repo. Também roda sob demanda
+  (*Actions → Run workflow*).
+- **Escrita no Supabase sem CLI instalada** (`.github/workflows/supabase.yml`),
+  com três jobs:
+  - `migracoes` — `supabase db push --db-url`, disparado quando um push em
+    `main` toca `supabase/migrations/**`;
+  - `funcoes` — publica apenas as edge functions que o commit tocou; uma
+    mudança em `_shared/` republica todas, porque todas importam de lá;
+  - `seed` — aplica um arquivo de `supabase/seeds/` via `psql`, **só manual**.
+    Um seed de roteiro apaga o dia inteiro de `itinerary_items` antes de
+    inserir, então exige `confirmar_seed = sim`; aceita o nome do arquivo ou um
+    pedaço dele (`09-14`) e recusa o que for ambíguo. Rodar com o campo vazio
+    lista os seeds disponíveis no resumo do job — é o caminho de descoberta
+    pelo celular.
+
+  Entradas do `workflow_dispatch` entram nos scripts por `env`, nunca
+  interpoladas direto: `${{ }}` é substituído como texto antes de o bash ver a
+  linha, e uma aspa na entrada viraria comando.
+
+### Alterado
+- `vercel.json` mantém `git.deploymentEnabled: false` **de propósito**, agora
+  com o motivo registrado: religar a integração Git da Vercel faria um push em
+  `main` disparar dois deploys, e o da Vercel não passa por lint/build/test.
+- `CLAUDE.md`: a seção de deployment deixa de descrever um processo manual e
+  passa a documentar os dois workflows, a tabela de secrets necessários
+  (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `SUPABASE_DB_URL`,
+  `SUPABASE_ACCESS_TOKEN`) e os comandos manuais como fallback. Todo job
+  degrada para *warning* e pula quando falta o seu secret, então o repositório
+  não fica vermelho antes de os segredos serem cadastrados.
+
 ## [1.2.1] - 2026-09-14
 
 ### Corrigido
