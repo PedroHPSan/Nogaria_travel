@@ -124,6 +124,50 @@ O primeiro é `roteiro/epcotDia09.ts` (EPCOT, 09/09/2026, sem Early Entry e sem 
 
 Como `itinerary_items` vive no Supabase e não há semeadura automática, o dia também existe como SQL em `supabase/seeds/roteiro_epcot_2026-09-09.sql`, **gerado a partir do módulo TS** (editar o TS e regerar, não editar o SQL à mão). O script resolve viagem e participantes por consulta em vez de hardcodar UUIDs, e é idempotente: apaga os itens do EPCOT já existentes naquela data antes de inserir — o que também descarta os `participant_status` do dia, então rodar antes de o dia começar.
 
+### Fase Universal: fila paga e o que ela muda (2026-09-14)
+
+Os dias 14, 15 e 16/09 são os primeiros dias operacionais **com fura-fila**, e
+isso inverte a premissa dos três dias Disney: lá o roteiro era ordenado por
+horário de menor fila porque não havia Lightning Lane; aqui o Express
+Unlimited vem incluso na diária do Loews Royal Pacific (DEC-002) e a ordem dos
+blocos passa a ser **geográfica**, porque o que se economiza é caminhada, não
+espera. `buildOperationalDay` ganhou `OperationalRow.lightningLane` e
+`OperationalDayConfig.defaultLightningLane` (default `'none'`, então os dias
+Disney não mudaram) — a fila paga é declarada bloco a bloco de propósito: o
+Express **não** vale para Hagrid's nem para Pteranodon Flyers, e marcar o dia
+inteiro como `'express'` seria falso.
+
+Três fatos externos decidem qual parque fica em qual dia, e nenhum deles está
+no código — todos vieram de consulta e valem re-checar antes de qualquer
+replanejamento:
+
+1. **O Express Unlimited do hotel não vale no Epic Universe** (é vendido à
+   parte e não foi comprado). Por isso o Epic é o único dos três com dia
+   inteiro, Early Park Admission às 9h e rope drop em Super Nintendo World —
+   é o único dia em que horário ainda é a moeda de troca.
+2. **16/09 é data do Halloween Horror Nights** (setembro/2026: 2-6, 9-13,
+   16-20, 23-27, 30): o Universal Studios fecha às **17h** para quem tem
+   ingresso normal. Em vez de perda, é o que faz o dia fechar — o check-out do
+   Royal Pacific é 11h e o check-in do Casa Faena, em Miami Beach, exige ~3h30
+   de estrada. O dia termina na Turnpike, não no parque.
+3. **Gabi tem 112cm** (não os 100cm de `initialMockData.ts`, que está
+   desatualizado desde `animalKingdomDia11.ts`). Ela fica de fora de 5 das 6
+   atrações fortes do IOA e de 5 do Epic, e de **uma só** no Universal
+   Studios — mais uma razão para o USF ser o último dia.
+
+`child_switch` só é marcado quando o Child Swap é de fato o plano: ele prende
+os dois adultos na atração, e com Express custa ~10 min. Onde não compensa, a
+família se divide de verdade e isso vive em `notes` — o caso é o Hagrid's no
+dia 14 (sem Express, último bloco, fila entrando no fechamento), travado como
+exceção nomeada em `universalDias14a16.test.ts` para não virar afrouxamento
+silencioso da regra.
+
+Os SQLs de `supabase/seeds/` destes dias são **gerados** por
+`npx vite-node scripts/gerarSeedRoteiro.ts`, não escritos à mão — os seeds
+anteriores pediam "editar o TS e regerar" no cabeçalho sem que existisse um
+gerador. A lista de colunas do `insert`, os casts do `select` e o alias do
+`values` saem todos de uma constante só (`COLUNAS`).
+
 **Colunas e índices novos** (`20260906120000_bot_performance_and_reminders.sql`): índice composto `whatsapp_messages (tenant_id, sender_phone, created_at desc)` — o `loadHistory` filtrava por três coisas com índices de coluna única; `whatsapp_messages.kind` (`chat`/`digest`/`reminder`), com `loadHistory` filtrando `kind = 'chat'` para que digests e avisos não entrem no histórico do modelo como turnos de conversa; `itinerary_items (trip_id, date, time_start)`; `ai_usage_logs.latency_ms`/`tool_rounds`/`tools_called`, porque sem separar "quantas rodadas de tool" de "quantos tokens" não dá para saber se uma resposta lenta foi o modelo ou o número de idas e vindas (é sempre o número de idas e vindas). Leituras (`get_tasks`, `get_flight_info`, `get_itinerary`) ganharam `limit`.
 
 Não há índice GIN de trigrama de propósito: as buscas já são pré-filtradas por `trip_id`, o que reduz o conjunto a algumas centenas de linhas curtas. Um GIN exigiria um wrapper `IMMUTABLE` de `unaccent` e só compensa uma ordem de grandeza acima deste volume.
