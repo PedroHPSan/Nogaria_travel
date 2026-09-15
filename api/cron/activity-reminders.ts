@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { proxyToSupabaseFunction } from './_shared';
+import { proxyToSupabaseFunction } from './_shared.js';
 
 // Vercel Cron: '2,9,16,23,30,37,44,51,58 * * * *' — mesmo passo de ~7min do
 // antigo pg_cron `whatsapp-activity-reminders` (coprimo de 10 de propósito,
