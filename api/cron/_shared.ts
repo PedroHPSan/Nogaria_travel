@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 /**
@@ -23,7 +24,15 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 function isAuthorized(req: IncomingMessage): boolean {
   const expected = process.env.CRON_SECRET;
   if (!expected) return false;
-  return req.headers.authorization === `Bearer ${expected}`;
+
+  const received = req.headers.authorization;
+  const expectedHeader = `Bearer ${expected}`;
+  // Comparação de tempo constante: `===` teria comparação byte a byte que
+  // retorna no primeiro caractere diferente, então o tempo de resposta
+  // vazaria quantos caracteres do segredo um atacante já acertou.
+  const receivedBuf = Buffer.from(received ?? '');
+  const expectedBuf = Buffer.from(expectedHeader);
+  return receivedBuf.length === expectedBuf.length && timingSafeEqual(receivedBuf, expectedBuf);
 }
 
 function send(res: ServerResponse, status: number, body: unknown): void {
