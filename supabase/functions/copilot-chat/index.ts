@@ -7,7 +7,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { resolveGeminiModel, type ChatMessage } from '../_shared/gemini.ts';
 import { chatWithConfiguredProvider } from '../_shared/aiProvider.ts';
 import { createToolExecutor, TOOL_DECLARATIONS } from '../_shared/tripTools.ts';
-import type { ParticipantRow } from '../_shared/tripContext.ts';
+import { localDateIso, type ParticipantRow } from '../_shared/tripContext.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -45,11 +45,18 @@ interface TripRow {
   currency_base: string;
 }
 
-function buildWebSystemPrompt(trip: TripRow, participants: ParticipantRow[]): string {
+function buildWebSystemPrompt(trip: TripRow, participants: ParticipantRow[], now: Date, timeZone: string): string {
   const roster = participants.map(p => `${p.nickname ?? p.full_name}${p.is_minor ? ' [menor]' : ''}`).join(', ');
+  const todayIso = localDateIso(now, timeZone);
+  const weekday = new Intl.DateTimeFormat('pt-BR', { timeZone, weekday: 'long' }).format(now);
+  const time = new Intl.DateTimeFormat('pt-BR', { timeZone, hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
   return [
     'Você é o Copiloto de IA da Plataforma de Viagens, um assistente que responde perguntas sobre uma viagem específica com acesso aos dados reais dela.',
     'Responda sempre em português (pt-BR), de forma direta e objetiva — 1-3 frases na maioria dos casos, sem listar informação que não foi pedida.',
+    // Sem isso o modelo tinha que adivinhar dia da semana e hora a partir do
+    // próprio conhecimento — e 2026 é posterior ao corte de treino dele, então
+    // o palpite saía errado (mesmo bug corrigido em tripContext.ts::buildSystemPrompt).
+    `Agora é ${weekday}, ${todayIso}, ${time} (horário local, fuso ${timeZone}). Use SEMPRE estes valores para dia da semana, data e hora atual — nunca calcule nenhum deles por conta própria.`,
     `Viagem ativa: "${trip.title}" para ${trip.destination_main}, de ${trip.start_date} a ${trip.end_date}. Moeda base: ${trip.currency_base}.`,
     `Participantes: ${roster || 'não cadastrados'}.`,
     '- Use as ferramentas disponíveis (roteiro, tarefas, voos) para consultar dados reais antes de responder. Nunca invente horários, preços ou reservas.',
@@ -139,6 +146,7 @@ Deno.serve(async request => {
 
     const participants = (participantsRes.data ?? []) as ParticipantRow[];
     const timeZone = whatsappConfigRes.data?.timezone ?? 'America/Sao_Paulo';
+    const now = new Date();
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY') ?? null;
     const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY') ?? null;
@@ -148,7 +156,7 @@ Deno.serve(async request => {
     const { text, usage, provider, model, costUsd } = await chatWithConfiguredProvider({
       config: aiConfigRes.data ?? { provider: 'gemini', model_name: null, temperature: 0.3 },
       keys: { geminiApiKey, claudeApiKey },
-      systemPrompt: buildWebSystemPrompt(trip, participants),
+      systemPrompt: buildWebSystemPrompt(trip, participants, now, timeZone),
       history,
       userText: message,
       tools: WEB_TOOLS,
@@ -156,7 +164,9 @@ Deno.serve(async request => {
         supabase,
         tenantId: trip.tenant_id,
         tripId: trip.id,
-        todayIso: new Date().toISOString().slice(0, 10),
+        // UTC puro rolava o dia cedo demais em fuso atrás de UTC (Orlando):
+        // às 20h/21h locais o bot já achava que era o dia seguinte.
+        todayIso: localDateIso(now, timeZone),
         participants,
         timeZone,
         // Sem telefone no web: identifica a pendência de confirmação por usuário.

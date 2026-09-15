@@ -428,7 +428,7 @@ async function handleMessage(supabase: SupabaseClient, msg: IncomingTextMessage)
   const { text, usage, provider, model, costUsd } = await chatWithConfiguredProvider({
     config: aiConfig ?? { provider: 'gemini', model_name: null, temperature: 0.4 },
     keys: { geminiApiKey, claudeApiKey },
-    systemPrompt: buildSystemPrompt(ctx, todayIso, config.timezone),
+    systemPrompt: buildSystemPrompt(ctx, todayIso, config.timezone, now),
     history,
     userText: msg.text,
     tools: TOOL_DECLARATIONS,

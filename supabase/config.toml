@@ -403,6 +403,10 @@ verify_jwt = false
 [functions.activity-checkins]
 verify_jwt = false
 
+# Relatório detalhado de replanejamento (envio único, não recorrente). Pública, gated por x-cron-secret.
+[functions.trip-report]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

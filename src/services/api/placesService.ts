@@ -1,3 +1,5 @@
+import { todayLocalIso } from '../dateUtils';
+
 export interface StorePlace {
   placeId: string;
   name: string;
@@ -56,7 +58,7 @@ const CACHE_KEY_PREFIX = 'nogaria_places_cache_';
 const QUOTA_KEY = 'nogaria_api_quota_usage';
 
 function getTodayString(): string {
-  return new Date().toISOString().split('T')[0];
+  return todayLocalIso();
 }
 
 interface StoredQuota {

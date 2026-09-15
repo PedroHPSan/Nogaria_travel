@@ -4,6 +4,7 @@ import type { Participant } from '../../types/database.types';
 import { deriveAge } from '../../data/mappers/participantMapper';
 import { useAuth } from '../../context/AuthContext';
 import { LEGAL_VERSION } from '../../features/legal/legalTexts';
+import { todayLocalIso } from '../../services/dateUtils';
 import { Avatar, DiceBearAvatar } from '../Avatar';
 import {
   randomAvatarSeed,
@@ -178,7 +179,7 @@ export const ParticipantModal: React.FC<ParticipantModalProps> = ({
     setError('');
   }, [initialData, isOpen]);
 
-  const hoje = new Date().toISOString().split('T')[0];
+  const hoje = todayLocalIso();
   const idadeCalculada = birthDate ? deriveAge(birthDate, hoje) : null;
   const isMinor = idadeCalculada !== null && idadeCalculada < 18;
   const { profile } = useAuth();

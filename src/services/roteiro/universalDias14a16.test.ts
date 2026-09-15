@@ -112,10 +112,14 @@ describe('Express Unlimited — onde vale e onde não vale', () => {
   });
 
   it('as atrações fortes do IOA e do USF entram como express', () => {
+    // Forbidden Journey e VelociCoaster saíram do dia 14 (a família teve que
+    // deixar o parque depois do Ripsaw Falls) e viraram o resgate do dia 16 —
+    // ver o bloco "Hogsmeade & Jurassic Park de resgate" em
+    // universalStudiosDia16.ts. Continuam com Express, só que num dia diferente.
     [
-      [ISLANDS_OF_ADVENTURE_DIA_14_ITEMS, 'Jurassic World VelociCoaster'],
-      [ISLANDS_OF_ADVENTURE_DIA_14_ITEMS, 'Harry Potter and the Forbidden Journey'],
       [ISLANDS_OF_ADVENTURE_DIA_14_ITEMS, 'The Incredible Hulk Coaster'],
+      [UNIVERSAL_STUDIOS_DIA_16_ITEMS, 'Jurassic World VelociCoaster'],
+      [UNIVERSAL_STUDIOS_DIA_16_ITEMS, 'Harry Potter and the Forbidden Journey'],
       [UNIVERSAL_STUDIOS_DIA_16_ITEMS, 'Revenge of the Mummy'],
       [UNIVERSAL_STUDIOS_DIA_16_ITEMS, 'Harry Potter and the Escape from Gringotts'],
     ].forEach(([itens, titulo]) => {
@@ -124,13 +128,13 @@ describe('Express Unlimited — onde vale e onde não vale', () => {
     });
   });
 
-  it("Hagrid's não aceita Express — por isso é o último bloco do dia 14", () => {
-    const hagrid = ISLANDS_OF_ADVENTURE_DIA_14_ITEMS.find(i => i.title.startsWith("Hagrid's"));
+  it("Hagrid's não aceita Express, mesmo no resgate do dia 16", () => {
+    // No dia 14 original, Hagrid's era o último bloco do dia justamente por
+    // não aceitar Express. No resgate do dia 16 ele entra CEDO de propósito
+    // (a fila da manhã é mais curta que a de fim de tarde), mas continua sem
+    // fila paga — isso não mudou, só o horário em que a família paga o preço.
+    const hagrid = UNIVERSAL_STUDIOS_DIA_16_ITEMS.find(i => i.title.startsWith("Hagrid's"));
     expect(hagrid?.lightning_lane).toBe('none');
-    const maiorOrdemComAtracao = Math.max(
-      ...ISLANDS_OF_ADVENTURE_DIA_14_ITEMS.filter(i => i.item_type !== undefined).map(i => i.base_order ?? 0),
-    );
-    expect(hagrid?.base_order).toBe(maiorOrdemComAtracao);
   });
 });
 
@@ -148,7 +152,7 @@ describe('Islands of Adventure 14/09 — replanejado no balcão às 11h55, parqu
     // replanejamento no meio do dia faria o app esquecer o que já rolou.
     const ordenado = porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS);
     const primeiroPendente = ordenado.find(i => i.status !== 'completed');
-    expect(primeiroPendente?.title).toBe('The Amazing Adventures of Spider-Man');
+    expect(primeiroPendente?.title).toBe('Saída do parque por imprevisto e volta ao Royal Pacific');
 
     // O que está feito tem que ser um PREFIXO do dia: um bloco concluído depois
     // de um pendente significa buraco na linha do tempo, e é assim que o app
@@ -171,31 +175,20 @@ describe('Islands of Adventure 14/09 — replanejado no balcão às 11h55, parqu
   });
 
   it('mantém todo bloco de parque dentro do horário de funcionamento (9h–20h)', () => {
-    // Exceção: a fila do Hagrid's é entrada antes das 20h e termina depois —
-    // quem já está na fila anda mesmo com o parque fechado. É o único bloco
-    // com item_type que pode ultrapassar o fechamento, e só por isso ele é o
-    // último do dia.
+    // Sem exceção nesta versão: o dia terminou de vez no Ripsaw Falls
+    // (15h05), muito antes do fechamento das 20h — não sobrou nenhum bloco
+    // (Hagrid's incluído) disputando o limite do horário do parque.
     porOrdem(ISLANDS_OF_ADVENTURE_DIA_14_ITEMS)
-      .filter(i => i.item_type !== undefined && !i.title.startsWith("Hagrid's"))
+      .filter(i => i.item_type !== undefined)
       .forEach(item => {
         expect(minutos(item.time_start), `${item.title} começa antes da abertura`).toBeGreaterThanOrEqual(9 * 60);
         expect(minutos(item.time_end!), `${item.title} passa das 20h`).toBeLessThanOrEqual(20 * 60);
       });
   });
 
-  it("entra na fila do Hagrid's antes do fechamento das 20h", () => {
-    const hagrid = ISLANDS_OF_ADVENTURE_DIA_14_ITEMS.find(i => i.title.startsWith("Hagrid's"));
-    expect(minutos(hagrid!.time_start)).toBeLessThan(20 * 60);
-  });
-
-  it('cobre as quatro atrações que barram a Gabi com Child Swap', () => {
+  it('cobre as duas atrações que barram a Gabi com Child Swap — as outras duas viraram resgate no dia 16', () => {
     const trocas = ISLANDS_OF_ADVENTURE_DIA_14_ITEMS.filter(i => i.child_switch).map(i => i.title);
-    expect(trocas).toEqual([
-      'The Incredible Hulk Coaster',
-      "Doctor Doom's Fearfall",
-      'Jurassic World VelociCoaster',
-      'Harry Potter and the Forbidden Journey',
-    ]);
+    expect(trocas).toEqual(['The Incredible Hulk Coaster', "Doctor Doom's Fearfall"]);
   });
 
   it('põe a retirada do Express Unlimited antes de qualquer bloco de parque', () => {

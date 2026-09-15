@@ -4,6 +4,7 @@ import { useTrip } from '../../context/TripContext';
 import { useAuth } from '../../context/AuthContext';
 import { deriveAge } from '../../data/mappers/participantMapper';
 import { LEGAL_VERSION } from '../legal/legalTexts';
+import { todayLocalIso } from '../../services/dateUtils';
 
 interface RascunhoParticipante {
   full_name: string;
@@ -39,7 +40,7 @@ export const TripWizard: React.FC = () => {
   const [pessoas, setPessoas] = useState<RascunhoParticipante[]>([participanteVazio()]);
   const [consentimentoMenores, setConsentimentoMenores] = useState(false);
 
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = todayLocalIso();
   const ehMenor = (p: RascunhoParticipante) => Boolean(p.birth_date) && deriveAge(p.birth_date, hoje) < 18;
   const temMenor = pessoas.some(ehMenor);
 

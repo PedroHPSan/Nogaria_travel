@@ -54,6 +54,7 @@ import { useDocumentsData } from '../data/useDocumentsData';
 import { supabase } from '../services/supabaseClient';
 import type { SupabaseLike } from '../data/useTripsData';
 import type { RealtimeClientLike } from '../data/useRealtimeTable';
+import { todayLocalIso } from '../services/dateUtils';
 
 export interface DocumentFile {
   id: string;
@@ -221,7 +222,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // satisfaz RealtimeClientLike (channel/on/subscribe/removeChannel), então o
   // cast segue o mesmo padrão de SupabaseLike acima.
   const realtime = supabase as unknown as RealtimeClientLike;
-  const hoje = new Date().toISOString().split('T')[0];
+  const hoje = todayLocalIso();
 
   const { trips, loading: tripsLoading, createTrip } = useTripsData({
     client,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
 import type { Expense, Participant } from '../../types/database.types';
+import { todayLocalIso } from '../../services/dateUtils';
 
 interface ExpenseModalProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setCategory(initialData.category || 'food');
       setPaidById(initialData.paid_by_id || '');
       setBeneficiaryIds(initialData.beneficiary_ids || []);
-      setDate(initialData.date || new Date().toISOString().split('T')[0]);
+      setDate(initialData.date || todayLocalIso());
       setStatus(initialData.status || 'paid');
     } else {
       setDescription('');
@@ -62,7 +63,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       setCategory('food');
       setPaidById(participants[0]?.id || '');
       setBeneficiaryIds(participants.map(p => p.id));
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(todayLocalIso());
       setStatus('paid');
     }
   }, [initialData, isOpen, participants]);
