@@ -12,6 +12,7 @@ import type { ItineraryItem } from '../../types/database.types';
 import { sortItineraryChronologically } from '../../services/itinerarySort';
 import { participantsBelowMinHeight, shortestMinorWithHeight } from '../../services/eligibility';
 import { buildIcs, buildItineraryJson, inferTripTimeZone } from '../../services/itineraryExport';
+import { todayLocalIso } from '../../services/dateUtils';
 import {
   CalendarDays,
   Plus,
@@ -156,7 +157,7 @@ export const ItineraryView: React.FC = () => {
 
   useEffect(() => {
     if (timelineDate || timelineDates.length === 0) return;
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = todayLocalIso();
     const closest = timelineDates.find(d => d >= todayIso) ?? timelineDates[0];
     setTimelineDate(closest);
     // eslint-disable-next-line react-hooks/exhaustive-deps

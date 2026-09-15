@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
 import type { Task, Decision, Participant } from '../../types/database.types';
+import { todayLocalIso } from '../../services/dateUtils';
 
 interface TaskDecisionModalProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export const TaskDecisionModal: React.FC<TaskDecisionModalProps> = ({
         chosen_decision: decChosen.trim(),
         reason: decReason.trim(),
         decided_by_id: decDecidedById,
-        date: new Date().toISOString().split('T')[0],
+        date: todayLocalIso(),
         financial_impact_usd: decFinancialImpact !== '' ? Number(decFinancialImpact) : undefined,
         is_active: true
       });

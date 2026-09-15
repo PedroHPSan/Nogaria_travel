@@ -18,6 +18,7 @@ import { DreParticipants } from './dre/DreParticipants';
 import { DreTimeline } from './dre/DreTimeline';
 import { KpiCard } from '../../components/ui/KpiCard';
 import type { Expense } from '../../types/database.types';
+import { todayLocalIso } from '../../services/dateUtils';
 import {
   DollarSign,
   TrendingUp,
@@ -131,7 +132,7 @@ export const DREView: React.FC = () => {
         category: cat,
         paid_by_id: participants[0]?.id || '',
         beneficiary_ids: participants.map(p => p.id),
-        date: new Date().toISOString().split('T')[0],
+        date: todayLocalIso(),
         status: 'paid',
       });
     } else {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BaseModal } from './BaseModal';
 import type { GiftCard, Participant } from '../../types/database.types';
 import { calculateGiftCardNetCost } from '../../services/giftCardCalculator';
+import { todayLocalIso } from '../../services/dateUtils';
 
 interface GiftCardModalProps {
   isOpen: boolean;
@@ -84,7 +85,7 @@ export const GiftCardModal: React.FC<GiftCardModalProps> = ({
       current_balance: currentBalance !== '' ? Number(currentBalance) : Number(nominalValue),
       expiry_date: expiryDate || undefined,
       status,
-      purchase_date: new Date().toISOString().split('T')[0],
+      purchase_date: todayLocalIso(),
       notes: notes.trim() || undefined
     });
     onClose();

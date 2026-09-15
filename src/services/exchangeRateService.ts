@@ -1,4 +1,5 @@
 import type { Currency } from '../types/database.types';
+import { todayLocalIso } from './dateUtils';
 
 export type ExchangeRateSource = 'ptax' | 'market' | 'cache' | 'manual' | 'default';
 
@@ -25,7 +26,7 @@ const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
 /** Uma PTAX mais velha que isto (feriadão + fim de semana) já não representa "hoje". */
 const MAX_STORED_RATE_AGE_DAYS = 7;
 
-const todayIso = () => new Date().toISOString().split('T')[0];
+const todayIso = () => todayLocalIso();
 
 /**
  * Cliente mínimo para ler `exchange_rates` — estrutural, para o teste injetar

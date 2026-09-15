@@ -273,17 +273,34 @@ function preloadedItineraryLines(items: Record<string, unknown>[]): string[] {
   return lines;
 }
 
+/**
+ * Dia da semana e horário locais de `now`, no fuso do tenant, prontos para o
+ * prompt. Não é decoração: 2026 é posterior ao corte de treino do modelo, e
+ * pedir para o Gemini calcular "que dia da semana é 14/09/2026" ou inferir a
+ * hora atual a partir só da data é pedir para ele chutar — foi assim que o
+ * bot passou a errar dia e horário na resposta, um erro que `dateIso` sozinho
+ * não corrige porque não diz nem o dia da semana nem "agora". Os dois valores
+ * saem do mesmo `now`/`timeZone` que já geraram `dateIso` (via `localDateIso`
+ * no chamador), então os três nunca podem se contradizer entre si.
+ */
+function localWeekdayAndTime(now: Date, timeZone: string): { weekday: string; time: string } {
+  const weekday = new Intl.DateTimeFormat('pt-BR', { timeZone, weekday: 'long' }).format(now);
+  const time = new Intl.DateTimeFormat('pt-BR', { timeZone, hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+  return { weekday, time };
+}
+
 /** System prompt do bot: prefixo estático + contexto do dia já resolvido. */
-export function buildSystemPrompt(ctx: TripContext, dateIso: string, timeZone: string): string {
+export function buildSystemPrompt(ctx: TripContext, dateIso: string, timeZone: string, now: Date): string {
   const trip = ctx.trip;
   const roster = ctx.participants
     .map(p => `${p.nickname ?? p.full_name}${p.height_cm ? ` (${p.height_cm}cm)` : ''}${p.is_minor ? ' [menor]' : ''}`)
     .join(', ');
+  const { weekday, time } = localWeekdayAndTime(now, timeZone);
 
   const dynamic: string[] = [
     '',
     '--- CONTEXTO DE HOJE ---',
-    `Data de hoje: ${dateIso}.`,
+    `Agora é ${weekday}, ${dateIso}, ${time} (horário local, fuso ${timeZone}). Use SEMPRE estes três valores ao falar de dia da semana, data ou hora atual — nunca calcule nenhum deles por conta própria: sua base de treinamento não cobre 2026 de forma confiável e o cálculo manual de dia da semana costuma sair errado.`,
     trip
       ? `Viagem ativa: "${trip.title}" para ${trip.destination_main}, de ${trip.start_date} a ${trip.end_date}. Moeda base: ${trip.currency_base}.`
       : 'Nenhuma viagem ativa encontrada no momento.',

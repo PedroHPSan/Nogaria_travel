@@ -4,6 +4,7 @@ import { newId } from '../../services/ids';
 import { makeDefaultAssumptions } from '../../services/purchase/purchaseAssumptions';
 import { supersede } from '../../services/purchase/priceQuotes';
 import { INITIAL_PRICE_QUOTES } from '../../services/initialMockData';
+import { todayLocalIso } from '../../services/dateUtils';
 
 function loadAssumptions(
   storageKey: string,
@@ -16,7 +17,7 @@ function loadAssumptions(
 }
 
 export function usePurchasesState(storageKey: string, tripId: string, usdBrlRate: number) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayLocalIso();
 
   const [priceQuotes, setPriceQuotes] = useState<PriceQuote[]>(() => {
     const saved = localStorage.getItem(`${storageKey}_price_quotes`);

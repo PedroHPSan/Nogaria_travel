@@ -220,7 +220,7 @@ describe('buildSystemPrompt', () => {
       nextFlight: null,
     };
 
-    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
+    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York', new Date('2026-08-25T15:00:00Z'));
     expect(prompt).toContain('NOGÁRIA USA 2026');
     expect(prompt).toContain('Gabi (100cm)');
     expect(prompt).toContain('Rider Switch');
@@ -381,7 +381,7 @@ describe('buildSystemPrompt — pré-carregamento do dia', () => {
   };
 
   it('injeta roteiro, tarefas e voo do dia — o que elimina uma rodada de tool', () => {
-    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
+    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York', new Date('2026-08-25T15:00:00Z'));
     expect(prompt).toContain('09:00-11:00 Space Mountain (Magic Kingdom) [altura mín. 112cm]');
     expect(prompt).toContain('Comprar dólar');
     expect(prompt).toContain('LA8180');
@@ -391,22 +391,28 @@ describe('buildSystemPrompt — pré-carregamento do dia', () => {
   it('converte o horário do voo para o fuso do tenant, não expõe o UTC cru', () => {
     // 10:30 UTC = 06:30 em America/New_York (EDT). Servir o valor cru fazia o
     // bot informar "10:30" como se já fosse hora local de Orlando.
-    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
+    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York', new Date('2026-08-25T15:00:00Z'));
     expect(prompt).not.toContain('2026-08-26T10:30:00Z');
     expect(prompt).toContain('06:30');
   });
 
   it('mantém o bloco estático como prefixo, antes de qualquer dado variável', () => {
-    const a = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York');
-    const b = buildSystemPrompt({ ...ctx, todayItems: [], tasksDueSoon: [] }, '2026-08-30', 'America/New_York');
+    const a = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York', new Date('2026-08-25T15:00:00Z'));
+    const b = buildSystemPrompt({ ...ctx, todayItems: [], tasksDueSoon: [] }, '2026-08-30', 'America/New_York', new Date('2026-08-30T15:00:00Z'));
     const marker = '--- CONTEXTO DE HOJE ---';
     // O prefixo idêntico é o que o cache implícito do Gemini reaproveita.
     expect(a.slice(0, a.indexOf(marker))).toBe(b.slice(0, b.indexOf(marker)));
   });
 
   it('marca dia livre quando não há atividades', () => {
-    const prompt = buildSystemPrompt({ ...ctx, todayItems: [] }, '2026-08-25', 'America/New_York');
+    const prompt = buildSystemPrompt({ ...ctx, todayItems: [] }, '2026-08-25', 'America/New_York', new Date('2026-08-25T15:00:00Z'));
     expect(prompt).toContain('nenhuma atividade cadastrada (dia livre)');
+  });
+
+  it('injeta dia da semana e horário local calculados pelo servidor — 25/08/2026 é terça, e o modelo nunca deve calcular isso sozinho (2026 é pós-corte de treino)', () => {
+    const prompt = buildSystemPrompt(ctx, '2026-08-25', 'America/New_York', new Date('2026-08-25T15:00:00Z'));
+    expect(prompt).toContain('Agora é terça-feira, 2026-08-25, 11:00 (horário local, fuso America/New_York)');
+    expect(prompt).toContain('nunca calcule nenhum deles por conta própria');
   });
 });
 

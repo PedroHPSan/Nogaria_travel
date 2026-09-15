@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BaseModal } from './BaseModal';
 import type { Market, PriceQuote, PurchaseItem } from '../../types/database.types';
+import { todayLocalIso } from '../../services/dateUtils';
 
 interface Props {
   isOpen: boolean;
@@ -16,7 +17,7 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
   const [price, setPrice] = useState<number | ''>('');
   const [priceKind, setPriceKind] = useState<PriceQuote['price_kind']>('list');
   const [url, setUrl] = useState('');
-  const [observedAt, setObservedAt] = useState(new Date().toISOString().split('T')[0]);
+  const [observedAt, setObservedAt] = useState(todayLocalIso());
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
       setPrice('');
       setPriceKind('list');
       setUrl('');
-      setObservedAt(new Date().toISOString().split('T')[0]);
+      setObservedAt(todayLocalIso());
       setError('');
     }
   }, [isOpen]);
@@ -37,7 +38,7 @@ export const PriceQuoteModal: React.FC<Props> = ({ isOpen, onClose, onSave, item
     if (!storeName.trim()) return setError('Informe a loja.');
     if (price === '' || Number(price) <= 0) return setError('Preço deve ser maior que zero.');
     if (!observedAt) return setError('Informe a data da cotação.');
-    if (observedAt > new Date().toISOString().split('T')[0]) return setError('Data não pode ser futura.');
+    if (observedAt > todayLocalIso()) return setError('Data não pode ser futura.');
 
     onSave({
       trip_id: tripId,
