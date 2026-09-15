@@ -10,6 +10,47 @@ no commit correspondente — ver "Versionamento" no `CLAUDE.md`.
 > "primeira versão" do produto — o app já estava em uso real pela família
 > (issues #18–#59, ver `roadmap-ia-issues-2026-09` na memória do projeto).
 
+## [1.5.0] - 2026-09-15
+
+### Adicionado
+- **Relatório do roteiro reprogramado por WhatsApp** (#67): edge function
+  `trip-report`, disparo manual (não é cron periódico como o `daily-digest`),
+  envia o detalhamento dia a dia de um intervalo de datas — um dia por
+  mensagem, porque o texto de vários dias juntos estoura o limite de 4096
+  caracteres do WhatsApp.
+- **Cron do bot migrado de pg_cron para Vercel Cron** (#68): `api/cron/
+  {daily-digest,activity-reminders,activity-checkins}.ts` + `crons` em
+  `vercel.json`, nos mesmos horários que os jobs de pg_cron usavam. Motivo: a
+  conta do GitHub entrou em billing hold, derrubando o único jeito de forçar
+  um envio fora de hora (`workflow_dispatch` de `supabase.yml`). Os pg_cron
+  antigos foram desagendados (`20260914190000_move_cron_to_vercel.sql`) —
+  rodar os dois lados ao mesmo tempo duplicaria toda mensagem da família.
+
+### Corrigido
+- **Dia 14/09, quinta versão: saída antecipada do parque.** A família precisou
+  deixar o Islands of Adventure logo depois do Ripsaw Falls (15h05) por um
+  imprevisto e não conseguiu voltar. Três atrações fortes ficaram pra trás —
+  Forbidden Journey, Hagrid's e o VelociCoaster (pedido nº1 da Débora) — e
+  viraram um bloco de resgate via Hogwarts Express no dia 16 (09h20-11h35),
+  cortando Fast & Furious, Horror Make-Up Show, Kang & Kodos e E.T. Adventure
+  do anel da tarde para não estourar o fechamento das 17h do Halloween Horror
+  Nights.
+- **Bot e Copiloto web erravam dia da semana e hora atual.** `buildSystemPrompt`/
+  `buildWebSystemPrompt` só informavam a data ISO pro Gemini, nunca o dia da
+  semana nem a hora local — o modelo calculava os dois sozinho, e 2026 é
+  posterior ao corte de treino dele, então o palpite saía errado. Os dois
+  prompts agora recebem "Agora é `<dia da semana>`, `<data>`, `<hora>`" já
+  resolvidos no servidor.
+- **10 arquivos do frontend calculavam "hoje" em UTC** (`new
+  Date().toISOString().split('T')[0]`) em vez do fuso do navegador — em
+  Orlando (UTC-4/-5) a virada de dia acontecia cedo demais na tela, a partir
+  das 20h/21h locais. Novo `src/services/dateUtils.ts::todayLocalIso()`
+  centraliza a leitura correta.
+- **Duas funções de cron novas crashavam em toda invocação** (#69, #71):
+  `api/tsconfig.json` gerava CommonJS sob `"type": "module"` do
+  `package.json`, e a comparação do secret de autenticação não era
+  timing-safe (#70, achado pelo review de segurança automático).
+
 ## [1.4.0] - 2026-09-14
 
 ### Adicionado
