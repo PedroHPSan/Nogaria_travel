@@ -68,8 +68,33 @@ import { buildOperationalDay, type OperationalRow } from './shared';
  * duas trocas seguidas. Nada depois das 14h40 se move — o Ripsaw Falls continua
  * abrindo o Toon Lagoon no mesmo horário.
  *
- * `reminderMinutesBefore: 0` desliga o aviso do item — só 7 momentos de
- * decisão avisam.
+ * **Quinta versão, dia interrompido no Toon Lagoon:** a família precisou
+ * deixar o parque por um imprevisto logo depois do Ripsaw Falls (15h05) e não
+ * conseguiu voltar — o dia para de vez aqui, em vez de manter o resto do
+ * plano como se fosse acontecer. Ripsaw Falls e tudo antes dele viram
+ * `completed`; nada depois disso é reagendado dentro do próprio 14/09, porque
+ * não há mais parque hoje para reagendar.
+ *
+ * A pergunta real não é "o que fazer à tarde" — é o que fazer com o resto do
+ * Islands of Adventure que ficou pra trás: Popeye & Bluto's Bilge-Rat Barges,
+ * Skull Island: Reign of Kong, Camp Jurassic, Flight of the Hippogriff,
+ * Ollivanders/Honeydukes de Hogsmeade e o passeio final pelo Lost Continent.
+ * Três atrações fortes viram resgate deliberado no dia 16
+ * (`universalStudiosDia16.ts`, bloco "Hogsmeade & Jurassic Park de resgate"):
+ * Harry Potter and the Forbidden Journey, Hagrid's Magical Creatures
+ * Motorbike Adventure e Jurassic World VelociCoaster — nessa ordem de
+ * prioridade, porque o VelociCoaster é o pedido nº1 da Débora e o Hagrid's é a
+ * melhor montanha-russa do parque, mas os dois cabem no Hogwarts Express desde
+ * que o Forbidden Journey (rápido, com Express) abra caminho. As demais —
+ * Bilge-Rat Barges, Reign of Kong, Camp Jurassic, Hippogriff e o Ollivanders
+ * de Hogsmeade — ficam de fora da viagem: o dia 16 já é um dia de embarque
+ * para Miami com deadline duro (Halloween Horror Nights às 17h), e a Débora
+ * tem sua própria versão do Ollivanders no Beco Diagonal no mesmo dia. Não é
+ * negação do que se perdeu — é a mesma disciplina do resto do roteiro, que
+ * corta o B/C antes de arriscar o S.
+ *
+ * `reminderMinutesBefore: 0` desliga o aviso do item — só 5 momentos de
+ * decisão avisam nesta versão (o dia encolheu junto com os blocos).
  */
 const ROWS: OperationalRow[] = [
   // ---------- Já feito: Celebration Suites → Royal Pacific ----------
@@ -149,138 +174,60 @@ const ROWS: OperationalRow[] = [
     timeIsEstimated: false, reminderMinutesBefore: 0,
   },
 
-  // ---------- AGORA ----------
+  // ---------- Último bloco cumprido ----------
   {
     order: 9, start: '14:20', end: '14:40', title: 'The Amazing Adventures of Spider-Man',
     category: 'park', area: 'Marvel Super Hero Island', itemType: 'attraction', priority: 'S',
     minHeightCm: 102, lightningLane: 'express', lightningLaneRank: 3,
     description: 'Simulador 3D sobre trilho — a atração forte de maior alcance do dia, e a primeira em que os 4 andam juntos.',
-    notes: 'Bloco de agora. Saiu da frente do Hulk e do Doctor Doom para o lugar deles: a família chegou ao Marvel e foi direto nas duas que barram a Gabi, então o Homem-Aranha vira a recompensa dela logo depois das duas trocas seguidas. Ainda dentro do Marvel — nenhuma caminhada extra.',
+    notes: 'Feito. Saiu da frente do Hulk e do Doctor Doom para o lugar deles: a família chegou ao Marvel e foi direto nas duas que barram a Gabi, então o Homem-Aranha virou a recompensa dela logo depois das duas trocas seguidas.',
+    status: 'completed',
     reminderMinutesBefore: 0,
   },
-
-  // ---------- Toon Lagoon: os dois blocos molhados, no pico do calor ----------
   {
     order: 10, start: '14:40', end: '15:05', title: "Dudley Do-Right's Ripsaw Falls",
     category: 'park', area: 'Toon Lagoon', itemType: 'attraction', priority: 'A',
     minHeightCm: 112, lightningLane: 'express', lightningLaneRank: 5,
     description: 'Queda de 15m em tronco. Molha de verdade — não é respingo.',
-    notes: 'Barra de 44in = 111,8cm: a Gabi passa por 2mm, de tênis. Medir na entrada ANTES de entrar na fila, para não descobrir na plataforma. Celulares e a mochila no locker, não no colo. É o pico do calor do dia — é agora que os dois blocos molhados fazem sentido.',
-    planB: 'Se ela não passar na medição, ela e um adulto vão ao Me Ship, the Olive (sem altura mínima, ao lado, com canhões de água) e o grupo se reencontra na saída do tronco.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 11, start: '15:05', end: '15:25', title: "Popeye & Bluto's Bilge-Rat Barges",
-    category: 'park', area: 'Toon Lagoon', itemType: 'attraction', priority: 'A',
-    minHeightCm: 107, lightningLane: 'express', lightningLaneRank: 6,
-    description: 'Bote circular em corredeira — o mais molhado do complexo Universal, sem exagero.',
-    notes: 'Gabi (112cm) passa. Encharca todo mundo, então é o primeiro bloco a cair se alguém estiver reclamando do frio do ar-condicionado. Poncho ajuda pouco aqui.',
-    status: 'optional',
-    planB: 'Se o grupo não topar molhar de novo, pular e alongar a pausa seguinte para 40 min.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 12, start: '15:25', end: '15:45', title: 'Pausa — secar, banheiro e sorvete',
-    category: 'rest', area: 'Toon Lagoon',
-    description: 'Bloco novo, comprado com os 35 min ganhos no balcão do hotel.',
-    notes: 'Não é folga: é o que segura a Gabi (4 anos) de pé até as 20h. Banheiro, troca de camiseta, garrafas cheias e protetor solar. Se o dia estourar o relógio, este bloco encolhe antes de qualquer atração.',
+    notes: 'Feito — última atração do dia. Barra de 44in = 111,8cm: a Gabi passou por 2mm, de tênis.',
+    status: 'completed',
     reminderMinutesBefore: 0,
   },
 
-  // ---------- Skull Island e Jurassic Park ----------
+  // ---------- Saída por imprevisto ----------
   {
-    order: 13, start: '15:45', end: '16:05', title: 'Skull Island: Reign of Kong',
-    category: 'park', area: 'Skull Island', itemType: 'attraction', priority: 'A',
-    minHeightCm: 91, lightningLane: 'express', lightningLaneRank: 7,
-    description: 'Caminhão-simulador em meio a animatrônicos em tamanho real. Escuro, alto e com sustos reais.',
-    notes: 'A Gabi passa na altura (91cm), mas 4 anos é a idade em que esta atração assusta de verdade. Decidir na entrada, olhando a fila temática — se ela travar ali, já é resposta.',
-    planB: 'Se a Gabi recusar, ela e um adulto seguem direto para o Camp Jurassic (5 min adiante) e o grupo se reencontra na saída do Kong.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 14, start: '16:05', end: '16:35', title: 'Jurassic World VelociCoaster',
-    category: 'park', area: 'Jurassic Park', itemType: 'attraction', priority: 'S',
-    minHeightCm: 130, childSwitch: true, lightningLane: 'express', lightningLaneRank: 1,
-    description: 'A melhor montanha-russa do complexo Universal e o pedido nº 1 da Débora desde o planejamento.',
-    notes: 'Gabi (112cm) fora — terceira troca do dia, e a que mais compensa fazer com calma: a sala de Child Swap fica com vista para o lançamento. Nada solto nos bolsos; lockers gratuitos na entrada.',
-    recommendedWindow: 'Meio da tarde, com luz para a vista do topo e antes da fila de fim de dia',
-    reminderMinutesBefore: 20,
-  },
-  {
-    order: 15, start: '16:35', end: '16:50', title: 'Raptor Encounter',
-    category: 'park', area: 'Jurassic Park', itemType: 'character', priority: 'A',
-    description: 'Encontro com o velociraptor Blue, com tratador em cena — o melhor bloco do dia para foto com a Gabi.',
-    notes: 'Sem altura mínima e sem fila paga. O raptor avança na direção de quem se mexe: segurar a Gabi no colo na primeira aproximação.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 16, start: '16:50', end: '17:15', title: 'Camp Jurassic e Discovery Center',
-    category: 'park', area: 'Jurassic Park', itemType: 'experience', priority: 'B',
-    description: 'Playground temático em três níveis (redes, cavernas, canhões de água) e o centro de visitantes com o laboratório de DNA.',
-    notes: 'Onde a Gabi gasta energia sem fila, antes das 2h30 finais em Hogsmeade. O Pteranodon Flyers fica ao lado e a Gabi habilita um adulto (a regra é 92-137cm), mas cobra 30-40 min de fila SEM Express por 1 min de voo: só se a espera estiver abaixo de 20 min.',
-    status: 'optional', reminderMinutesBefore: 0,
-  },
-
-  // ---------- Hogsmeade: as últimas 2h50 ----------
-  {
-    order: 17, start: '17:15', end: '17:30', title: 'Travessia Jurassic Park → Hogsmeade',
-    category: 'transit', area: 'Deslocamento',
-    notes: 'A ponte de Jurassic Park cai direto no vilarejo — é a melhor entrada do parque, vale chegar olhando para o castelo e não para o celular.',
-    reminderMinutesBefore: 10,
-  },
-  {
-    order: 18, start: '17:30', end: '18:10', title: 'Jantar no Three Broomsticks + Butterbeer',
-    category: 'restaurant', area: 'Hogsmeade',
-    description: 'Quick service dentro do salão do Três Vassouras: frango assado, costela e shepherd\'s pie. O restaurante temático mais bem resolvido de Orlando.',
-    notes: 'Mobile order pelo app ainda na travessia — às 17h30 o salão enche. Butterbeer gelada (não a frozen) se a fila da frozen estiver grande. ~US$ 90 para os 4. Jantar aqui elimina uma travessia inteira e entrega Hogsmeade iluminado para o resto da noite.',
-    recommendedArrivalMinBefore: 10, timeIsEstimated: false, reminderMinutesBefore: 15,
-  },
-  {
-    order: 19, start: '18:10', end: '18:40', title: 'Harry Potter and the Forbidden Journey',
-    category: 'park', area: 'Hogsmeade', itemType: 'attraction', priority: 'S',
-    minHeightCm: 122, childSwitch: true, lightningLane: 'express', lightningLaneRank: 2,
-    description: 'Braço robótico dentro do castelo de Hogwarts — e a fila atravessa a estufa, o escritório do Dumbledore e a sala dos retratos falantes.',
-    notes: 'Gabi (112cm) fora — quarta e última troca do dia. Quem fizer o Child Swap deve pedir para percorrer a fila do castelo mesmo sem andar: ela vale por si só, e é a única parte que a Gabi pode ver.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 20, start: '18:40', end: '19:00', title: 'Flight of the Hippogriff',
-    category: 'park', area: 'Hogsmeade', itemType: 'attraction', priority: 'A',
-    minHeightCm: 91, lightningLane: 'express', lightningLaneRank: 9,
-    description: 'Montanha-russa familiar que passa pela cabana do Hagrid e pelo Bicuço.',
-    notes: 'A única de Hogsmeade em que a Gabi anda — e a compensação direta das três atrações que acabaram de barrá-la.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 21, start: '19:00', end: '19:25', title: 'Ollivanders, Honeydukes e Dervish & Banges',
-    category: 'park', area: 'Hogsmeade', itemType: 'experience', priority: 'A',
-    description: 'Cerimônia de escolha da varinha (uma criança por sessão), doces do Honeydukes e o vilarejo já sob a luz noturna.',
-    notes: 'Conferir o horário da última sessão do Ollivanders ao entrar na loja — em noite de fechamento às 20h costuma ser por volta das 19h40. Varinha interativa ~US$ 65: decidir aqui, é o pedido recorrente da Débora, e ela volta a funcionar no Beco Diagonal no dia 16.',
-    reminderMinutesBefore: 0,
-  },
-  {
-    order: 22, start: '19:25', end: '20:05', title: "Hagrid's Magical Creatures Motorbike Adventure",
-    category: 'park', area: 'Hogsmeade', itemType: 'attraction', priority: 'S',
-    minHeightCm: 122,
-    description: 'Única atração forte do parque que NÃO aceita Universal Express — por isso é o último bloco do dia.',
-    notes: 'Entrar na fila até 19h50, com folga sobre o fechamento das 20h: quem já está na fila anda, mesmo depois de o parque fechar. Débora vai com um adulto; a Gabi fica com o outro nas lojas de Hogsmeade, que atendem ~30 min depois do fechamento, e todos se reencontram na saída do vilarejo.',
-    planB: 'Se a fila do Hagrid\'s já estiver fechada (acontece quando a espera ultrapassa o horário do parque) ou se ele estiver em pane — o que é frequente —, a alternativa é o Hogwarts Express no dia 16, que devolve a família ao Hogsmeade; mas aí é sem Express e com o relógio do Halloween Horror Nights correndo.',
-    recommendedWindow: 'Últimos 30 minutos antes do fechamento das 20h',
-    reminderMinutesBefore: 15,
-  },
-
-  // ---------- Volta ----------
-  {
-    order: 23, start: '20:05', end: '20:40', title: 'Saída pelo Lost Continent e Port of Entry',
+    order: 11, start: '15:05', end: '15:40', title: 'Saída do parque por imprevisto e volta ao Royal Pacific',
     category: 'transit', area: 'Deslocamento',
     location: "Universal's Islands of Adventure → Universal's Loews Royal Pacific Resort",
-    notes: 'Caminho de saída passa pelo Lost Continent — parar 2 min na Mystic Fountain, a fonte que conversa com quem passa, é o melhor fecho de dia para a Gabi. Compras de última hora na Islands of Adventure Trading Co., no Port of Entry, que fica aberta depois do fechamento.',
-    reminderMinutesBefore: 10,
+    description: 'O dia parou aqui: a família precisou deixar o Islands of Adventure logo depois do Ripsaw Falls e não conseguiu voltar hoje.',
+    notes: 'Water taxi ou trilha a pé de volta ao hotel, ~12 min. Os cartões Express Unlimited dos 4 continuam valendo no dia 16 (DEC-002/37654214702) — nada se perde por não terem sido usados hoje.',
+    timeIsEstimated: false, reminderMinutesBefore: 0,
   },
   {
-    order: 24, start: '20:40', end: '21:20', title: 'Check-in do quarto, malas e preparação do dia 15',
+    order: 12, start: '15:40', end: '16:00', title: 'Check-in do quarto e malas do Bell Services',
     category: 'rest', area: 'Hotel', location: "Universal's Loews Royal Pacific Resort",
-    notes: 'Retirar as malas do Bell Services. Amanhã é Epic Universe com Early Park Admission às 9h e SEM Express — despertador às 7h, roupa e mochila separadas hoje à noite, e os cartões Express guardados fora da mala (eles voltam a valer no dia 16).',
+    description: 'O quarto libera às 16h — a saída antecipada do parque coincide quase exatamente com o horário normal de check-in.',
+    notes: 'Retirar as malas deixadas no Bell Services pela manhã.',
+    timeIsEstimated: false, reminderMinutesBefore: 0,
+  },
+  {
+    order: 13, start: '16:00', end: '18:30', title: 'Tarde livre no resort — piscina e Wantilan Luau (se houver vaga)',
+    category: 'rest', area: 'Hotel', location: "Universal's Loews Royal Pacific Resort",
+    description: 'A tarde que ninguém planejou vira folga de verdade em vez de tempo perdido: piscina com tobogã, praia artificial e lazy river do Royal Pacific.',
+    notes: 'Vale ligar para a recepção perguntando se há mesa no Wantilan Luau desta noite (luau havaiano com jantar, às quintas e domingos normalmente — conferir o dia de hoje) como alternativa ao jantar simples. Gabi (4 anos) se beneficia mais de um fim de tarde parado do que de mais estímulo.',
+    status: 'optional', reminderMinutesBefore: 0,
+  },
+  {
+    order: 14, start: '18:30', end: '19:30', title: 'Jantar — Bahama Breeze ou Jake\'s American Bar no CityWalk',
+    category: 'restaurant', area: 'CityWalk',
+    description: 'O Three Broomsticks ficou para trás com o resto de Hogsmeade — CityWalk fica a 10 min a pé do hotel e cobre o jantar sem exigir outro deslocamento de carro.',
+    notes: 'Mobile order não se aplica fora dos parques; reservar pelo app do Universal Orlando Resort ou chegar sem fila por volta das 18h30. Butterbeer não está disponível fora dos parques.',
+    recommendedArrivalMinBefore: 10, reminderMinutesBefore: 15,
+  },
+  {
+    order: 15, start: '19:30', end: '20:30', title: 'Malas, roupas e preparação do dia 15',
+    category: 'rest', area: 'Hotel', location: "Universal's Loews Royal Pacific Resort",
+    notes: 'Amanhã é Epic Universe com Early Park Admission às 9h e SEM Express — despertador às 7h, roupa e mochila separadas hoje à noite, e os cartões Express guardados fora da mala (eles voltam a valer no dia 16, no Universal Studios/Islands of Adventure).',
     reminderMinutesBefore: 0,
   },
 ];
