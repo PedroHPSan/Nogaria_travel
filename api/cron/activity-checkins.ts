@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { proxyToSupabaseFunction } from './_shared';
+import { proxyToSupabaseFunction } from './_shared.js';
 
 // Vercel Cron: '5,20,35,50 * * * *' — mesmo passo de 15min do antigo pg_cron
 // `whatsapp-activity-checkins`.
