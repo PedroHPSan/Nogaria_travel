@@ -1,3 +1,6 @@
+> **Status: concluído (PR #1)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. AuthGate/AuthScreen/OnboardingScreen em `src/features/auth/`; entregue na mesma branch do PR #1 (commit 0d54f0c).
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Supabase Auth & Multi-Tenant Onboarding Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -8,7 +11,7 @@
 
 **Tech Stack:** React 19, TypeScript, `@supabase/supabase-js` (already a dependency — no new packages), Supabase Postgres/Auth, Tailwind v4 (existing `glass-card` utilities).
 
-**Spec:** `docs/superpowers/specs/2026-07-26-supabase-auth-design.md`
+**Spec:** `docs/archive/2026-07-26-supabase-auth-design.md`
 
 ## Global Constraints
 

@@ -1,3 +1,6 @@
+> **Status: concluído (PR #4)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. `DayTimeline.tsx`, `MonthCalendar.tsx`, `coverageEngine.ts`.
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Roteiro dos Parques — Fatia 2: Timeline + Calendário Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

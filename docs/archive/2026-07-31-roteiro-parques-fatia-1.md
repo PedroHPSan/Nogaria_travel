@@ -1,3 +1,6 @@
+> **Status: concluído (PR #3)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. Catálogo em `src/services/roteiro/`.
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Roteiro dos 7 parques — Fatia 1: modelo de dados + ingestão — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

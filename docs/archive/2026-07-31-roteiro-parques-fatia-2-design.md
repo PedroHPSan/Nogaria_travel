@@ -1,7 +1,10 @@
+> **Status: concluído (PR #4)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. Motor de recálculo (fora de escopo aqui) → #73.
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Roteiro dos 7 parques — Fatia 2: timeline + calendário + cobertura
 
 **Data:** 2026-07-31
-**Escopo:** segunda de cinco fatias do projeto "roteiro sempre cronológico" (ver `docs/superpowers/specs/2026-07-31-roteiro-parques-fatia-1-design.md` para a decomposição completa).
+**Escopo:** segunda de cinco fatias do projeto "roteiro sempre cronológico" (ver `docs/archive/2026-07-31-roteiro-parques-fatia-1-design.md` para a decomposição completa).
 
 ## Contexto
 

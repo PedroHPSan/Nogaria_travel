@@ -75,9 +75,9 @@ Optional repo *variable* `SUPABASE_PROJECT_REF` overrides the hard-coded `bkrqhi
 
 Manual fallback, still correct when CI is unavailable: `vercel deploy --prod --yes` from a clean `main` checkout, `supabase db push --linked`, `supabase functions deploy <name>`. Production URL is **`https://nogaria-travel.vercel.app`** — treat this as the stable canonical URL (not the custom domain, see below). The Vercel env vars are set in the dashboard (Project Settings → Environment Variables), not derived from anything in this repo — keep them in sync with `.env` by hand if the Supabase project ever changes.
 
-The custom domain **`nogaria.store`** (registered via Locaweb) is attached to the Vercel project but currently broken (DNS/registrar-side issue, tracked as a support ticket with Locaweb — not a Vercel or app-code problem). Once fixed, it should become the primary URL; until then, use the `.vercel.app` one everywhere (including Supabase's Auth URL Configuration, below).
+O domínio `nogaria.store` (Locaweb) está anexado ao projeto Vercel, mas o DNS não está funcional; use a URL `.vercel.app` em tudo (inclusive na Auth URL Configuration do Supabase).
 
-**GitHub Actions em billing hold (desde 14/09/2026): os dois workflows acima não rodam.** Nem o push-trigger de `deploy.yml`/`supabase.yml` nem o `workflow_dispatch` manual funcionam enquanto a conta estiver bloqueada — use o fallback manual logo abaixo (`vercel deploy --prod --yes`, `supabase db push --linked`, `supabase functions deploy <name>`) até o billing ser resolvido. O cron recorrente do bot **não** depende disso — ver a próxima seção.
+Se os workflows do GitHub Actions não rodarem (ex.: billing da conta), use o fallback manual acima; histórico de execuções em Actions.
 
 ### Cron do bot: Vercel Cron, não mais pg_cron (desde 2026-09-14)
 
@@ -220,18 +220,16 @@ A resposta da família é resolvida pelo chat normal (Gemini function calling), 
 
 `reschedule_itinerary_item` e `mark_itinerary_item_done` limpam a linha de `itinerary_item_outcomes` do item ao aplicar (reencaixado ou marcado concluído por fora do check-in = não é mais pendência). Tabela nova `itinerary_item_outcomes` (`pending`/`skipped`/`cancelled`, unique por `itinerary_item_id`) e `whatsapp_messages.kind` ganhou `'checkin'` (mesmo motivo de `digest`/`reminder`: não deve entrar no histórico de chat do Gemini).
 
-**Gap conhecido:** um item cancelado (`status='cancelled'`) continua existindo em `itinerary_items` sem nenhuma marcação visual no app — `ItineraryView`/`DayTimeline` não sabem ler `itinerary_item_outcomes` ainda. Só afeta o bot por enquanto.
-
 ## LGPD, franquia e isolamento (2026-09-09)
 
-Resolvidas nesta passada: #20, #27, #31, #32, #33, #34, #35, #36. O que cada uma deixou no código:
+Resolvidas nesta passada: #20, #27, #31, #32, #33, #34. A engenharia de #35 e #36 também está no código, mas as duas issues **continuam abertas** com pendências externas (secrets do CI e revisão jurídica) → #35, #36. O que cada uma deixou no código:
 
 - **Consentimento e termos (#36).** `participants.guardian_consent_at/by/version` guardam o consentimento específico do responsável (LGPD art. 14), obrigatório no `ParticipantModal` e no `TripWizard` para qualquer menor e preservado na edição. `profiles.terms_accepted_at/version` + `ConsentScreen` (entre login e app, em `AuthGate`) cobrem senha, magic link e Google; subir `LEGAL_VERSION` em `src/features/legal/legalTexts.ts` reabre o aceite para todo mundo. Os textos (política + termos) estão nesse arquivo com os campos do controlador entre colchetes e `LEGAL_IS_DRAFT = true` até a revisão jurídica — trocar os dois antes de aceitar usuário externo. Exclusão completa: RPC `delete_tenant(p_tenant_id)` (admin, `SECURITY DEFINER`, cascata em todas as tabelas, inclusive `whatsapp_messages`/`ai_usage_logs`), exposta em Conta → Privacidade e dados. Retenção: `whatsapp_configs.message_retention_days` (default 90) e `purge_expired_whatsapp_data()` em pg_cron diário (sem Vault) apagam mensagens e anonimizam o telefone em `ai_usage_logs` N dias depois da última viagem do tenant. Minimização: `tripContext.ts` não seleciona mais `birth_date`; o prompt recebe só `[menor]` + altura.
 - **Franquia do bot (#27).** `plan_message_quota(plan)` (free 50 / family 300 / pro 1500 / enterprise ilimitado) com override em `whatsapp_configs.monthly_message_quota`; `_shared/quota.ts` é puro e testado. O webhook conta as mensagens recebidas do mês (fronteira no fuso do tenant) *depois* do insert idempotente e faz corte suave: ao estourar, uma mensagem por dia por telefone com a data de renovação; a partir de 90%, um rodapé de aviso (também 1×/dia), marcado em `whatsapp_messages.payload.quota`. Custo por tenant/mês: view `tenant_monthly_ai_costs` (`security_invoker`, respeita RLS).
 - **Configuração do bot na UI (#20).** `useWhatsappConfigData` + `WhatsAppConfigModal` (Conta → Bot do WhatsApp, admin edita) fazem upsert por `tenant_id` — exige o `unique (tenant_id)` de `20260909150000`. `whatsapp_phone` é editável no `ParticipantModal`.
 - **Isolamento (#35).** `npm run test:isolation` roda `tests/isolation/tenantIsolation.test.ts` contra o projeto real (cria/apaga usuários e tenants com prefixo `isolation-`); precisa de `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`. `.github/workflows/ci.yml` roda lint/build/test em todo push e PR e, depois, esse job — os três secrets precisam existir em Settings → Secrets do repositório, senão ele só avisa e pula.
 
-**Deploy pendente depois do merge** (desde 14/09/2026 o push em `main` dispara isto sozinho via `.github/workflows/supabase.yml`; os comandos abaixo são o fallback manual): `supabase db push --linked` (migrations `20260909120000` a `20260909150000`), `supabase functions deploy exchange-rate-sync whatsapp-webhook`, e — se os segredos `project_url`/`cron_secret` do Vault já existirem — a migration da PTAX agenda o cron sozinha; se não, criar os segredos e rodá-la de novo. Para popular o histórico de câmbio de uma vez: `curl -X POST -H "x-cron-secret: $CRON_SECRET" "$SUPABASE_URL/functions/v1/exchange-rate-sync?days=90"`.
+**Deploy:** automático no push em `main` (`.github/workflows/supabase.yml`); fallback manual na seção Deployment. Para popular o histórico de câmbio de uma vez: `curl -X POST -H "x-cron-secret: $CRON_SECRET" "$SUPABASE_URL/functions/v1/exchange-rate-sync?days=90"`.
 
 ## Versionamento (a partir de 2026-09-14)
 
@@ -244,13 +242,13 @@ Fluxo por release em produção:
 
 ## Gotchas
 
-- **`auditEngine.ts` is generic since #31** — every rule reads data (`birth_date`-derived `age`, `height_cm`, flight/accommodation dates, itinerary times), never a name or literal date; each rule is a pure function composed by `runFullTripAudit`, tested in `auditEngine.test.ts` against a *different* family. Eligibility (height/age) lives in `src/services/eligibility.ts`, shared by the audit, `coverageEngine.ts` and `ItineraryView.tsx`. The park catalog (`src/services/roteiro/*`) now carries `minHeightCm` for 56 attractions, so the height gate fires with real data. **`AiCopilotView.tsx` is still the `setTimeout` + keyword chain** — PR #47 (open) replaces it with the `copilot-chat` edge function; don't duplicate that work. `MonthCalendar.tsx` renders one block per month between `start_date` and `end_date` (#33).
+- **`auditEngine.ts` is generic since #31** — every rule reads data (`birth_date`-derived `age`, `height_cm`, flight/accommodation dates, itinerary times), never a name or literal date; each rule is a pure function composed by `runFullTripAudit`, tested in `auditEngine.test.ts` against a *different* family. Eligibility (height/age) lives in `src/services/eligibility.ts`, shared by the audit, `coverageEngine.ts` and `ItineraryView.tsx`. The park catalog (`src/services/roteiro/*`) now carries `minHeightCm` for 56 attractions, so the height gate fires with real data. `AiCopilotView.tsx` chama a edge function `copilot-chat` (PR #47). `MonthCalendar.tsx` renders one block per month between `start_date` and `end_date` (#33).
 - **`DocumentFile` and `LoyaltyAccount` are declared twice** — in `database.types.ts` *and* again in `TripContext.tsx`, which exports its own copies. The context and everything downstream use the `TripContext` versions. Edit both, or consolidate, to avoid drift.
 - **`Participant.age` / `is_minor` are derived on read** in `participantMapper.ts` from `birth_date` (the SQL table has no `age` column) and never written. Anything that needs an age must go through the mapper's `deriveAge(birthDate, today)`.
 - **tsconfig is strict in ways that break builds late:** `noUnusedLocals` and `noUnusedParameters` turn unused variables into build failures (`npm run dev` won't catch them — only `npm run build`). `verbatimModuleSyntax` requires `import type` for type-only imports. `erasableSyntaxOnly` forbids enums and constructor parameter properties.
 - **IDs are `crypto.randomUUID()`** via `newId()` in `src/services/ids.ts`; never reintroduce `` `prefix-${Date.now()}` `` (collides for batch inserts in the same millisecond).
 - **`DailyBriefingView` uses the Web Speech API** (`window.speechSynthesis`) directly, guarded by feature detection.
-- `README.md` is the untouched Vite starter template and describes nothing about this app.
+- `README.md` ainda é o template do Vite (1278 bytes) e não descreve o app; este arquivo é a documentação de fato.
 
 ## graphify
 
