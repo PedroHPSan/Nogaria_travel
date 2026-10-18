@@ -1,4 +1,4 @@
-> **Status: concluído (PR #4)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. `DayTimeline.tsx`, `MonthCalendar.tsx`, `coverageEngine.ts`.
+> **Status: concluído (PR #4)** (componentes movidos de `src/features/timeline/` para `src/features/itinerary/` no commit 4c5be44) — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. `DayTimeline.tsx`, `MonthCalendar.tsx`, `coverageEngine.ts`.
 > Fonte de verdade de pendências: issues do GitHub.
 
 # Roteiro dos Parques — Fatia 2: Timeline + Calendário Implementation Plan
