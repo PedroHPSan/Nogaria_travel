@@ -1,3 +1,5 @@
+> **Status: concluído** — arquivado em 2026-10-18. §1 avatar (`src/components/Avatar.tsx`, migration `20260829200933_participant_avatar.sql`) e §3 tom do bot (persona calorosa em `supabase/functions/_shared/tripContext.ts`) estão implementados. Pendências: issues do GitHub.
+
 # Plano: Sistema de Avatar + Mods Estéticos + Tom do Bot WhatsApp
 
 > Documento de handoff para o Antigravity implementar. Decisões já validadas com o Pedro (ver seção 0). Segue as convenções de `CLAUDE.md` (5 lugares para nova entidade, currency em USD, padrão View/Modal, etc).

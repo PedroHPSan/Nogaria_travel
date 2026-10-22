@@ -1,3 +1,6 @@
+> **Status: concluído (PR #3)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. Fatias 3 e 4 (motor de recálculo + fila/clima ao vivo) seguem pendentes → #73; clima no ReplanBoard → #74.
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Roteiro dos 7 parques — Fatia 1: modelo de dados + ingestão
 
 **Data:** 2026-07-31

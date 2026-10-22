@@ -1,3 +1,6 @@
+> **Status: concluído (PR #2)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. 
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Migração para Supabase — Fatia 1 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -8,7 +11,7 @@
 
 **Tech Stack:** React 19, TypeScript 6, Vite 8, Tailwind v4, Vitest 2, `@supabase/supabase-js`, e (novos) `jsdom` + `@testing-library/react`.
 
-**Spec:** `docs/superpowers/specs/2026-07-27-migracao-supabase-fatia-1-design.md`
+**Spec:** `docs/archive/2026-07-27-migracao-supabase-fatia-1-design.md`
 
 ## Global Constraints
 

@@ -1,3 +1,6 @@
+> **Status: concluído (PR #1)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. Ver nota no plano correspondente.
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Supabase Auth & Multi-Tenant Onboarding — Design
 
 ## Context

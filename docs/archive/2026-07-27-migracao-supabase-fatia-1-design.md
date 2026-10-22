@@ -1,3 +1,6 @@
+> **Status: concluído (PR #2)** — arquivado em 2026-10-18. Os checkboxes `- [ ]` abaixo nunca foram marcados durante a execução; o código está em `main`. 
+> Fonte de verdade de pendências: issues do GitHub.
+
 # Migração para Supabase — Fatia 1: fundação e wizard de primeira viagem
 
 **Data:** 2026-07-27
